@@ -84,6 +84,15 @@ function uebung_pruefen(array $roh, array $plan): array
         'rep_max'      => $repMax,
         'weight_step'  => $step,
         'photo'        => trim((string) ($roh['photo'] ?? '')),
+        /*
+         * Ausführung und englischer Suchbegriff. Ein Name allein ist
+         * mehrdeutig: "Überkopfdrücken" kann sitzend oder stehend sein,
+         * mit Lang- oder Kurzhantel. Ohne diese Felder lässt sich nicht
+         * nachschlagen, welche Übung gemeint ist, und brauchbare Videos
+         * findet man fast nur unter dem englischen Namen.
+         */
+        'execution'    => trim((string) ($roh['execution'] ?? '')),
+        'search'       => trim((string) ($roh['search'] ?? '')),
         // Ergänzung zum Schema aus SPEC.md §4: die aufgeklebte Gerätenummer
         // aus dem Studio. Optional, dient dem Wiederfinden des Geräts.
         'station'      => trim((string) ($roh['station'] ?? '')),

@@ -903,10 +903,44 @@
         // Sonst verliert eine Eingabe ihren Text, sobald die Kurve
         // nachlädt oder man einen Punkt antippt.
         if (!neu) {
+            html += zeichneAusfuehrung(u);
             html += '<div id="verlaufteil">' + zeichneVerlauf() + '</div>';
         }
 
         return html + zeichneEditor(neu ? { day: zustand.neuTag } : u);
+    }
+
+    /**
+     * Ausführung und Nachschlagelink.
+     *
+     * Steht ganz oben in der Übungsansicht, noch vor dem Verlauf: wer eine
+     * Übung aufmacht, will meist zuerst wissen, wie sie geht.
+     */
+    function zeichneAusfuehrung(u) {
+        if (!u.execution && !u.search) {
+            return '';
+        }
+
+        let html = '<section class="ausfuehrung">';
+
+        if (u.execution) {
+            html += '<p class="ausfuehrung__text">' + esc(u.execution) + '</p>';
+        }
+
+        if (u.search) {
+            // Videos zu Kraftübungen sind fast durchweg englisch, und der
+            // englische Name ist eindeutiger als jede deutsche Übersetzung.
+            const suche = encodeURIComponent(u.search);
+            html += '<div class="ausfuehrung__suche">'
+                 + '<span class="ausfuehrung__begriff">' + esc(u.search) + '</span>'
+                 + '<a class="kopfknopf" target="_blank" rel="noopener" '
+                 + 'href="https://www.youtube.com/results?search_query=' + suche + '">Video</a>'
+                 + '<a class="kopfknopf" target="_blank" rel="noopener" '
+                 + 'href="https://www.google.com/search?q=' + suche + '">Google</a>'
+                 + '</div>';
+        }
+
+        return html + '</section>';
     }
 
     /** Zeichnet nur den Verlaufsteil neu, nicht die ganze Ansicht. */
@@ -1098,6 +1132,15 @@
                  + zahl(s) + ' kg</option>';
         });
         html += '</select>'
+
+            + '<label class="mini" for="e-execution">Ausführung</label>'
+            + '<textarea class="feld feld--text feld--lang" id="e-execution" '
+            + 'name="execution" rows="4" placeholder="Wie genau wird die Übung '
+            + 'ausgeführt?">' + esc(u.execution || '') + '</textarea>'
+
+            + '<label class="mini" for="e-search">Englischer Suchbegriff</label>'
+            + '<input class="feld feld--text" id="e-search" name="search" '
+            + 'value="' + esc(u.search || '') + '" placeholder="z. B. incline dumbbell curl">'
 
             + '<label class="mini">Foto</label>'
             + zeichneBildauswahl(u.photo || '')

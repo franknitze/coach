@@ -32,6 +32,19 @@ module.exports = (port) => testlauf('Verlauf', port, async (t) => {
     ok(await page.locator('.chart').count() === 2, 'zwei getrennte Diagramme statt einer zweiten y-Achse');
     ok(await page.locator('.editor').count() === 1, 'Formular steht unter dem Verlauf');
 
+    /* ---------- Ausführung und Nachschlagen ---------- */
+
+    await page.click('[data-gehe="plan"]');
+    await page.waitForSelector('.zeile');
+    await page.locator('.zeile', { hasText: 'Bankdrücken' }).locator('.zeile__text').click();
+    await page.waitForSelector('.editor');
+    ok(await page.locator('#e-execution').count() === 1, 'Ausführung ist bearbeitbar');
+    ok(await page.locator('#e-search').count() === 1, 'englischer Suchbegriff auch');
+    await page.locator('[data-abbrechen]').click();
+    await page.waitForSelector('.zeile');
+    await page.locator('.zeile', { hasText: 'Bankdrücken' }).locator('.zeile__text').click();
+    await page.waitForSelector('.chart');
+
     const lese = await page.locator('.verlauf__lese').innerText();
     ok(lese.includes('80 kg') && lese.includes('Volumen'),
        'Ableselinie zeigt die letzte Einheit: ' + lese.replace(/\s+/g, ' '));

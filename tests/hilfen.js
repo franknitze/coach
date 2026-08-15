@@ -84,6 +84,8 @@ function datenAnlegen(ordner) {
             id: 'bankdruecken', name: 'Bankdrücken', muscle_group: 'brust',
             day: 'oberkoerper', order: 1, target_sets: 4, rep_min: 6, rep_max: 10,
             weight_step: 2.5, photo: '', station: '43',
+            execution: 'Ellenbogen rund 45 Grad, Stange zur unteren Brust.',
+            search: 'barbell bench press',
         },
         latzug: {
             id: 'latzug', name: 'Latzug', muscle_group: 'ruecken',
