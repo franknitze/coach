@@ -4,8 +4,20 @@ declare(strict_types=1);
 /**
  * Schreibt den Trainingsplan nach data/exercises.json und data/plan.json.
  *
- *   php bin/plan-anlegen.php
- *   php bin/plan-anlegen.php --force   (überschreibt vorhandene Übungen)
+ *   php bin/plan-anlegen.php                nur Fehlendes anlegen
+ *   php bin/plan-anlegen.php --aktualisieren  Plandaten auffrischen
+ *   php bin/plan-anlegen.php --neu            alles zurücksetzen
+ *
+ * DER STANDARD FASST NICHTS AN, WAS SCHON DA IST. Grund: die Zuordnung
+ * von Fotos und Gerätenummern macht Frank in der App, und die steht in
+ * derselben Datei wie der Plan. Ein Aufruf mit --force hat sie einmal
+ * vollständig gelöscht. Deshalb gibt es --force nicht mehr.
+ *
+ * --aktualisieren schreibt nur die Felder, die aus dem Plan stammen:
+ * Name, Ausführung, Suchbegriff, Sätze, Wiederholungen, Schrittweite,
+ * Tag, Reihenfolge, Muskelgruppe. Foto und Gerätenummer bleiben stehen.
+ *
+ * --neu setzt wirklich alles zurück und legt vorher eine Sicherung an.
  *
  * Warum ein Skript und keine Datei im Repo: data/ ist ausgeschlossen, dort
  * liegen Passwort-Hash und Trainingsdaten. Der Plan selbst ist aber weder
@@ -23,12 +35,30 @@ if (PHP_SAPI !== 'cli') {
 
 require_once __DIR__ . '/../lib/config.php';
 
-$force = in_array('--force', $argv, true);
+$aktualisieren = in_array('--aktualisieren', $argv, true);
+$zuruecksetzen = in_array('--neu', $argv, true);
+
+if (in_array('--force', $argv, true)) {
+    fwrite(STDERR, "--force gibt es nicht mehr, es hat einmal alle Fotozuordnungen "
+        . "gelöscht.\n  --aktualisieren  frischt die Plandaten auf, Fotos bleiben\n"
+        . "  --neu            setzt alles zurück, mit Sicherung\n");
+    exit(1);
+}
 
 $vorhanden = (array) json_read(EXERCISES_FILE, []);
-if ($vorhanden !== [] && !$force) {
-    fwrite(STDERR, "Es gibt schon " . count($vorhanden) . " Übungen. Mit --force überschreiben.\n");
-    exit(1);
+
+/** Sicherung neben die Datei legen, bevor etwas überschrieben wird. */
+function sichern(string $datei): void
+{
+    if (!is_file($datei)) {
+        return;
+    }
+    $ziel = dirname($datei) . '/sicherung';
+    ensure_dir($ziel);
+    $name = basename($datei, '.json') . '-'
+          . (new DateTimeImmutable('now'))->format('Ymd-His') . '.json';
+    copy($datei, $ziel . '/' . $name);
+    echo "Sicherung: " . basename($ziel) . '/' . $name . "\n";
 }
 
 /**
@@ -159,6 +189,12 @@ $plan = [
      'kneeling cable crunch'],
 ];
 
+/** Welche Felder aus dem Plan stammen und bei --aktualisieren gesetzt werden. */
+const AUS_DEM_PLAN = [
+    'name', 'muscle_group', 'day', 'order', 'target_sets',
+    'rep_min', 'rep_max', 'weight_step', 'execution', 'search',
+];
+
 $uebungen = [];
 foreach ($plan as $z) {
     $uebungen[$z[0]] = [
@@ -177,9 +213,56 @@ foreach ($plan as $z) {
     ];
 }
 
-json_write(EXERCISES_FILE, $uebungen);
+/*
+ * Zusammenführen statt überschreiben.
+ *
+ * Was in der App gesetzt wurde, hat Vorrang: Foto und Gerätenummer
+ * überleben jede Planänderung. Übungen, die nicht mehr im Plan stehen,
+ * bleiben ebenfalls erhalten; sie zu löschen wäre Datenverlust durch ein
+ * Skript, und wer eine Übung loswerden will, tut das in der App.
+ */
+$neuAngelegt = 0;
+$aufgefrischt = 0;
+$unberuehrt = 0;
+$ergebnis = $vorhanden;
 
-json_write(PLAN_FILE, [
+if ($zuruecksetzen) {
+    sichern(EXERCISES_FILE);
+    $ergebnis = $uebungen;
+    $neuAngelegt = count($uebungen);
+} else {
+    foreach ($uebungen as $id => $neu) {
+        if (!isset($ergebnis[$id])) {
+            $ergebnis[$id] = $neu;
+            $neuAngelegt++;
+            continue;
+        }
+        if (!$aktualisieren) {
+            $unberuehrt++;
+            continue;
+        }
+        $vorher = $ergebnis[$id];
+        foreach (AUS_DEM_PLAN as $feld) {
+            $ergebnis[$id][$feld] = $neu[$feld];
+        }
+        // Über JSON vergleichen, nicht direkt: aus der Datei kommt die
+        // Schrittweite 5 als Ganzzahl zurück, im Plan steht sie als 5.0.
+        // Ein direkter Vergleich meldete deshalb bei jedem Lauf 15
+        // Änderungen, die keine sind, und legte jedes Mal eine Sicherung an.
+        if (json_encode($ergebnis[$id]) !== json_encode($vorher)) {
+            $aufgefrischt++;
+        }
+    }
+    if ($aufgefrischt > 0 || $neuAngelegt > 0) {
+        sichern(EXERCISES_FILE);
+    }
+}
+
+json_write(EXERCISES_FILE, $ergebnis);
+
+if ($zuruecksetzen || !is_file(PLAN_FILE)) {
+    sichern(PLAN_FILE);
+    json_write(PLAN_FILE, [
     'days' => [
         'oberkoerper'  => ['label' => 'Oberkörper'],
         'ganzkoerper'  => ['label' => 'Ganzkörper'],
@@ -197,7 +280,10 @@ json_write(PLAN_FILE, [
         'quadrizeps' => 'normal', 'beinbeuger' => 'normal', 'waden' => 'normal',
         'bizeps' => 'normal', 'trizeps' => 'normal', 'bauch' => 'normal',
     ],
-]);
+    ]);
+}
+
+$mitFoto = count(array_filter($ergebnis, fn (array $u): bool => !empty($u['photo'])));
 
 $proTag = [];
 foreach ($uebungen as $u) {
@@ -210,6 +296,7 @@ foreach (['oberkoerper' => 'A Oberkörper', 'ganzkoerper' => 'B Ganzkörper',
           'unterkoerper' => 'C Unterkörper'] as $k => $name) {
     printf("  %-15s %2d Übungen, %2d Sätze\n", $name, $proTag[$k]['anzahl'], $proTag[$k]['saetze']);
 }
-echo "\nJe Durchgang: Rücken 15, Quadrizeps 15, Brust 14 Sätze.\n";
-echo "Weder Gerätenummern noch Fotos gesetzt: das wird in der App zugeordnet.\n";
-echo "Startgewichte gibt es bewusst keine. Die erste Einheit ist die Eichung.\n";
+echo "\n  neu angelegt: $neuAngelegt";
+echo ", aufgefrischt: $aufgefrischt";
+echo ", unberührt gelassen: $unberuehrt\n";
+echo "  Übungen mit zugeordnetem Foto: $mitFoto\n";

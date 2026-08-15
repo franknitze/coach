@@ -12,6 +12,7 @@
 const laeufe = {
     fotos:      { port: null, modul: './fotos' },
     regel:      { port: null, modul: './regel' },
+    update:     { port: null, modul: './update' },
     verwaltung: { port: 8791, modul: './verwaltung' },
     studio:     { port: 8792, modul: './studio' },
     verlauf:    { port: 8793, modul: './verlauf' },

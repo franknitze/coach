@@ -51,8 +51,15 @@ else
 fi
 
 # data/ bleibt draußen, nur die Zugriffssperre darin reist mit.
+#
+# assets/img/exercises/ bleibt ebenfalls draußen, und das ist der wichtige
+# Teil: dort liegen die selbst hochgeladenen Fotos, die es lokal gar nicht
+# gibt. Mit --delete hat rsync sie einmal komplett gelöscht. Fotos wandern
+# ausschließlich über bin/fotos-hochladen.sh nach oben, und das nur
+# hinzufügend.
 rsync -az --delete $TROCKEN -e "$SSH" \
     --include='data/' --include='data/.htaccess' --exclude='data/**' \
+    --exclude 'assets/img/exercises/' \
     --exclude 'tests/' --exclude 'images/' --exclude '.git/' \
     --exclude '.DS_Store' --exclude 'bin/icons.js' --exclude 'bin/deploy.sh' \
     --exclude '*.md' --exclude '.gitignore' \
@@ -63,6 +70,9 @@ if [ -n "$TROCKEN" ]; then
     exit 0
 fi
 
+echo
+echo "── Fotos abgleichen (nur hinzufügend) ──"
+bash "$(dirname "$0")/fotos-hochladen.sh" | sed 's/^/  /'
 echo
 echo "── Live-Prüfung ──"
 pruefe() {
