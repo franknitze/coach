@@ -1,0 +1,9 @@
+# --- Echte Trainingsdaten und Geheimnisse: NIE ins Repo ---
+# data/config.json enthält den Passwort-Hash und den n8n-API-Key,
+# data/logs/ die echten Trainings-Logs. Gesichert wird das über den
+# n8n-Backup-Workflow (SPEC.md §9), nicht über Git.
+# Eine data/config.example.json ohne Werte darf später versioniert werden.
+data/
+
+# --- System ---
+.DS_Store
