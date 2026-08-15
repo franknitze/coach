@@ -6,13 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `SPEC.md` (deutsch, ~290 Zeilen) ist die verbindliche Vorgabe und die einzige Quelle dafür, was gebaut wird. Vor jedem Implementierungsvorschlag lesen; das Dokument ist so geschrieben, dass sich der Plan ohne Rückfragen ableiten lässt. Die Phasen 0 bis 6 in §10 sind die vorgegebene Reihenfolge.
 
-Gebaut sind Phase 0 (lokal), 1 und 2, also Fundament, Login, Verwaltung und Studio-Modus:
+Gebaut sind Phase 0 (lokal) bis 3, also Fundament, Login, Verwaltung, Studio-Modus und Auswertung:
 
 | Steht | Fehlt |
 |---|---|
-| `lib/storage.php`, `config.php`, `auth.php`, `uebungen.php`, `logs.php` | `api/history.php` (Phase 3), `coach.php` (Phase 4), `export.php` (Phase 5) |
-| `api/`: `login`, `logout`, `exercises`, `settings`, `plan`, `session` | Verlaufskurven, Coach-Ansage auf der Kachel |
-| `index.php`, `assets/app.css`, `assets/app.js`: Start, Studio, Mein Plan | `manifest.json`, `service-worker.js` |
+| `lib/storage.php`, `config.php`, `auth.php`, `uebungen.php`, `logs.php` | `api/coach.php` (Phase 4), `export.php` (Phase 5) |
+| `api/`: `login`, `logout`, `exercises`, `settings`, `plan`, `session`, `history` | Coach-Ansage auf der Kachel |
+| `index.php`, `assets/app.css`, `assets/app.js`: Start, Studio, Mein Plan, Übungsdetail mit Verlauf | `manifest.json`, `service-worker.js` |
 | `.htaccess`, `bin/init-config.php` | alles auf dem Server, es ist noch nichts deployed |
 
 Drei Abweichungen von SPEC.md, alle bewusst:
@@ -23,6 +23,8 @@ Drei Abweichungen von SPEC.md, alle bewusst:
 - **Feld `rotation_index`** in jeder Session, zusätzlich zum Schema in §4. Die Rotation darf denselben Tag mehrfach enthalten (`oberkoerper, unterkoerper, oberkoerper`), über den Tagesnamen allein wäre die Position also nicht eindeutig und der Vorschlag würde zwischen zwei Positionen hängenbleiben. Ältere Einträge ohne das Feld fallen auf die Namenssuche zurück.
 
 **Sätze werden einzeln gespeichert, nicht am Ende der Einheit.** Jede Bestätigung ist ein eigener POST auf `session.php` mit `set_index`. Damit ist der Aufruf wiederholbar: ein Doppel-Tap oder ein Wiederholungsversuch überschreibt denselben Satz, statt ihn ein zweites Mal anzuhängen, und dasselbe Feld erlaubt das Korrigieren eines bereits bestätigten Satzes. Im Studio kann der Akku leer werden; was bestätigt ist, liegt auf der Platte.
+
+- **Kein Diagramm-Nachladen.** SPEC.md §2 empfiehlt uPlot oder Chart.js per CDN. Gebraucht wird eine Linie mit zwei Achsen, dafür lohnt keine Bibliothek, und ein CDN-Skript widerspricht der PWA, die offline laufen soll. Die Kurven sind Inline-SVG in `assets/app.js` (`chart()`), rund 60 Zeilen. Falls doch eine Bibliothek gewünscht ist, wäre sie selbst gehostet einzubinden, nicht per CDN.
 
 **Die Reihenfolge der Sessions braucht ein zweites Kriterium.** `date` ist auf die Sekunde genau. Zwei Einträge derselben Sekunde wären nicht unterscheidbar, und „welche war die letzte" entschiede der Zufall, was den Tagesvorschlag verdreht. `logs_monat()` sortiert deshalb nach Datum **und** Position in der Datei.
 
@@ -139,7 +141,15 @@ Die Richtung ist aus Franks Studio abgeleitet, nicht aus einer Fitness-App-Schab
 - **Zwei Akzente mit fester Bedeutung, sonst nirgends:** `--tag` `#f2b705` (das Gelb der Gerätenummern-Schilder) heißt „hier tippen". `--vinyl` `#c8562b` (das Orange des Bankpolsters) heißt „Steigerung fällig" und ist für die Coach-Ansage aus §7 reserviert. Wer eines der beiden dekorativ verwendet, nimmt ihm die Aussage.
 - **Monospace für alle Zahlen und Kürzel, Sans für Fließtext.** Ein Trainingslog ist eine Zahlentabelle. Keine Webfonts, die PWA muss offline laufen.
 - **Hauptaktionen sitzen unten am Rand**, nicht mittig. Bedienung mit dem Daumen heißt Daumenzone. Touch-Ziele ab 56px, `env(safe-area-inset-*)` beachten.
-- **Signature ist die Geräteplakette** (`.plakette`): das gelbe Nummernschild, das im Studio an den Geräten klebt. Sie trägt ab Phase 2 auf jeder Übungskachel die echte Stationsnummer, damit er das Gerät findet. Bis dahin ist sie definiert, aber ungenutzt, und soll nicht mit erfundenen Nummern dekoriert werden.
+- **Signature ist die Geräteplakette** (`.plakette`): das gelbe Nummernschild, das im Studio an den Geräten klebt. Sie trägt die echte Stationsnummer, in der Liste klein, auf der Übungskachel groß als Ersatz für ein fehlendes Foto. Nie mit erfundenen Nummern dekorieren.
+
+**Diagramme** (Phase 3, `chart()` in `app.js`):
+
+- **Nie eine zweite y-Achse.** Schwerstes Gewicht (kg) und Volumen (kg mal Wiederholungen) haben ganz andere Größenordnungen. In ein Achsenkreuz gezwungen suggerieren sich kreuzende Linien Zusammenhänge, die es nicht gibt. Deshalb zwei getrennte Diagramme mit gemeinsamer Auswahl.
+- **Die Datenlinie trägt die Schriftfarbe, nicht Gelb und nicht Orange.** Beide Akzente haben eine feste Bedeutung und verlören sie als Datenfarbe. Gelb bleibt dem gewählten Punkt vorbehalten, weil das die Interaktion ist.
+- **x folgt der echten Zeit, nicht der Position im Array.** Eine Trainingspause von drei Wochen soll als Lücke sichtbar sein.
+- Die y-Achse ist bewusst nicht bei null verankert, sonst wäre der Unterschied zwischen 80 und 85 kg nicht zu sehen. Beschriftet sind die tatsächlichen Grenzwerte, damit der Ausschnitt ablesbar bleibt. Für Balken gälte das Gegenteil.
+- **Bei einer einzigen Einheit gibt es keine Kurve**, sondern den Wert als Zeile. Eine Linie aus einem Punkt behauptet einen Verlauf, den es nicht gibt.
 
 ## Konventionen
 

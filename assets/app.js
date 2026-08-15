@@ -138,7 +138,10 @@
         ansicht: 'start',
         offen: null,           // aufgeklappte Übung im Studio
         entwurf: {},           // laufende Eingabe je Übung
-        bearbeitet: null,
+        uebungId: null,        // Übung in der Detailansicht, null = neue
+        neuTag: null,          // Trainingstag einer neu angelegten Übung
+        verlauf: null,         // Antwort von api/history.php
+        punktIndex: null,      // gewählte Einheit im Diagramm, null = letzte
         loeschfrage: null,
         meldung: '',
     };
@@ -398,6 +401,178 @@
             + '</div>';
     }
 
+    /* ---------- Verlaufsdiagramm ----------
+     *
+     * Inline-SVG statt einer Diagramm-Bibliothek: gebraucht wird eine
+     * Linie mit zwei Achsen, dafür lohnt kein Nachladen, und die PWA soll
+     * ohne Netz laufen.
+     *
+     * Bewusst zwei getrennte Diagramme statt einer zweiten y-Achse.
+     * Gewicht (kg) und Volumen (kg mal Wiederholungen) haben ganz andere
+     * Größenordnungen; in ein Achsenkreuz gezwungen suggerieren sich
+     * kreuzende Linien Zusammenhänge, die es nicht gibt.
+     *
+     * Die Linie ist neutral eingefärbt, nicht gelb und nicht orange:
+     * beide Farben haben in dieser App eine feste Bedeutung ("hier
+     * tippen" und "Steigerung fällig") und verlören sie als Datenfarbe.
+     */
+
+    const CH = { w: 340, h: 128, l: 50, r: 8, t: 14, b: 22 };
+
+    function chartGeometrie(punkte, feld) {
+        const innenB = CH.w - CH.l - CH.r;
+        const innenH = CH.h - CH.t - CH.b;
+
+        const werte = punkte.map(function (p) { return p[feld]; });
+        let unten = Math.min.apply(null, werte);
+        let oben  = Math.max.apply(null, werte);
+
+        // Waagerechte Linie mittig statt am Rand kleben lassen.
+        if (unten === oben) {
+            unten -= 1;
+            oben  += 1;
+        }
+        const luft = (oben - unten) * 0.15;
+
+        const zeiten = punkte.map(function (p) { return new Date(p.date).getTime(); });
+        const t0 = zeiten[0];
+        const t1 = zeiten[zeiten.length - 1];
+
+        return {
+            zeiten: zeiten,
+            datenUnten: Math.min.apply(null, werte),
+            datenOben: Math.max.apply(null, werte),
+            // x folgt der echten Zeit, nicht der Position: eine Pause von
+            // drei Wochen soll als Lücke sichtbar sein.
+            x: function (i) {
+                return t1 === t0
+                    ? CH.l + innenB / 2
+                    : CH.l + (zeiten[i] - t0) / (t1 - t0) * innenB;
+            },
+            y: function (v) {
+                return CH.t + innenH - (v - (unten - luft)) / ((oben + luft) - (unten - luft)) * innenH;
+            },
+        };
+    }
+
+    function chart(punkte, feld, einheit, gewaehlt) {
+        const g = chartGeometrie(punkte, feld);
+        const xy = punkte.map(function (p, i) { return [g.x(i), g.y(p[feld])]; });
+
+        const pfad = xy.map(function (p, i) {
+            return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1);
+        }).join(' ');
+
+        const yOben  = g.y(g.datenOben);
+        const yUnten = g.y(g.datenUnten);
+
+        let svg = '<svg class="chart" viewBox="0 0 ' + CH.w + ' ' + CH.h + '" '
+            + 'data-feld="' + feld + '" role="img" '
+            + 'aria-label="Verlauf ' + esc(einheit) + '">';
+
+        // Zurückhaltendes Raster: nur die beiden echten Datenwerte.
+        svg += '<line class="ch-raster" x1="' + CH.l + '" y1="' + yOben.toFixed(1)
+             + '" x2="' + (CH.w - CH.r) + '" y2="' + yOben.toFixed(1) + '"></line>'
+             + '<line class="ch-raster" x1="' + CH.l + '" y1="' + yUnten.toFixed(1)
+             + '" x2="' + (CH.w - CH.r) + '" y2="' + yUnten.toFixed(1) + '"></line>'
+             + '<text class="ch-achse" x="' + (CH.l - 8) + '" y="' + (yOben + 4).toFixed(1)
+             + '" text-anchor="end">' + esc(zahl(g.datenOben)) + '</text>'
+             + '<text class="ch-achse" x="' + (CH.l - 8) + '" y="' + (yUnten + 4).toFixed(1)
+             + '" text-anchor="end">' + esc(zahl(g.datenUnten)) + '</text>';
+
+        if (punkte.length > 1) {
+            svg += '<path class="ch-linie" d="' + pfad + '"></path>';
+        }
+
+        // Fadenkreuz auf dem gewählten Punkt.
+        const p = xy[gewaehlt];
+        if (p) {
+            svg += '<line class="ch-kreuz" x1="' + p[0].toFixed(1) + '" y1="' + CH.t
+                 + '" x2="' + p[0].toFixed(1) + '" y2="' + (CH.h - CH.b) + '"></line>'
+                 + '<circle class="ch-punkt" cx="' + p[0].toFixed(1) + '" cy="'
+                 + p[1].toFixed(1) + '" r="5"></circle>';
+        }
+
+        svg += '<text class="ch-achse" x="' + CH.l + '" y="' + (CH.h - 6)
+             + '">' + esc(datumKurz(punkte[0].date)) + '</text>';
+        if (punkte.length > 1) {
+            svg += '<text class="ch-achse" x="' + (CH.w - CH.r) + '" y="' + (CH.h - 6)
+                 + '" text-anchor="end">'
+                 + esc(datumKurz(punkte[punkte.length - 1].date)) + '</text>';
+        }
+
+        return svg + '</svg>';
+    }
+
+    /* ---------- Ansicht: eine Übung ---------- */
+
+    function zeichneUebung() {
+        const neu = zustand.uebungId === null;
+        // Die Bibliothek ist die Quelle für die Stammdaten, nicht die
+        // Verlaufsantwort: die kommt später und wäre beim ersten
+        // Bildaufbau noch die der vorher geöffneten Übung.
+        const u = neu ? { day: zustand.neuTag } : zustand.uebungen[zustand.uebungId];
+
+        if (!u) {
+            return '<p class="fehler">Diese Übung gibt es nicht mehr.</p>';
+        }
+
+        let html = '<div class="titelzeile">'
+            + '<h1 class="titel">' + esc(neu ? 'Neue Übung' : u.name) + '</h1>'
+            + '<button class="kopfknopf" data-gehe="plan">Zurück</button>'
+            + '</div>';
+
+        if (!neu) {
+            html += zeichneVerlauf();
+        }
+
+        return html + zeichneEditor(neu ? { day: zustand.neuTag } : u);
+    }
+
+    function zeichneVerlauf() {
+        const punkte = (zustand.verlauf && zustand.verlauf.points) || [];
+
+        if (punkte.length === 0) {
+            return '<p class="tag__leer">Noch kein Verlauf. Sobald du diese Übung '
+                 + 'trainiert hast, steht hier die Kurve.</p>';
+        }
+
+        const i = Math.min(zustand.punktIndex === null ? punkte.length - 1 : zustand.punktIndex,
+                           punkte.length - 1);
+        const p = punkte[i];
+
+        // Bei einem einzigen Datenpunkt ist eine Kurve eine Lüge: es gibt
+        // keinen Verlauf, nur einen Wert.
+        if (punkte.length === 1) {
+            return '<section class="verlauf">'
+                + '<p class="verlauf__lese">' + esc(datum(p.date)) + ' · '
+                + esc(zahl(p.max_weight)) + ' kg × ' + p.top_reps + ' · '
+                + p.sets + (p.sets === 1 ? ' Satz' : ' Sätze') + '</p>'
+                + '<p class="tag__leer">Eine Einheit reicht für keine Kurve. '
+                + 'Ab der zweiten wird hier ein Verlauf sichtbar.</p></section>';
+        }
+
+        return '<section class="verlauf">'
+            + '<div class="verlauf__lese">'
+            + '<span class="verlauf__datum">' + esc(datum(p.date)) + '</span>'
+            + '<span class="verlauf__werte">'
+            + esc(zahl(p.max_weight)) + ' kg × ' + p.top_reps + '  ·  '
+            + p.sets + (p.sets === 1 ? ' Satz' : ' Sätze') + '  ·  '
+            + esc(zahl(p.volume)) + ' Volumen</span></div>'
+
+            + '<div class="chart__kopf"><span class="mini">Schwerstes Gewicht</span>'
+            + '<span class="chart__einheit">kg</span></div>'
+            + chart(punkte, 'max_weight', 'Kilogramm', i)
+
+            + '<div class="chart__kopf"><span class="mini">Volumen</span>'
+            + '<span class="chart__einheit">kg × Wdh</span></div>'
+            + chart(punkte, 'volume', 'Volumen', i)
+
+            + '<p class="hinweis">' + punkte.length + ' Einheiten. '
+            + 'Tippen wählt eine Einheit aus.</p>'
+            + '</section>';
+    }
+
     /* ---------- Ansicht: Mein Plan ---------- */
 
     function zeichnePlan() {
@@ -420,22 +595,16 @@
                 + '<span class="tag__zahl">' + liste.length + '</span>'
                 + '</div>';
 
-            if (liste.length === 0 && zustand.bearbeitet !== 'neu:' + tag) {
+            if (liste.length === 0) {
                 html += '<p class="tag__leer">Noch nichts eingetragen.</p>';
             }
 
             liste.forEach(function (u) {
-                html += zustand.bearbeitet === u.id ? zeichneEditor(u) : zeichneZeile(u);
+                html += zeichneZeile(u);
             });
 
-            if (zustand.bearbeitet === 'neu:' + tag) {
-                html += zeichneEditor({ day: tag });
-            } else {
-                html += '<button class="zufuegen" data-neu="' + esc(tag) + '">'
-                     + 'Übung zufügen</button>';
-            }
-
-            html += '</section>';
+            html += '<button class="zufuegen" data-neu="' + esc(tag) + '">'
+                 + 'Übung zufügen</button></section>';
         });
 
         return html + zeichneSchwerpunkte();
@@ -518,7 +687,8 @@
 
             + '<label class="mini" for="e-photo">Foto</label>'
             + '<input class="feld feld--text" id="e-photo" name="photo" '
-            + 'value="' + esc(u.photo || '') + '" placeholder="beinpresse.jpg">'
+            + 'value="' + esc(u.photo || '') + '" placeholder="'
+            + esc((u.id || 'uebung') + '.jpg') + '">'
             + '<p class="hinweis">Dateiname aus assets/img/exercises/</p>'
 
             + '<p class="fehler" role="alert">' + esc(zustand.meldung) + '</p>'
@@ -567,10 +737,22 @@
     function zeichnen() {
         if (zustand.ansicht === 'plan') {
             app.innerHTML = zeichnePlan();
+        } else if (zustand.ansicht === 'uebung') {
+            app.innerHTML = zeichneUebung();
         } else if (zustand.ansicht === 'studio') {
             app.innerHTML = zeichneStudio();
         } else {
             app.innerHTML = zeichneStart();
+        }
+    }
+
+    async function verlaufLaden(id) {
+        zustand.verlauf = null;
+        zustand.punktIndex = null;
+        try {
+            zustand.verlauf = await api('api/history.php?id=' + encodeURIComponent(id));
+        } catch (err) {
+            zustand.meldung = err.message;
         }
     }
 
@@ -598,7 +780,7 @@
 
         if (d.gehe) {
             zustand.ansicht = d.gehe;
-            zustand.bearbeitet = null;
+            zustand.uebungId = null;
             zustand.offen = null;
             zustand.meldung = '';
             if (d.gehe !== 'studio') {
@@ -710,20 +892,30 @@
         /* --- Mein Plan --- */
 
         if (d.bearbeite) {
-            zustand.bearbeitet = d.bearbeite;
+            zustand.ansicht = 'uebung';
+            zustand.uebungId = d.bearbeite;
             zustand.loeschfrage = null;
             zustand.meldung = '';
+            // Erst leeren, dann zeichnen. Sonst zeigt der erste Bildaufbau
+            // den Verlauf der zuvor geöffneten Übung.
+            zustand.verlauf = null;
+            zustand.punktIndex = null;
+            zeichnen();                 // Gerüst sofort, Kurve sobald geladen
+            await verlaufLaden(d.bearbeite);
             return zeichnen();
         }
 
         if (d.neu) {
-            zustand.bearbeitet = 'neu:' + d.neu;
+            zustand.ansicht = 'uebung';
+            zustand.uebungId = null;
+            zustand.neuTag = d.neu;
+            zustand.verlauf = null;
             zustand.meldung = '';
             return zeichnen();
         }
 
         if (ziel.hasAttribute('data-abbrechen')) {
-            zustand.bearbeitet = null;
+            zustand.ansicht = 'plan';
             zustand.loeschfrage = null;
             zustand.meldung = '';
             return zeichnen();
@@ -742,7 +934,8 @@
                     { method: 'DELETE' }
                 );
                 zustand.uebungen = antwort.exercises || {};
-                zustand.bearbeitet = null;
+                zustand.ansicht = 'plan';
+                zustand.uebungId = null;
                 zustand.loeschfrage = null;
             } catch (err) {
                 zustand.meldung = err.message;
@@ -786,11 +979,46 @@
         try {
             const antwort = await api('api/exercises.php', { daten: daten });
             zustand.uebungen = antwort.exercises || {};
-            zustand.bearbeitet = null;
+            zustand.ansicht = 'plan';
+            zustand.uebungId = null;
             zustand.meldung = '';
         } catch (err) {
             zustand.meldung = err.message;
         }
+        zeichnen();
+    });
+
+    /*
+     * Tippen im Diagramm wählt eine Einheit aus. Auf dem Handy gibt es kein
+     * Hover, also übernimmt der Fingertipp die Rolle des Fadenkreuzes.
+     * Gerechnet wird in viewBox-Koordinaten, weil das SVG mitskaliert.
+     */
+    app.addEventListener('pointerdown', function (e) {
+        const svg = e.target.closest('.chart');
+        if (!svg || !zustand.verlauf) {
+            return;
+        }
+
+        const punkte = zustand.verlauf.points || [];
+        if (punkte.length < 2) {
+            return;
+        }
+
+        const kasten = svg.getBoundingClientRect();
+        const x = (e.clientX - kasten.left) / kasten.width * CH.w;
+        const g = chartGeometrie(punkte, svg.dataset.feld);
+
+        let naechster = 0;
+        let abstand = Infinity;
+        punkte.forEach(function (p, i) {
+            const d = Math.abs(g.x(i) - x);
+            if (d < abstand) {
+                abstand = d;
+                naechster = i;
+            }
+        });
+
+        zustand.punktIndex = naechster;
         zeichnen();
     });
 

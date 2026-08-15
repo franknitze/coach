@@ -143,6 +143,60 @@ function logs_letzte_einheiten(string $uebungId, int $anzahl): array
 }
 
 /**
+ * Der komplette Verlauf einer Übung, älteste Einheit zuerst.
+ *
+ * Rechnet je Einheit zwei Größen aus:
+ * - max_weight: das schwerste Gewicht des Tages.
+ * - volume: Summe aus Gewicht mal Wiederholungen über alle Sätze. SPEC.md
+ *   §5.4 nennt es "Gewicht × Wdh × Sätze"; die Summe ist dasselbe, sobald
+ *   die Sätze unterschiedlich ausfallen, was der Normalfall ist.
+ *
+ * Gerechnet wird hier und nicht im Browser: das Frontend zeigt an, es
+ * rechnet nicht. Sonst driften Kurve und spätere Coach-Ansage auseinander.
+ */
+function logs_verlauf(string $uebungId): array
+{
+    $punkte = [];
+
+    logs_rueckwaerts(function (array $session) use ($uebungId, &$punkte): bool {
+        foreach ((array) ($session['exercises'] ?? []) as $eintrag) {
+            if (($eintrag['exercise_id'] ?? '') !== $uebungId) {
+                continue;
+            }
+            $saetze = (array) ($eintrag['sets'] ?? []);
+            if ($saetze === []) {
+                continue;
+            }
+
+            $maxGewicht = 0.0;
+            $topWdh     = 0;
+            $volumen    = 0.0;
+
+            foreach ($saetze as $satz) {
+                $gewicht = (float) ($satz['weight'] ?? 0);
+                $wdh     = (int) ($satz['reps'] ?? 0);
+                $volumen += $gewicht * $wdh;
+                if ($gewicht > $maxGewicht) {
+                    $maxGewicht = $gewicht;
+                    $topWdh     = $wdh;
+                }
+            }
+
+            $punkte[] = [
+                'date'       => $session['date'] ?? '',
+                'max_weight' => $maxGewicht,
+                'top_reps'   => $topWdh,
+                'volume'     => round($volumen, 1),
+                'sets'       => count($saetze),
+            ];
+        }
+        return false;   // den ganzen Verlauf durchgehen, nicht abbrechen
+    });
+
+    return array_reverse($punkte);
+}
+
+/**
  * Trägt einen Satz in die heutige Session ein und legt sie an, falls es
  * sie noch nicht gibt.
  *

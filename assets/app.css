@@ -348,6 +348,95 @@ body {
 
 .zufuegen:active { color: var(--schrift); }
 
+/* ---------- Verlauf ----------
+ *
+ * Die Linie trägt die Schriftfarbe, nicht Gelb und nicht Orange: beide
+ * haben in dieser App eine feste Bedeutung und verlören sie als Datenfarbe.
+ * Raster und Achsen bleiben zurückgenommen, damit die Linie die Aussage
+ * trägt und nicht das Gitter.
+ */
+
+.verlauf { margin-bottom: 28px; }
+
+/* Zwei gewollte Zeilen statt eines zufälligen Umbruchs: erst welche
+   Einheit, dann was dabei herauskam. */
+.verlauf__lese {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--linie);
+}
+
+.verlauf__datum {
+    font: 600 12px/1 var(--mono);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--schrift-leise);
+}
+
+.verlauf__werte {
+    font: 17px/1.4 var(--mono);
+    color: var(--schrift);
+}
+
+.chart__kopf {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 18px 0 2px;
+}
+
+.chart__kopf .mini { margin-bottom: 0; }
+
+.chart__einheit {
+    font: 11px/1 var(--mono);
+    color: var(--schrift-leise);
+}
+
+.chart {
+    display: block;
+    width: 100%;
+    height: auto;
+    touch-action: manipulation;
+}
+
+.ch-linie {
+    fill: none;
+    stroke: var(--schrift);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+}
+
+.ch-raster {
+    stroke: var(--linie);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+}
+
+.ch-kreuz {
+    stroke: var(--schrift-leise);
+    stroke-width: 1;
+    stroke-dasharray: 2 3;
+    vector-effect: non-scaling-stroke;
+}
+
+.ch-punkt {
+    fill: var(--tag);
+    stroke: var(--raum);
+    stroke-width: 2;
+}
+
+.ch-achse {
+    fill: var(--schrift-leise);
+    font-family: var(--mono);
+    font-size: 11px;
+}
+
 /* ---------- Editor ---------- */
 
 .editor {
