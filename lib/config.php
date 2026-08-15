@@ -22,7 +22,28 @@ date_default_timezone_set('Europe/Berlin');
  * an die echte Trainingshistorie kommen. Im Betrieb bleibt die Variable
  * ungesetzt, dann gilt der Pfad aus der Zeile darunter.
  */
-define('DATA_DIR', getenv('COACH_DATA') ?: __DIR__ . '/../data');
+define('DATA_DIR', coach_datenpfad());
+
+/**
+ * Wo liegt data/?
+ *
+ * COACH_DATA sticht den Standardpfad. Gelesen wird sowohl über getenv()
+ * als auch aus $_SERVER: unter Apache kommt die Variable per SetEnv aus
+ * der .htaccess, und je nach PHP-Anbindung (mod_php, FastCGI, FPM) landet
+ * sie mal im einen, mal im anderen. Auf beides zu schauen kostet nichts
+ * und erspart die Suche, warum die App plötzlich ein leeres data/ sieht.
+ */
+function coach_datenpfad(): string
+{
+    $ausUmgebung = getenv('COACH_DATA');
+    if (is_string($ausUmgebung) && $ausUmgebung !== '') {
+        return $ausUmgebung;
+    }
+    if (!empty($_SERVER['COACH_DATA'])) {
+        return (string) $_SERVER['COACH_DATA'];
+    }
+    return __DIR__ . '/../data';
+}
 define('LOGS_DIR', DATA_DIR . '/logs');
 
 define('CONFIG_FILE',    DATA_DIR . '/config.json');

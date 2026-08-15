@@ -53,7 +53,7 @@ module.exports = (port) => testlauf('Coach', port, async (t) => {
        'zugeklappt bleibt auch Zurückholen still');
 
     // Aufgeklappt steht die Ansage da, dort wird ja gehandelt.
-    await latz.locator('.kachel__kopf').click();
+    await latz.locator('.kachel__text').click();
     await page.waitForFunction(() =>
         document.querySelectorAll('.kachel:has(.satz--dran)').length === 1);
     const latzText = await latz.locator('.kachel__coach').innerText();
@@ -61,14 +61,14 @@ module.exports = (port) => testlauf('Coach', port, async (t) => {
     const leise = await latz.locator('.kachel__coach').evaluate((n) => getComputedStyle(n).color);
     ok(leise !== faellig, 'und ist sichtbar zurückhaltender gesetzt als die Steigerung');
 
-    await schu.locator('.kachel__kopf').click();
+    await schu.locator('.kachel__text').click();
     await page.waitForFunction(() =>
         document.querySelector('.kachel:has(.satz--dran)').innerText.includes('Schulterdrücken'));
     ok((await schu.locator('.kachel__coach').innerText()).includes('zurück auf 8'),
        'Zurückholen nennt die untere Grenze');
 
     // Der Coach entscheidet nicht für Frank
-    await bank.locator('.kachel__kopf').click();
+    await bank.locator('.kachel__text').click();
     await page.waitForSelector('.satz--dran');
     ok(await bank.locator('.regler__wert').first().innerText() === '80 kg',
        'Eingabe bleibt beim letzten Wert, nicht beim Coach-Vorschlag');

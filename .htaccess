@@ -6,7 +6,13 @@
 
 Options -Indexes
 
-# Der komplette data/-Baum ist aus dem Browser nicht erreichbar.
+# Der komplette data/-Baum ist aus dem Browser nicht erreichbar. Dort
+# liegen Passwort-Hash, API-Key und die Trainingsdaten.
+#
+# In data/ liegt zusätzlich eine eigene .htaccess mit derselben Sperre.
+# Zwei Riegel, weil hier alles daran hängt: geht diese Datei bei einem
+# Deployment verloren oder greift eine Regel nach einer Änderung an der
+# Apache-Konfiguration nicht mehr, wäre der Passwort-Hash herunterladbar.
 RedirectMatch 404 ^/data(/|$)
 
 # Sperr- und Zwischendateien des atomaren Schreibens.

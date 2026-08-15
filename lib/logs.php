@@ -16,6 +16,20 @@ require_once __DIR__ . '/config.php';
  * Progressionsregel. Alle drei sollen dieselbe Reihenfolge sehen.
  */
 
+/**
+ * Fängt $text mit $anfang an?
+ *
+ * Eigene Funktion statt str_starts_with, weil das erst ab PHP 8 existiert.
+ * Welche Version All-Inkl für die Subdomain fährt, wird in KAS eingestellt
+ * und kann sich ändern, ohne dass es jemand merkt. Ein Aufruf einer nicht
+ * vorhandenen Funktion legt die ganze App lahm, und zwar erst auf dem
+ * Server. Diese drei Zeilen sind billiger als diese Fehlersuche.
+ */
+function beginnt_mit(string $text, string $anfang): bool
+{
+    return strncmp($text, $anfang, strlen($anfang)) === 0;
+}
+
 /** Monatsdateien, neueste zuerst. */
 function logs_monate(): array
 {
@@ -229,7 +243,7 @@ function logs_satz_eintragen(
         // Heutige Session desselben Trainingstags suchen.
         $i = null;
         foreach ($sessions as $index => $session) {
-            if (str_starts_with((string) ($session['date'] ?? ''), $heute)
+            if (beginnt_mit((string) ($session['date'] ?? ''), $heute)
                 && ($session['day'] ?? '') === $tag) {
                 $i = $index;
                 break;
@@ -278,7 +292,7 @@ function logs_session_am(string $tag, ?DateTimeImmutable $zeitpunkt = null): ?ar
     $tagesdatum = $wann->format('Y-m-d');
 
     foreach (logs_monat($wann->format('Y-m')) as $session) {
-        if (str_starts_with((string) ($session['date'] ?? ''), $tagesdatum)
+        if (beginnt_mit((string) ($session['date'] ?? ''), $tagesdatum)
             && ($session['day'] ?? '') === $tag) {
             return $session;
         }

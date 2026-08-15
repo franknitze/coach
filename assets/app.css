@@ -122,10 +122,15 @@ body {
 
 /* ---------- Anmeldung ---------- */
 
+/* flex statt min-height: 100svh. Der Body ist selbst eine Flex-Spalte,
+   und die volle Bildschirmhöhe hier drin ergäbe zusammen mit dem Kopf
+   mehr als eine Bildschirmhöhe. Die Seite scrollte dann, und der mittig
+   gesetzte Inhalt rutschte nach unten aus dem Bild. */
 .tor {
     display: flex;
     flex-direction: column;
-    min-height: 100svh;
+    flex: 1;
+    min-height: 0;
 }
 
 .tor__mitte {
@@ -714,18 +719,75 @@ body {
 .kachel.ist-fertig { opacity: 0.55; }
 .kachel.ist-fertig.ist-offen { opacity: 1; }
 
+/* Kein Knopf, sondern eine Reihe aus zwei Knöpfen: Foto vergrößern und
+   Übung aufklappen sind zwei verschiedene Absichten. */
 .kachel__kopf {
     display: flex;
     align-items: center;
     gap: 14px;
     width: 100%;
     padding: 14px;
+}
+
+.kachel__foto {
+    flex: 0 0 auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    line-height: 0;
+    cursor: zoom-in;
+}
+
+.kachel__text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+    padding: 0;
     border: 0;
     background: transparent;
     color: inherit;
     text-align: left;
     cursor: pointer;
 }
+
+/* ---------- Gerätefoto groß ---------- */
+
+.lupe {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 20px;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 20px);
+    background: rgba(12, 14, 18, 0.96);
+    cursor: zoom-out;
+}
+
+.lupe__bild {
+    max-width: 100%;
+    max-height: 78vh;
+    border-radius: 14px;
+    object-fit: contain;
+}
+
+.lupe__fuss {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.lupe__name {
+    font: 17px/1.3 var(--sans);
+    color: var(--schrift);
+}
+
+.lupe .plakette { font-size: 17px; padding: 5px 12px; }
 
 .kachel__bild,
 .kachel__platzhalter {

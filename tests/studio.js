@@ -53,7 +53,25 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
     ok(await bank.locator('.punkt.ist-voll').count() === 0, 'heute noch nichts erledigt');
     ok(await bank.locator('.kachel__platzhalter').innerText() === '43', 'Gerätenummer statt fehlendem Foto');
 
-    await bank.locator('.kachel__kopf').click();
+    /* ---------- Foto groß, Text klappt auf: zwei getrennte Ziele ---------- */
+
+    const latz = page.locator('.kachel', { hasText: 'Latzug' });
+    await latz.locator('.kachel__foto').click();
+    await page.waitForSelector('#lupe:not([hidden])');
+    ok(true, 'ein Tipp aufs Foto zeigt es groß');
+    ok((await page.locator('#lupe-name').innerText()).includes('Latzug'),
+       'mit dem Namen der Übung');
+    ok((await page.locator('#lupe-nummer').innerText()) === '07',
+       'und der Gerätenummer, damit man die Maschine findet');
+    ok(!(await latz.getAttribute('class')).includes('ist-offen'),
+       'das Foto klappt die angetippte Übung NICHT auf');
+    ok((await page.locator('.kachel.ist-offen').innerText()).includes('Bankdrücken'),
+       'und reißt auch die gerade offene Übung nicht weg');
+
+    await page.click('#lupe');
+    ok(await page.locator('#lupe').isHidden(), 'ein zweiter Tipp schließt wieder');
+
+    await bank.locator('.kachel__text').click();
     await page.waitForSelector('.satz--dran');
     ok(await bank.locator('.regler__wert').first().innerText() === '80 kg', 'Gewicht vorbefüllt');
     ok(await bank.locator('.regler__wert').nth(1).innerText() === '12 Wdh', 'Wiederholungen vorbefüllt');

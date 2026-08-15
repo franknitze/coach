@@ -71,6 +71,31 @@ if (!is_file(PLAN_FILE)) {
 }
 
 ensure_dir(LOGS_DIR);
+
+/*
+ * Den Riegel im Datenverzeichnis notfalls selbst anlegen.
+ *
+ * Normalerweise reist data/.htaccess mit dem Deployment mit. Wird die App
+ * anders aufgespielt, etwa per FTP oder durch Entpacken eines Archivs,
+ * fehlt sie leicht, und versteckte Dateien übersieht man dabei besonders
+ * gern. Dann läge der Passwort-Hash im Web-Root ohne jeden Schutz.
+ */
+$riegel = DATA_DIR . '/.htaccess';
+if (!is_file($riegel)) {
+    file_put_contents($riegel, implode("\n", [
+        '# Kein Zugriff aus dem Browser. Von bin/init-config.php angelegt.',
+        '<IfModule mod_authz_core.c>',
+        '    Require all denied',
+        '</IfModule>',
+        '<IfModule !mod_authz_core.c>',
+        '    Order allow,deny',
+        '    Deny from all',
+        '</IfModule>',
+        '',
+    ]));
+    echo ".htaccess in data/ angelegt (Zugriffssperre).\n";
+}
+
 echo "\nFertig. data/ ist eingerichtet.\n";
 echo "Der API-Key für den n8n-Backup-Workflow steht in data/config.json.\n";
 

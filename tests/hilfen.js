@@ -88,7 +88,7 @@ function datenAnlegen(ordner) {
         latzug: {
             id: 'latzug', name: 'Latzug', muscle_group: 'ruecken',
             day: 'oberkoerper', order: 2, target_sets: 4, rep_min: 8, rep_max: 12,
-            weight_step: 5, photo: '', station: '07',
+            weight_step: 5, photo: 'latzug.jpg', station: '07',
         },
         schulterdruecken: {
             id: 'schulterdruecken', name: 'Schulterdrücken', muscle_group: 'schulter',
@@ -175,6 +175,7 @@ async function testlauf(name, port, lauf) {
     const hilfen = {
         page,
         basis: 'http://127.0.0.1:' + port,
+        datenordner: ordner,
 
         ok(bedingung, text) {
             if (bedingung) {

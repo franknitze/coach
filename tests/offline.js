@@ -24,11 +24,11 @@ module.exports = (port) => testlauf('Offline-Puffer', port, async (t) => {
 
     /* ---------- Netz weg ---------- */
 
-    t.konsoleErlauben(/ERR_INTERNET_DISCONNECTED|ERR_NETWORK_CHANGED/);
+    t.konsoleErlauben(/ERR_INTERNET_DISCONNECTED|ERR_NETWORK_CHANGED|ERR_FAILED/);
     await page.context().setOffline(true);
 
     const bank = page.locator('.kachel', { hasText: 'Bankdrücken' });
-    await bank.locator('.kachel__kopf').click();
+    await bank.locator('.kachel__text').click();
     await page.waitForSelector('.satz--dran');
 
     // Bewusst vom vorbefüllten Wert abweichen: so beweist der Lauf, dass
@@ -46,6 +46,9 @@ module.exports = (port) => testlauf('Offline-Puffer', port, async (t) => {
     }
 
     ok(await bank.locator('.satz--fertig').count() === 3, 'drei Sätze ohne Netz bestätigt');
+    ok(await page.locator('.kachel', { hasText: 'Latzug' })
+        .locator('.kachel__platzhalter').count() === 1,
+       'ein ohne Netz nicht ladbares Foto weicht der Gerätenummer, kein kaputtes Bildsymbol');
     ok(await bank.locator('.punkt.ist-voll').count() === 3, 'die Kachel zeigt sie als erledigt');
 
     const status = await page.locator('#status').innerText();

@@ -76,15 +76,28 @@ function version(string $pfad): string
         </header>
 
         <div class="tor__mitte">
-            <h1 class="tor__titel">Anmelden</h1>
-            <p class="tor__hinweis">Danach 30 Tage angemeldet.</p>
-
             <?php if (!$eingerichtet): ?>
-                <p class="fehler">
-                    Noch nicht eingerichtet. Auf dem Server einmal
-                    <code>php bin/init-config.php</code> ausführen.
+                <h1 class="tor__titel">Passwort festlegen</h1>
+                <p class="tor__hinweis">
+                    Einmalig. Danach ist diese Seite verschwunden.
                 </p>
+
+                <form id="einrichtung" novalidate>
+                    <label class="mini" for="passwort">Neues Passwort</label>
+                    <input class="feld" id="passwort" type="password" name="password"
+                           autocomplete="new-password" autofocus required>
+
+                    <label class="mini" for="passwort2">Noch einmal</label>
+                    <input class="feld" id="passwort2" type="password" name="password_repeat"
+                           autocomplete="new-password" required>
+
+                    <p class="hinweis">Mindestens 8 Zeichen.</p>
+                    <p class="fehler" id="fehler" role="alert"></p>
+                </form>
             <?php else: ?>
+                <h1 class="tor__titel">Anmelden</h1>
+                <p class="tor__hinweis">Danach 30 Tage angemeldet.</p>
+
                 <form id="anmeldung" novalidate>
                     <label class="mini" for="passwort">Passwort</label>
                     <input class="feld" id="passwort" type="password" name="password"
@@ -94,13 +107,17 @@ function version(string $pfad): string
             <?php endif; ?>
         </div>
 
-        <?php if ($eingerichtet): ?>
-            <div class="tor__fuss">
+        <div class="tor__fuss">
+            <?php if (!$eingerichtet): ?>
+                <button class="knopf" type="submit" form="einrichtung" id="einrichten">
+                    Passwort festlegen
+                </button>
+            <?php else: ?>
                 <button class="knopf" type="submit" form="anmeldung" id="anmelden">
                     Anmelden
                 </button>
-            </div>
-        <?php endif; ?>
+            <?php endif; ?>
+        </div>
     </main>
 
 <?php else: ?>
@@ -118,6 +135,16 @@ function version(string $pfad): string
     <main class="inhalt" id="app">
         <p class="leer__text">Wird geladen.</p>
     </main>
+
+    <!-- Großansicht eines Gerätefotos. Liegt außerhalb von #app, damit ein
+         Neuzeichnen der Liste das offene Bild nicht wegnimmt. -->
+    <div class="lupe" id="lupe" hidden>
+        <img class="lupe__bild" id="lupe-bild" src="" alt="">
+        <div class="lupe__fuss">
+            <span class="plakette" id="lupe-nummer" hidden></span>
+            <span class="lupe__name" id="lupe-name"></span>
+        </div>
+    </div>
 
     <!-- Der Pausen-Timer liegt außerhalb von #app, damit das Sekundenzählen
          nicht die ganze Übungsliste neu zeichnet. -->

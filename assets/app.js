@@ -105,6 +105,36 @@
 
     /* ---------- Anmeldung ---------- */
 
+    /* ---------- Einmalige Einrichtung ---------- */
+
+    const einrichtung = document.getElementById('einrichtung');
+
+    if (einrichtung) {
+        const knopf  = document.getElementById('einrichten');
+        const fehler = document.getElementById('fehler');
+
+        einrichtung.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            fehler.textContent = '';
+            knopf.disabled = true;
+            knopf.textContent = 'Moment';
+
+            const daten = {};
+            new FormData(einrichtung).forEach(function (wert, schluessel) {
+                daten[schluessel] = wert;
+            });
+
+            try {
+                await api('api/setup.php', { daten: daten });
+                location.reload();   // ab jetzt zeigt die Seite die Anmeldung
+            } catch (err) {
+                fehler.textContent = err.message;
+                knopf.disabled = false;
+                knopf.textContent = 'Passwort festlegen';
+            }
+        });
+    }
+
     const anmeldung = document.getElementById('anmeldung');
 
     if (anmeldung) {
@@ -329,6 +359,68 @@
     addEventListener('online', puffernSenden);
     addEventListener('offline', statusZeichnen);
 
+    /* ---------- Gerätefoto groß ----------
+     *
+     * Im Studio sucht man mit dem Bild die Maschine. Ein Vorschaubild von
+     * 76 Pixeln taugt dafür nicht. Ein Tipp zeigt es formatfüllend, der
+     * nächste schließt wieder, dazu die Gerätenummer groß daneben.
+     */
+
+    const lupe       = document.getElementById('lupe');
+    const lupeBild   = document.getElementById('lupe-bild');
+    const lupeName   = document.getElementById('lupe-name');
+    const lupeNummer = document.getElementById('lupe-nummer');
+
+    function lupeZeigen(datei, name, nummer) {
+        if (!lupe) {
+            return;
+        }
+        lupeBild.src = 'assets/img/exercises/' + datei;
+        lupeBild.alt = name;
+        lupeName.textContent = name;
+        lupeNummer.textContent = nummer;
+        lupeNummer.hidden = !nummer;
+        lupe.hidden = false;
+    }
+
+    function lupeSchliessen() {
+        if (lupe && !lupe.hidden) {
+            lupe.hidden = true;
+            lupeBild.src = '';   // Speicher freigeben
+        }
+    }
+
+    /*
+     * Lädt ein Foto nicht, tritt die Geräteplakette an seine Stelle.
+     *
+     * Im Funkloch ist genau das der Normalfall, solange das Bild noch nicht
+     * im Cache liegt. Ein kaputtes Bildsymbol auf jeder Kachel sähe nach
+     * Fehler aus; die Nummer ist ohnehin das, womit man das Gerät findet.
+     *
+     * Fehler von Bildern steigen nicht auf, deshalb in der Capture-Phase.
+     */
+    document.addEventListener('error', function (e) {
+        const bild = e.target;
+        if (!bild.classList || !bild.classList.contains('kachel__bild')) {
+            return;
+        }
+        const knopf = bild.closest('.kachel__foto');
+        if (knopf) {
+            knopf.outerHTML = '<span class="kachel__platzhalter">'
+                + esc(knopf.dataset.nummer || '?') + '</span>';
+        }
+    }, true);
+
+    if (lupe) {
+        // Egal wohin man tippt, es geht zu. Genau das erwartet man.
+        lupe.addEventListener('click', lupeSchliessen);
+        addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                lupeSchliessen();
+            }
+        });
+    }
+
     /* ---------- Pausen-Timer ----------
      *
      * Liegt außerhalb von #app und zählt per textContent herunter. Ein
@@ -530,9 +622,20 @@
         const heute  = u.today || [];
         const ziel   = u.target_sets;
 
+        /*
+         * Das Foto ist ein eigenes Ziel und liegt NICHT im Aufklapp-Knopf.
+         * Ein Tipp darauf zeigt das Gerät groß; im Studio sucht man damit
+         * die Maschine, und dafür ist ein 76-Pixel-Bild zu klein.
+         *
+         * Ohne Foto bleibt die Geräteplakette Teil der Aufklappfläche, dort
+         * gäbe es ja nichts zu vergrößern.
+         */
         const bild = u.photo
-            ? '<img class="kachel__bild" src="assets/img/exercises/' + esc(u.photo)
-              + '" alt="" loading="lazy">'
+            ? '<button class="kachel__foto" data-foto="' + esc(u.photo)
+              + '" data-name="' + esc(u.name) + '" data-nummer="' + esc(u.station || '')
+              + '" aria-label="Foto von ' + esc(u.name) + ' vergrößern">'
+              + '<img class="kachel__bild" src="assets/img/exercises/' + esc(u.photo)
+              + '" alt="" loading="lazy"></button>'
             : '<span class="kachel__platzhalter">'
               + (u.station ? esc(u.station) : '?') + '</span>';
 
@@ -563,11 +666,14 @@
 
         const fertig = heute.length >= ziel;
 
+        // Zwei getrennte Ziele nebeneinander: das Foto vergrößert, der Text
+        // klappt auf. Verschachtelte Knöpfe wären ungültiges HTML, deshalb
+        // ist der Kopf ein div und nicht selbst ein Knopf.
         let html = '<section class="kachel' + (offen ? ' ist-offen' : '')
             + (fertig ? ' ist-fertig' : '') + '" data-uebung="' + esc(u.id) + '">'
-            + '<button class="kachel__kopf" data-oeffne="' + esc(u.id) + '">'
+            + '<div class="kachel__kopf">'
             + bild
-            + '<span class="kachel__text">'
+            + '<button class="kachel__text" data-oeffne="' + esc(u.id) + '">'
             + '<span class="kachel__name">' + esc(u.name) + '</span>'
             + '<span class="kachel__ziel">' + ziel + ' Sätze · '
             + u.rep_min + '–' + u.rep_max + ' Wdh</span>'
@@ -576,7 +682,7 @@
                 : '')
             + ansage
             + '<span class="punkte">' + punkte + '</span>'
-            + '</span></button>';
+            + '</button></div>';
 
         if (offen) {
             html += zeichneSaetze(u);
@@ -860,6 +966,20 @@
             + '<button class="kopfknopf" data-gehe="start">Fertig</button>'
             + '</div>';
 
+        // Kein Plan, keine Tage: dann gibt es hier nichts zu bedienen, und
+        // das muss dastehen. Ein leerer Bildschirm mit Überschriften lässt
+        // einen ratlos zurück, weil man nach einem Knopf sucht, den es
+        // nicht gibt.
+        if (Object.keys(tage).length === 0) {
+            return html + '<section class="leer">'
+                + '<h2 class="leer__titel">Hier ist noch kein Plan</h2>'
+                + '<p class="leer__text">Es sind weder Trainingstage noch Übungen '
+                + 'hinterlegt. Der Plan wird auf dem Server einmalig angelegt, '
+                + 'danach lässt er sich hier ändern.</p>'
+                + '<ul class="schritte"><li>php bin/plan-anlegen.php</li></ul>'
+                + '</section>';
+        }
+
         Object.keys(tage).forEach(function (tag) {
             const liste = Object.values(zustand.uebungen)
                 .filter(function (u) { return u.day === tag; })
@@ -990,6 +1110,13 @@
     function zeichneSchwerpunkte() {
         const p = zustand.plan.muscle_priorities || {};
 
+        // Ohne Muskelgruppen gäbe es eine Überschrift ohne einen einzigen
+        // Schalter darunter. Eine Rubrik, die nichts enthält, ist keine
+        // Rubrik, sondern ein Fehler auf dem Bildschirm.
+        if (Object.keys(p).length === 0) {
+            return '';
+        }
+
         let html = '<section class="tag">'
             + '<div class="tag__kopf"><span class="tag__name">Schwerpunkte</span></div>'
             + '<p class="tag__leer">Eine Gruppe auf Schwerpunkt setzen heißt: mehr '
@@ -1066,7 +1193,7 @@
     /* ---------- Ereignisse ---------- */
 
     app.addEventListener('click', async function (e) {
-        const ziel = e.target.closest('[data-gehe], [data-tag], [data-oeffne], '
+        const ziel = e.target.closest('[data-gehe], [data-tag], [data-oeffne], [data-foto], '
             + '[data-bestaetige], [data-korrigiere], [data-extra], [data-bearbeite], '
             + '[data-neu], [data-abbrechen], [data-frage], [data-loesche], [data-prio]');
         if (!ziel) {
@@ -1104,6 +1231,14 @@
         }
 
         /* --- Studio --- */
+
+        if (d.foto) {
+            // Nicht die Übung auf- oder zuklappen: das Foto hat sein
+            // eigenes Ziel, sonst würde ein Blick aufs Gerät die Kachel
+            // schließen, an der man gerade arbeitet.
+            lupeZeigen(d.foto, d.name || '', d.nummer || '');
+            return;
+        }
 
         if (d.oeffne) {
             zustand.offen = zustand.offen === d.oeffne ? null : d.oeffne;
