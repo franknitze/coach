@@ -28,7 +28,24 @@ RedirectMatch 404 ^/(lib|bin)(/|$)
 # IfModule ist Pflicht: fehlt mod_headers, quittiert Apache die Direktive
 # mit einem 500 auf der gesamten Seite.
 <IfModule mod_headers.c>
+    # Der Service Worker steuert, was zwischengespeichert wird. Läge er
+    # selbst im Cache, bliebe ein Gerät auf einer alten Fassung hängen.
     <Files "service-worker.js">
-        Header set Cache-Control "no-cache, must-revalidate"
+        Header set Cache-Control "no-store, must-revalidate"
     </Files>
+
+    # Code wird nie zwischengespeichert. Die Dateizeit in der URL würde
+    # zwar reichen, aber die Regel soll ohne Wenn und Aber gelten: was
+    # ausgeliefert wird, ist der aktuelle Stand.
+    <FilesMatch "\.(js|css)$">
+        Header set Cache-Control "no-store, must-revalidate"
+    </FilesMatch>
+
+    # Die Gerätefotos ändern sich praktisch nie und wiegen zusammen 2 MB.
+    # Die bei jedem Aufruf neu über schlechten Studioempfang zu ziehen,
+    # wäre die falsche Sparsamkeit. Sie bekommen einen neuen Dateinamen,
+    # wenn sich etwas ändert.
+    <FilesMatch "\.(jpg|png)$">
+        Header set Cache-Control "public, max-age=604800"
+    </FilesMatch>
 </IfModule>

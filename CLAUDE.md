@@ -120,13 +120,17 @@ Was **nicht** offline geht: der Verwaltungsbereich (wird zu Hause bedient, der V
 
 Drei Regeln im Service Worker, die Reihenfolge ist wichtig:
 
+**Grundregel: mit Netz kommt NICHTS aus dem Cache.** Jede Anfrage geht an den Server, die Antwort von dort wird ausgeliefert. Der Cache ist ausschließlich der Notnagel, wenn gar keine Verbindung besteht. Vorgabe von Frank, und sie hat einen Anlass: eine frühere Fassung bediente statische Dateien zuerst aus dem Cache und erneuerte sie nur im Hintergrund. Zusammen mit einem unversionierten Eintrag und `ignoreSearch: true` blieb dadurch **jede Änderung beim Laden unsichtbar**. Eine App, bei der man nie sicher weiß, ob man den aktuellen Stand sieht, ist schlimmer als eine, die eine halbe Sekunde länger lädt.
+
+Dazu auf HTTP-Ebene: `index.php` sendet `Cache-Control: no-store`, `.htaccess` ebenso für `.js` und `.css`. Nur die Gerätefotos dürfen eine Woche liegenbleiben, sie ändern sich praktisch nie und wiegen zusammen 2 MB.
+
 1. **`api/` kommt nie aus dem Cache.** Ein zwischengespeicherter Trainingsstand wäre schlimmer als eine Fehlermeldung, weil die App Sätze zeigte, die längst anders auf der Platte liegen. Ein Test prüft, dass kein einziger API-Aufruf im Cache landet.
-2. **Seitenaufrufe zuerst aus dem Netz**, Cache nur als Notnagel. `index.php` entscheidet über das Session-Gate, und diese Entscheidung darf nicht altern. Gemerkt wird nur die **angemeldete** Hülle, erkennbar am Header `X-Angemeldet: 1`. Läge die Anmeldeseite im Cache, stünde man im Funkloch vor einem Formular, das sich nicht abschicken lässt.
-3. **Statisches zuerst aus dem Cache** und im Hintergrund erneuern.
+2. **Seitenaufrufe** wie alles andere: Netz zuerst, Cache nur als Notnagel. `index.php` entscheidet über das Session-Gate, und diese Entscheidung darf nicht altern. Gemerkt wird nur die **angemeldete** Hülle, erkennbar am Header `X-Angemeldet: 1`. Läge die Anmeldeseite im Cache, stünde man im Funkloch vor einem Formular, das sich nicht abschicken lässt.
+3. **Ein neuer Service Worker, der einen alten ablöst, lädt die Seite einmal neu.** Die Bedingung `navigator.serviceWorker.controller` davor ist Pflicht: beim ersten Besuch übernimmt der Worker per `clients.claim()` ebenfalls, und ohne die Abfrage lüde die Seite mitten im Anmelden neu und nähme das eingetippte Passwort mit.
 
 Zwei Dinge, die man leicht übersieht:
 
-- **`CACHE = 'coach-v1'` in `service-worker.js` hochzählen**, sobald sich die Liste der gecachten Dateien ändert. Sonst behalten bereits installierte Geräte den alten Stand.
+- **`CACHE` in `service-worker.js` hochzählen**, sobald sich die Liste der gecachten Dateien ändert. Sonst behalten bereits installierte Geräte den alten Stand.
 - CSS und JS tragen die **Dateizeit als Version** (`version()` in `index.php`). Ein festes `?v=1` wäre wirkungslos gewesen: nach einem Deployment hätte der Browser die alte Datei behalten, und mit Service Worker zusätzlich aus dem Cache bedient.
 
 Icons neu erzeugen: `node bin/icons.js`. Die PNG liegen im Repo, auf dem Server wird nichts gebaut.

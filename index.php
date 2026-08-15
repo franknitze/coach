@@ -22,6 +22,15 @@ $uebungen     = $angemeldet ? (array) json_read(EXERCISES_FILE, []) : [];
  */
 header('X-Angemeldet: ' . ($angemeldet ? '1' : '0'));
 
+/*
+ * Die Seite selbst wird nie zwischengespeichert. Sie entscheidet über das
+ * Session-Gate und verweist auf die aktuellen Versionen von CSS und JS;
+ * eine alte Fassung davon aus dem Browser-Cache hält den ganzen Rest auf
+ * altem Stand.
+ */
+header('Cache-Control: no-store, must-revalidate');
+header('Pragma: no-cache');
+
 function h(string $text): string
 {
     return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
@@ -132,6 +141,25 @@ if ('serviceWorker' in navigator) {
             // startet nur nicht ganz so schnell. Kein Grund für eine Meldung.
         });
     });
+
+    /*
+     * Löst ein NEUER Service Worker einen alten ab, wird einmal neu
+     * geladen, damit man nicht mit dem vorherigen Stand weiterarbeitet.
+     *
+     * Die Abfrage auf einen bereits vorhandenen Controller ist der Kern:
+     * beim allerersten Besuch übernimmt der Service Worker per
+     * clients.claim() ebenfalls, und ohne diese Bedingung lüde die Seite
+     * mitten im Anmelden neu und nähme das eingetippte Passwort mit.
+     */
+    if (navigator.serviceWorker.controller) {
+        var neugeladen = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function () {
+            if (!neugeladen) {
+                neugeladen = true;
+                location.reload();
+            }
+        });
+    }
 }
 </script>
 </body>

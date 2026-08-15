@@ -45,6 +45,41 @@ module.exports = (port) => testlauf('PWA und Export', port, async (t) => {
     ok(imCache.some((p) => p.endsWith('/assets/app.js')), 'JS liegt im Cache');
     ok(imCache.some((p) => p.includes('icon-192')), 'Icon liegt im Cache');
 
+    /* ---------- Eine geänderte Datei muss durchkommen ----------
+     *
+     * index.php hängt CSS und JS die Dateizeit an. Eine geänderte Datei hat
+     * also eine andere URL und darf NICHT aus dem Cache bedient werden.
+     * Vorher schlug der Service Worker mit ignoreSearch nach, fand den
+     * alten Eintrag und lieferte ihn aus: jede Änderung war beim ersten
+     * Laden unsichtbar. Der Test legt eine Attrappe unter der
+     * unversionierten URL ab und prüft, dass sie nicht ausgeliefert wird.
+     */
+
+    await page.evaluate(async () => {
+        const cache = await caches.open((await caches.keys())[0]);
+        await cache.put('assets/app.js',
+            new Response('/* ALTE FASSUNG */', { headers: { 'Content-Type': 'text/javascript' } }));
+    });
+
+    const geliefert = await page.evaluate(async () =>
+        (await fetch('assets/app.js?v=999999999')).text());
+
+    ok(!geliefert.includes('ALTE FASSUNG'),
+       'mit Netz kommt nichts aus dem Cache, auch nicht bei passendem Eintrag');
+    ok(geliefert.includes('zeichneStudio'),
+       'ausgeliefert wird die echte Datei vom Server');
+
+    // Und ohne Netz greift der Notnagel doch, sonst startet die App im
+    // Funkloch nicht.
+    await page.context().setOffline(true);
+    const ohneNetz = await page.evaluate(async () => {
+        try { return await (await fetch('assets/app.js')).text(); }
+        catch (e) { return 'FEHLGESCHLAGEN'; }
+    });
+    ok(ohneNetz.includes('ALTE FASSUNG'),
+       'ohne Netz wird der Cache-Eintrag doch bedient (Notnagel)');
+    await page.context().setOffline(false);
+
     /* ---------- Die API darf niemals aus dem Cache kommen ---------- */
 
     await page.click('[data-gehe="plan"]');

@@ -1,33 +1,32 @@
 /*
- * Service Worker: App-Shell im Cache, damit die App sofort startet und
- * nach dem Ablegen auf dem Homescreen wie eine App wirkt (SPEC.md §10,
- * Phase 5).
+ * Service Worker.
  *
- * WAS DAS NICHT LEISTET: Training ohne Netz. Die Sätze gehen weiterhin
- * sofort an api/session.php. Ohne Verbindung startet zwar die Hülle, aber
- * es lassen sich weder Übungen laden noch Sätze speichern. Wenn im Studio
- * kein Empfang ist, wäre das eine eigene Ausbaustufe (Sätze lokal in
- * IndexedDB puffern und später nachreichen), keine Sache des Cachings.
+ * REGEL: Solange Netz da ist, kommt NICHTS aus dem Cache. Jede Anfrage
+ * geht an den Server, und die Antwort von dort wird ausgeliefert. Der
+ * Cache ist ausschließlich der Notnagel für den Fall, dass gar keine
+ * Verbindung besteht.
  *
- * Drei Regeln, und die Reihenfolge ist wichtig:
+ * Das ist die Vorgabe von Frank, und sie hat einen konkreten Anlass: die
+ * frühere Fassung bediente statische Dateien zuerst aus dem Cache und
+ * erneuerte sie nur im Hintergrund. Zusammen mit einem unversionierten
+ * Eintrag führte das dazu, dass Änderungen beim Laden unsichtbar blieben.
+ * Eine App, bei der man nie sicher weiß, ob man den aktuellen Stand sieht,
+ * ist schlimmer als eine, die eine halbe Sekunde länger lädt.
  *
- * 1. api/ wird NIE aus dem Cache bedient. Ein zwischengespeicherter
- *    Trainingsstand wäre schlimmer als eine Fehlermeldung: die App zeigte
- *    Sätze an, die längst anders auf der Platte liegen.
- * 2. Seitenaufrufe zuerst aus dem Netz, der Cache ist nur der Notnagel.
- *    index.php entscheidet über das Session-Gate, und diese Entscheidung
- *    darf nicht altern.
- * 3. Statische Dateien zuerst aus dem Cache und im Hintergrund erneuern.
+ * Der Cache bleibt trotzdem befüllt, weil im Studio schlechter Empfang
+ * herrscht und die App dort auch ohne Verbindung starten muss.
+ *
+ * Was NIE in den Cache geht: alles unter api/. Ein zwischengespeicherter
+ * Trainingsstand wäre schlimmer als eine Fehlermeldung.
  */
 
-const CACHE = 'coach-v1';
+const CACHE = 'coach-v3';
 
-// Bei Änderungen an dieser Liste oder am Cache-Namen die Version hochzählen,
-// sonst behalten bereits installierte Geräte den alten Stand.
+// Nur der Notvorrat für den Start ohne Netz. CSS und JS stehen bewusst
+// nicht drin: die tragen die Dateizeit in der URL und landen beim ersten
+// echten Abruf unter genau dieser URL im Cache.
 const SCHALE = [
     './',
-    'assets/app.css',
-    'assets/app.js',
     'manifest.json',
     'assets/icons/icon-192.png',
     'assets/icons/icon-512.png',
@@ -63,44 +62,34 @@ self.addEventListener('fetch', (e) => {
         return;
     }
 
-    // 1. Die API immer frisch, ohne Ausnahme.
+    // Die API immer frisch, ohne Cache und ohne Notnagel.
     if (url.pathname.includes('/api/')) {
         return;
     }
 
-    // 2. Seitenaufrufe: Netz zuerst, Cache nur wenn nichts geht.
-    if (anfrage.mode === 'navigate') {
-        e.respondWith(
-            fetch(anfrage)
-                .then((antwort) => {
-                    // Nur die angemeldete Hülle merken. Läge die
-                    // Anmeldeseite im Cache, stünde man ohne Netz vor
-                    // einem Formular, das sich nicht abschicken lässt.
-                    if (antwort.ok && antwort.headers.get('X-Angemeldet') === '1') {
-                        const kopie = antwort.clone();
-                        caches.open(CACHE).then((c) => c.put('./', kopie));
-                    }
-                    return antwort;
-                })
-                .catch(() => caches.match('./', { ignoreSearch: true }))
-        );
-        return;
-    }
+    const istSeite = anfrage.mode === 'navigate';
 
-    // 3. Statisches: Cache zuerst, im Hintergrund erneuern.
-    //    ignoreSearch, weil index.php an CSS und JS eine Version aus der
-    //    Dateizeit hängt und die URL sich bei jedem Deployment ändert.
     e.respondWith(
-        caches.match(anfrage, { ignoreSearch: true }).then((treffer) => {
-            const ausDemNetz = fetch(anfrage).then((antwort) => {
+        fetch(anfrage)
+            .then((antwort) => {
+                // Vom Netz gekommen, also ausliefern. Eine Kopie in den
+                // Cache legen, damit es ohne Verbindung noch etwas gibt.
                 if (antwort.ok) {
-                    const kopie = antwort.clone();
-                    caches.open(CACHE).then((c) => c.put(anfrage, kopie));
+                    // Bei Seiten nur die angemeldete Hülle merken, sonst
+                    // stünde man im Funkloch vor dem Anmeldeformular.
+                    const merken = !istSeite || antwort.headers.get('X-Angemeldet') === '1';
+                    if (merken) {
+                        const kopie = antwort.clone();
+                        caches.open(CACHE).then((c) => c.put(istSeite ? './' : anfrage, kopie));
+                    }
                 }
                 return antwort;
-            }).catch(() => treffer);
-
-            return treffer || ausDemNetz;
-        })
+            })
+            .catch(() => {
+                // Kein Netz. Jetzt und nur jetzt der Cache.
+                return istSeite
+                    ? caches.match('./', { ignoreSearch: true })
+                    : caches.match(anfrage);
+            })
     );
 });
