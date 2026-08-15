@@ -88,7 +88,7 @@ function datenAnlegen(ordner) {
         latzug: {
             id: 'latzug', name: 'Latzug', muscle_group: 'ruecken',
             day: 'oberkoerper', order: 2, target_sets: 4, rep_min: 8, rep_max: 12,
-            weight_step: 5, photo: 'latzug.jpg', station: '07',
+            weight_step: 5, photo: 'IMG_1683.jpg', station: '07',
         },
         schulterdruecken: {
             id: 'schulterdruecken', name: 'Schulterdrücken', muscle_group: 'schulter',
@@ -131,7 +131,12 @@ async function testlauf(name, port, lauf) {
     const ordner = fs.mkdtempSync(path.join(os.tmpdir(), 'coach-test-'));
     datenAnlegen(ordner);
 
-    const server = spawn('php', ['-S', '127.0.0.1:' + port, '-t', WURZEL], {
+    // Dieselben Upload-Grenzen wie auf dem Server, sonst scheitert der
+    // Bilder-Test an der 2-MB-Vorgabe des eingebauten PHP-Servers.
+    const server = spawn('php', [
+        '-d', 'upload_max_filesize=512M', '-d', 'post_max_size=512M',
+        '-S', '127.0.0.1:' + port, '-t', WURZEL,
+    ], {
         cwd: WURZEL,
         env: Object.assign({}, process.env, { COACH_DATA: ordner }),
         stdio: 'ignore',

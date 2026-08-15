@@ -76,8 +76,10 @@
      * aber der lesbare Name: "ruecken" ist kein Wort.
      */
     const GRUPPEN = {
-        brust: 'Brust', ruecken: 'Rücken', beine: 'Beine',
-        schulter: 'Schulter', bizeps: 'Bizeps', trizeps: 'Trizeps',
+        brust: 'Brust', ruecken: 'Rücken', schulter: 'Schulter',
+        quadrizeps: 'Quadrizeps', beinbeuger: 'Beinbeuger', waden: 'Waden',
+        bizeps: 'Bizeps', trizeps: 'Trizeps', bauch: 'Bauch',
+        beine: 'Beine',   // aus älteren Plänen
     };
 
     function gruppenName(schluessel) {
@@ -185,6 +187,8 @@
         entwurf: {},           // laufende Eingabe je Übung
         uebungId: null,        // Übung in der Detailansicht, null = neue
         neuTag: null,          // Trainingstag einer neu angelegten Übung
+        fotos: null,           // Dateinamen aus api/fotos.php
+        bildLoeschfrage: null, // Foto, das gerade zum Löschen angefragt ist
         verlauf: null,         // Antwort von api/history.php
         punktIndex: null,      // gewählte Einheit im Diagramm, null = letzte
         ausPuffer: false,      // Studio-Ansicht kommt aus dem lokalen Stand
@@ -1009,18 +1013,30 @@
     }
 
     function zeichneZeile(u) {
-        const plakette = u.station
-            ? '<span class="plakette">' + esc(u.station) + '</span>'
-            : '<span class="plakette plakette--leer" title="Keine Gerätenummer">–</span>';
+        /*
+         * Vorschaubild wo vorhanden, sonst die Gerätenummer. Auch hier ist
+         * das Bild ein eigenes Ziel: antippen zeigt es groß, der Rest der
+         * Zeile führt in die Übung. Man erkennt ein Gerät schneller am
+         * Bild als am Namen.
+         */
+        const vorschau = u.photo
+            ? '<button class="zeile__foto" data-foto="' + esc(u.photo)
+              + '" data-name="' + esc(u.name) + '" data-nummer="' + esc(u.station || '')
+              + '" aria-label="Foto vergrößern">'
+              + '<img src="assets/img/exercises/' + esc(u.photo)
+              + '" alt="" loading="lazy" class="kachel__bild"></button>'
+            : (u.station
+                ? '<span class="plakette">' + esc(u.station) + '</span>'
+                : '<span class="plakette plakette--leer" title="Kein Foto, keine Nummer">–</span>');
 
-        return '<button class="zeile" data-bearbeite="' + esc(u.id) + '">'
-            + plakette
-            + '<span class="zeile__text">'
+        return '<div class="zeile">'
+            + vorschau
+            + '<button class="zeile__text" data-bearbeite="' + esc(u.id) + '">'
             + '<span class="zeile__name">' + esc(u.name) + '</span>'
             + '<span class="zeile__daten">'
             + esc(gruppenName(u.muscle_group)) + ' · ' + u.target_sets + '×'
             + u.rep_min + '–' + u.rep_max + ' · ' + zahl(u.weight_step) + ' kg'
-            + '</span></span></button>';
+            + '</span></button></div>';
     }
 
     function zeichneEditor(u) {
@@ -1083,11 +1099,8 @@
         });
         html += '</select>'
 
-            + '<label class="mini" for="e-photo">Foto</label>'
-            + '<input class="feld feld--text" id="e-photo" name="photo" '
-            + 'value="' + esc(u.photo || '') + '" placeholder="'
-            + esc((u.id || 'uebung') + '.jpg') + '">'
-            + '<p class="hinweis">Dateiname aus assets/img/exercises/</p>'
+            + '<label class="mini">Foto</label>'
+            + zeichneBildauswahl(u.photo || '')
 
             + '<p class="fehler" role="alert">' + esc(zustand.meldung) + '</p>'
 
@@ -1105,6 +1118,76 @@
         }
 
         return html + '</form>';
+    }
+
+    /**
+     * Bildauswahl: alle Studiofotos zum Antippen.
+     *
+     * Vorher stand hier ein Textfeld für einen Dateinamen. Das setzt
+     * voraus, dass man weiß, wie die Datei heißt, und dass jemand die
+     * Zuordnung vorher richtig geraten hat. Beides ist nicht der Fall:
+     * auf einem Foto sieht man das Gerät, aber nicht, welche Übung
+     * jemand daran macht. Das kann nur Frank entscheiden, also gehört
+     * die Entscheidung in die App und nicht in eine Konfigurationsdatei.
+     */
+    function zeichneBildauswahl(gewaehlt) {
+        const fotos = zustand.fotos || [];
+
+        if (fotos.length === 0) {
+            return '<p class="hinweis">Keine Fotos gefunden. Originale nach '
+                 + '<code>images/</code> legen und <code>bin/fotos.sh</code> laufen lassen.</p>';
+        }
+
+        let html = '<input type="hidden" name="photo" id="e-photo" value="'
+                 + esc(gewaehlt) + '">'
+
+                 // Kamera direkt: capture lässt das Handy die Kamera öffnen,
+                 // statt in der Fotomediathek zu landen. Man steht ja vor
+                 // dem Gerät, wenn man merkt, dass das Bild fehlt.
+                 + '<label class="hochladen">'
+                 + '<input type="file" id="e-upload" accept="image/*" capture="environment">'
+                 + '<span id="hochladen-text">Foto aufnehmen oder wählen</span>'
+                 + '</label>'
+
+                 + '<div class="bildwahl" id="bildwahl">'
+                 + '<button type="button" class="bildwahl__keins'
+                 + (gewaehlt ? '' : ' ist-gewaehlt') + '" data-bild="">kein Foto</button>';
+
+        fotos.forEach(function (datei) {
+            html += '<span class="bildwahl__feld">'
+                 + '<button type="button" class="bildwahl__stueck'
+                 + (datei === gewaehlt ? ' ist-gewaehlt' : '')
+                 + '" data-bild="' + esc(datei) + '" title="' + esc(datei) + '">'
+                 + '<img src="assets/img/exercises/' + esc(datei)
+                 + '" alt="" loading="lazy"></button>'
+                 // Löschen in zwei Schritten, wie überall sonst in der App:
+                 // ein Bild ist schnell weg und nicht wiederzuholen.
+                 + '<button type="button" class="bildwahl__weg'
+                 + (zustand.bildLoeschfrage === datei ? ' ist-scharf' : '')
+                 + '" data-bildweg="' + esc(datei) + '" title="Foto löschen">'
+                 + (zustand.bildLoeschfrage === datei ? 'wirklich?' : '×')
+                 + '</button></span>';
+        });
+
+        return html + '</div><p class="hinweis">' + fotos.length
+             + ' Fotos aus dem Studio. Antippen wählt aus.</p>';
+    }
+
+    /**
+     * Zeichnet nur die Bildauswahl neu.
+     *
+     * Die ganze Ansicht neu zu zeichnen würde halb eingetippte Werte im
+     * Formular darüber wegnehmen.
+     */
+    function zeichnenNurAuswahl() {
+        const alt = document.getElementById('bildwahl');
+        const versteckt = document.getElementById('e-photo');
+        if (!alt || !versteckt) {
+            return;
+        }
+        const huelle = document.createElement('div');
+        huelle.innerHTML = zeichneBildauswahl(versteckt.value);
+        alt.replaceWith(huelle.querySelector('#bildwahl'));
     }
 
     function zeichneSchwerpunkte() {
@@ -1193,7 +1276,7 @@
     /* ---------- Ereignisse ---------- */
 
     app.addEventListener('click', async function (e) {
-        const ziel = e.target.closest('[data-gehe], [data-tag], [data-oeffne], [data-foto], '
+        const ziel = e.target.closest('[data-gehe], [data-tag], [data-oeffne], [data-foto], [data-bild], [data-bildweg], '
             + '[data-bestaetige], [data-korrigiere], [data-extra], [data-bearbeite], '
             + '[data-neu], [data-abbrechen], [data-frage], [data-loesche], [data-prio]');
         if (!ziel) {
@@ -1231,6 +1314,47 @@
         }
 
         /* --- Studio --- */
+
+        if (d.bildweg) {
+            if (zustand.bildLoeschfrage !== d.bildweg) {
+                zustand.bildLoeschfrage = d.bildweg;   // erster Schritt
+                return zeichnenNurAuswahl();
+            }
+
+            try {
+                const antwort = await api('api/foto-loeschen.php',
+                    { daten: { photo: d.bildweg } });
+                zustand.uebungen = antwort.exercises || {};
+                zustand.fotos = (zustand.fotos || [])
+                    .filter(function (f) { return f !== d.bildweg; });
+
+                const versteckt = document.getElementById('e-photo');
+                if (versteckt && versteckt.value === d.bildweg) {
+                    versteckt.value = '';
+                }
+            } catch (err) {
+                zustand.meldung = err.message;
+            }
+            zustand.bildLoeschfrage = null;
+            return zeichnenNurAuswahl();
+        }
+
+        if (ziel.dataset.bild !== undefined) {
+            zustand.bildLoeschfrage = null;
+            // Nur die Markierung umsetzen, nicht die ganze Ansicht neu
+            // zeichnen: sonst verlöre das halb ausgefüllte Formular
+            // darüber seine Eingaben.
+            const feld = document.getElementById('e-photo');
+            if (feld) {
+                feld.value = ziel.dataset.bild;
+                const wahl = document.getElementById('bildwahl');
+                wahl.querySelectorAll('.ist-gewaehlt').forEach(function (k) {
+                    k.classList.remove('ist-gewaehlt');
+                });
+                ziel.classList.add('ist-gewaehlt');
+            }
+            return;
+        }
 
         if (d.foto) {
             // Nicht die Übung auf- oder zuklappen: das Foto hat sein
@@ -1398,6 +1522,80 @@
                 zeichnen();
             }
         }
+    });
+
+    /*
+     * Foto hochladen.
+     *
+     * Läuft über FormData und nicht über die JSON-Hilfsfunktion, weil eine
+     * Datei nun mal nicht in JSON passt. Nach dem Hochladen wird das neue
+     * Bild sofort ausgewählt: wer gerade das Gerät fotografiert hat, will
+     * es nicht anschließend in einem Raster suchen.
+     *
+     * Der Rest des Formulars wird dabei nicht neu gezeichnet, sonst wären
+     * halb eingetippte Werte weg.
+     */
+    app.addEventListener('change', async function (e) {
+        const feld = e.target;
+        if (feld.id !== 'e-upload' || !feld.files || !feld.files[0]) {
+            return;
+        }
+
+        const anzeige = document.getElementById('hochladen-text');
+        const alterText = anzeige ? anzeige.textContent : '';
+        if (anzeige) {
+            anzeige.textContent = 'Wird hochgeladen';
+        }
+
+        const paket = new FormData();
+        paket.append('foto', feld.files[0]);
+
+        try {
+            const antwort = await fetch('api/foto-upload.php', {
+                method: 'POST',
+                body: paket,
+            });
+            const inhalt = await antwort.json();
+
+            if (!antwort.ok) {
+                throw new Error(inhalt.error || 'Der Upload ist fehlgeschlagen.');
+            }
+
+            const datei = inhalt.photo;
+            zustand.fotos = [datei].concat(zustand.fotos || []);
+
+            // Neues Bild vorn einhängen und gleich auswählen.
+            const wahl = document.getElementById('bildwahl');
+            const versteckt = document.getElementById('e-photo');
+            if (wahl && versteckt) {
+                wahl.querySelectorAll('.ist-gewaehlt').forEach(function (k) {
+                    k.classList.remove('ist-gewaehlt');
+                });
+                const knopf = document.createElement('button');
+                knopf.type = 'button';
+                knopf.className = 'bildwahl__stueck ist-gewaehlt';
+                knopf.dataset.bild = datei;
+                knopf.title = datei;
+                knopf.innerHTML = '<img src="assets/img/exercises/' + esc(datei) + '" alt="">';
+                wahl.insertBefore(knopf, wahl.children[1] || null);
+                versteckt.value = datei;
+            }
+
+            if (anzeige) {
+                anzeige.textContent = 'Foto übernommen, noch speichern';
+            }
+        } catch (err) {
+            if (anzeige) {
+                anzeige.textContent = err.message;
+            }
+        }
+
+        feld.value = '';   // damit dieselbe Datei erneut gewählt werden kann
+        setTimeout(function () {
+            if (anzeige && anzeige.textContent !== alterText) {
+                anzeige.textContent = alterText;
+            }
+        }, 4000);
     });
 
     app.addEventListener('submit', async function (e) {
@@ -1569,6 +1767,12 @@
             ]);
             zustand.plan = einstellungen.plan || {};
             zustand.uebungen = uebungen.exercises || {};
+
+            // Die Fotoliste im Hintergrund holen, sie wird erst im
+            // Verwaltungsbereich gebraucht und soll den Start nicht bremsen.
+            api('api/fotos.php')
+                .then(function (a) { zustand.fotos = a.photos || []; })
+                .catch(function () { zustand.fotos = []; });
 
             if (Object.keys(zustand.uebungen).length > 0) {
                 try {

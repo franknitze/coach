@@ -1,84 +1,126 @@
 # Trainingsplan
 
-> Ziel: **Muskelaufbau**. Aufgestellt aus den Eckdaten in `SPEC.md` §12 und
-> der Geräteaufnahme aus `images/` (49 Fotos, Atrium Fitness Hannover).
-> Die Zahlen stehen in `bin/plan-anlegen.php`, hier steht das Warum.
+> Ziel: **maximaler Muskelaufbau** bei einem Trainierenden mit über zwei
+> Jahren Erfahrung, der bereits kräftig ist.
+>
+> Dieser Plan beschreibt **Bewegungen, keine Geräte**. Womit eine Bewegung
+> ausgeführt wird, entscheidet sich danach. Die Reihenfolge, die Satzzahlen
+> und die Wiederholungsbereiche sind der eigentliche Plan; das Gerät ist
+> austauschbar, solange die Bewegung dieselbe bleibt.
 
-## Der Aufbau in einem Satz
+## Aufbau
 
-Zwei Einheiten im Wechsel, A Oberkörper und B Unterkörper, jede mit hohem Volumen auf wenigen Gruppen, jeder Arbeitssatz nah ans Muskelversagen.
+Drei Einheiten im Wechsel: **A Oberkörper, B Ganzkörper, C Unterkörper.**
 
-## Keine Wochentage
+Nach A kommt B, nach B kommt C, dann wieder A. Nicht an Wochentage gebunden. Fällt eine Woche aus, läuft die Reihenfolge weiter, wo sie unterbrochen wurde.
 
-Der Plan ist **nicht** an Montag, Mittwoch, Freitag gebunden. Was zählt, ist die Reihenfolge: nach A kommt B, nach B kommt A. Die App leitet den nächsten Tag aus der zuletzt absolvierten Einheit ab, nicht aus dem Kalender.
+**Warum diese drei und nicht zwei.** Jede Muskelgruppe wird pro Durchgang zweimal getroffen: der Oberkörper an Tag A und Tag B, der Unterkörper an Tag B und Tag C. Zweimal pro Woche ist für Muskelaufbau der belegte Richtwert, einmal ist zu selten und dreimal geht bei diesem Volumen auf die Erholung. Der Ganzkörpertag in der Mitte ist die Klammer: er zieht beide Hälften auf die doppelte Frequenz, ohne dass eine einzelne Einheit überlang wird.
 
-Zwei Wochen Urlaub, eine Woche mit vier Einheiten, eine mit zweien: der Takt läuft weiter, wo er unterbrochen wurde. Wenn dir spontan nach einem anderen Tag ist, wählst du ihn auf der Startseite selbst, dann folgt die Reihenfolge deiner Wahl.
+## Die Grundsätze dahinter
 
-## Volumen, der eigentliche Hebel
+**Volumen ist der Haupthebel.** 15 bis 20 harte Sätze pro Woche für die großen Gruppen. Alles darunter lässt Wachstum liegen, alles darüber kostet mehr Erholung als es bringt.
 
-Für Muskelaufbau ist das Wochenvolumen die wichtigste Stellschraube, und §12 nennt dafür 15 bis 20 Sätze pro Woche für die großen Gruppen. Der Plan liefert pro Durchgang (A plus B) **10 bis 11 harte Sätze je großer Gruppe**. Damit skaliert das Volumen mit deiner Anwesenheit:
+**Jeder Arbeitssatz geht nah ans Muskelversagen**, also bis ein bis zwei Wiederholungen davor. Ein Satz, bei dem noch fünf drin gewesen wären, zählt nicht mit.
 
-| Einheiten pro Woche | Brust | Rücken | Quadrizeps |
-|---|---|---|---|
-| 2 | 10 | 10 | 11 |
-| **3** | **15** | **15** | **17** |
-| **4** | **20** | **20** | **22** |
+**Schwer zuerst.** Die Grundübungen stehen vorn, solange Kraft und Konzentration frisch sind. Isolation kommt zum Schluss, dort schadet Ermüdung wenig.
 
-Bei drei Einheiten liegst du in der Mitte des Zielfensters, bei vier an der Oberkante. Bei zwei Einheiten ist es Erhaltung statt Aufbau, das ist die ehrliche Auskunft für Wochen, in denen wenig geht.
+**Antagonisten im Wechsel.** Drücken und Ziehen abwechselnd: während die eine Seite arbeitet, erholt sich die andere. Das spart Zeit, ohne die Qualität zu senken.
 
-## Wiederholungen bewusst schwer
-
-Die Grundübungen laufen bei **5 bis 8**, die Maschinen bei **6 bis 12**. Über 12 Wiederholungen gehen nur Waden und Bauch, weil dort schwere Sätze technisch schlecht zu steuern sind.
-
-Sätze bis nah ans Versagen bauen zwar auch bei 15 Wiederholungen Muskeln auf, aber nur, wenn man wirklich bis dorthin geht. Genau daran scheitert es in der Praxis: bei hohen Wiederholungszahlen bricht man meist zwei bis drei Wiederholungen zu früh ab, weil es brennt und nicht weil der Muskel versagt. Bei 5 bis 8 Wiederholungen merkst du das Ende eindeutig. Für einen Erfahrenen ist das der verlässlichere Reiz.
+**Progression schlägt Auswahl.** Dieselben Bewegungen über Monate, dafür mit steigendem Gewicht. Abwechslung um der Abwechslung willen zerstört die Vergleichbarkeit und damit die Steigerung.
 
 ## A: Oberkörper
 
-| # | Übung | Gerät | Sätze | Wdh | Schritt |
+| # | Bewegung | Ziel | Sätze | Wdh | Pause |
 |---|---|---|---|---|---|
-| 1 | Bankdrücken Langhantel | Flachbank **43** | 4 | 5–8 | 2,5 kg |
-| 2 | Latzug | Kabelturm **26** | 4 | 6–10 | 5 kg |
-| 3 | Brustpresse | Maschine **33** | 3 | 6–10 | 2,5 kg |
-| 4 | Rudern sitzend am Kabel | Kabelturm **25** | 4 | 6–10 | 5 kg |
-| 5 | Schulterdrücken Kurzhantel | Schrägbank | 3 | 6–10 | 2,5 kg |
-| 6 | Butterfly | Maschine **36** | 3 | 8–12 | 5 kg |
-| 7 | Latzug eng | Maschine **34** | 2 | 8–12 | 5 kg |
-| 8 | Trizepsdrücken am Seil | Kabelturm **26** | 2 | 8–12 | 5 kg |
-| 9 | Bizepscurl SZ-Stange | freie Fläche | 2 | 8–12 | 2,5 kg |
+| 1 | **Bankdrücken flach**, Langhantel | Brust | 4 | 5–8 | 3 min |
+| 2 | **Vertikales Ziehen**: Klimmzug oder Latzug, weiter Griff | Rücken (Breite) | 4 | 6–10 | 3 min |
+| 3 | **Schrägbankdrücken**, Kurzhantel | Brust (oberer Anteil) | 3 | 8–10 | 2,5 min |
+| 4 | **Horizontales Ziehen schwer**: Rudern vorgebeugt | Rücken (Dicke) | 4 | 6–10 | 2,5 min |
+| 5 | **Überkopfdrücken**, Kurzhantel oder Langhantel | Schulter | 3 | 8–10 | 2 min |
+| 6 | **Horizontales Ziehen eng**: Rudergriff eng, Kabel | Rücken (Mitte) | 3 | 10–12 | 2 min |
+| 7 | **Fliegende am Kabel** | Brust (gedehnt) | 3 | 12–15 | 90 s |
+| 8 | **Trizepsstrecken über Kopf**, Kabel | Trizeps | 3 | 10–15 | 60 s |
+| 9 | **Curl auf der Schrägbank** | Bizeps | 3 | 8–12 | 60 s |
 
-27 Sätze: Brust 10, Rücken 10, Schulter 3, Arme je 2.
+**30 Sätze.** Brust 10, Rücken 11, Schulter 3, Trizeps 3, Bizeps 3.
 
-Die Arme bekommen nur je zwei direkte Sätze, und das reicht. Bei zehn Sätzen Drücken arbeitet der Trizeps überall mit, bei zehn Sätzen Ziehen der Bizeps. Mehr direkte Armarbeit ginge auf Kosten der großen Gruppen, und die bauen die Masse.
+Die Fliegenden stehen am Kabel und nicht an der Maschine: dort bleibt die Spannung auch in der gedehnten Position, und genau dort wächst die Brust. Der Curl auf der Schrägbank, weil der Bizeps mit dem Arm hinter dem Körper stärker gedehnt arbeitet als im Stehen.
 
-## B: Unterkörper
+## B: Ganzkörper
 
-| # | Übung | Gerät | Sätze | Wdh | Schritt |
+| # | Bewegung | Ziel | Sätze | Wdh | Pause |
 |---|---|---|---|---|---|
-| 1 | Kniebeuge Langhantel | Ständer **39** | 4 | 5–8 | 2,5 kg |
-| 2 | Beinpresse | Maschine **23** | 4 | 6–10 | 5 kg |
-| 3 | Rumänisches Kreuzheben | Ständer **39** | 4 | 6–10 | 2,5 kg |
-| 4 | Beinbeuger liegend | Maschine | 4 | 8–12 | 5 kg |
-| 5 | Beinstrecker | Maschine **18** | 3 | 8–12 | 5 kg |
-| 6 | Wadenheben stehend | Maschine **7** | 4 | 10–15 | 5 kg |
-| 7 | Beinheben | Bauchstation | 2 | 10–15 | 5 kg |
+| 1 | **Kniebeuge**, Langhantel | Quadrizeps, Gesäß | 4 | 5–8 | 3 min |
+| 2 | **Vertikales Ziehen eng**: Klimmzug oder Latzug, enger Griff | Rücken | 4 | 6–10 | 3 min |
+| 3 | **Horizontales Drücken**: Schrägbank oder Dips | Brust | 4 | 6–10 | 2,5 min |
+| 4 | **Hüftstrecken**: rumänisches Kreuzheben | Oberschenkelrückseite, Gesäß | 4 | 8–10 | 2,5 min |
+| 5 | **Seitheben**, Kabel oder Kurzhantel | Schulter seitlich | 4 | 12–20 | 90 s |
+| 6 | **Reverse Fly oder Face Pull** | Schulter hinten | 3 | 15–20 | 60 s |
+| 7 | **Beinbeugen** | Oberschenkelrückseite | 3 | 10–15 | 90 s |
+| 8 | **Wadenheben stehend** | Waden | 4 | 8–12 | 90 s |
 
-25 Sätze: Quadrizeps 11, Oberschenkelrückseite und Gesäß 8, Waden 4, Bauch 2.
+**30 Sätze.** Quadrizeps 4, hintere Kette 7, Brust 4, Rücken 4, Schulter 7, Waden 4.
 
-§12 nennt Kreuzheben als Grundübung. Ich habe die **rumänische** Variante genommen, nicht die klassische vom Boden: sie trifft die Oberschenkelrückseite und das Gesäß gezielter, verlangt weniger Technik unter Ermüdung und belastet den unteren Rücken geringer. Nach vier Sätzen schwerer Kniebeuge ist das der Unterschied zwischen einem guten Reiz und einem Risiko.
+Dies ist der Tag, der beide Hälften verbindet. Er nimmt von allem etwas, aber nicht wenig: mit vier Sätzen Kniebeuge und vier Sätzen Kreuzheben ist er kein Ausgleichstag, sondern eine volle Einheit.
 
-## Zeitrahmen
+Das Seitheben steht hier und nicht bei A, weil die seitliche Schulter am Oberkörpertag vom Drücken schon vorbelastet ist. Am Kabel ist es der Kurzhantel deutlich überlegen: mit der Hantel liegt unten, wenn der Arm hängt, überhaupt keine Last auf dem Muskel.
 
-27 beziehungsweise 25 Sätze passen in 90 Minuten, wenn die Pausen stimmen: **2 bis 3 Minuten** nach den schweren Grundübungen, **90 Sekunden** nach den Maschinen und der Armarbeit. Der Pausen-Timer in der App steht auf 2 Minuten; nach Kniebeuge und Bankdrücken darfst du ihn ruhig einmal durchlaufen lassen und noch etwas warten.
+## C: Unterkörper
 
-Wer die Pausen schleifen lässt, verliert Gewicht auf der Stange, und dann stimmt das Volumen zwar auf dem Papier, aber der Reiz nicht.
+| # | Bewegung | Ziel | Sätze | Wdh | Pause |
+|---|---|---|---|---|---|
+| 1 | **Beidbeiniges Drücken**: Beinpresse oder Hackenschmidt | Quadrizeps | 4 | 6–10 | 3 min |
+| 2 | **Beinbeugen sitzend** | Oberschenkelrückseite | 4 | 8–12 | 2,5 min |
+| 3 | **Einbeinig**: Ausfallschritt oder Split Squat | Quadrizeps, Gesäß, Stabilität | 3 | 8–12 je Bein | 2 min |
+| 4 | **Beinstrecken** | Quadrizeps (isoliert) | 4 | 12–20 | 90 s |
+| 5 | **Wadenheben sitzend** | Waden (Schollenmuskel) | 4 | 12–20 | 90 s |
+| 6 | **Curl** | Bizeps | 3 | 8–12 | 60 s |
+| 7 | **Trizepsdrücken** | Trizeps | 3 | 10–15 | 60 s |
+| 8 | **Bauch mit Zusatzgewicht**: Kabel-Crunch | Bauch | 3 | 10–15 | 60 s |
 
-## Startgewichte
+**28 Sätze.** Quadrizeps 11, hintere Kette 4, Waden 4, Arme je 3, Bauch 3.
 
-Es gibt keine. Die erste Einheit ist die Eichung: bei jeder Übung ein Gewicht wählen, mit dem der angegebene Bereich **sauber und bis nah ans Versagen** geht. Lieber eine Stufe zu leicht anfangen, die Progressionsregel holt das binnen zwei bis drei Wochen auf.
+Die Arme stehen am Beintag, nicht am Oberkörpertag. Das klingt ungewohnt, hat aber einen Grund: an Tag A sind sie nach zehn Sätzen Drücken und elf Sätzen Ziehen bereits ausgelastet, hier sind sie frisch. Beine und Arme stören sich nicht.
 
-Ab der zweiten Einheit übernimmt der Coach in der App: erst die Wiederholungen bis zur Obergrenze hochklettern, dann das Gewicht um die Schrittweite anheben und die Wiederholungen wieder Richtung Untergrenze fallen lassen. Zwei saubere Einheiten an der Obergrenze, dann geht es hoch.
+Das Wadenheben sitzend ergänzt das stehende aus Tag B: gebeugtes Knie trifft den darunterliegenden Schollenmuskel, gestrecktes Knie den Zwillingswadenmuskel. Wer nur eine Variante macht, lässt die Hälfte liegen.
 
-## Zwei offene Kleinigkeiten
+Einbeinige Arbeit gehört in einen Plan mit dem Anspruch „athletisch": sie deckt Seitenunterschiede auf, die bei beidbeinigen Übungen die starke Seite verdeckt.
 
-1. **Beinbeuger und Beinheben** haben auf den Fotos keine lesbare Gerätenummer. Beide Geräte sind vorhanden, die Nummer trage ich nach. Bis dahin zeigt die App dort ein leeres Schild.
-2. **Kurzhantel-Schrittweite**: die App kennt 1,25, 2,5 und 5 kg. Steigen die Kurzhanteln im Studio in 2-kg-Schritten, läuft die Progression dort eine Stufe grober als nötig.
+## Volumen pro Woche
+
+| Muskelgruppe | bei 3 Einheiten | bei 4 Einheiten |
+|---|---|---|
+| Brust | 14 | 19 |
+| Rücken | 15 | 20 |
+| Quadrizeps | 15 | 20 |
+| Oberschenkelrückseite und Gesäß | 11 | 15 |
+| Schulter seitlich und vorn | 7 | 9 |
+| Schulter hinten | 3 | 4 |
+| Waden | 8 | 11 |
+| Bizeps | 6 | 8 |
+| Trizeps | 6 | 8 |
+| Bauch | 3 | 4 |
+
+Bei drei Einheiten liegen die großen Gruppen bei 14 bis 15 Sätzen, also am unteren Rand des Zielfensters. Bei vier Einheiten bei 19 bis 20, am oberen. Das ist Absicht: mehr geht in 90 Minuten nicht unter, ohne die Pausen zu kürzen, und kurze Pausen kosten Gewicht auf der Stange. Wer mehr Volumen will, geht öfter, nicht länger.
+
+Arme und hintere Schulter bekommen weniger direkte Sätze als die großen Gruppen. Sie arbeiten bei jedem Drücken und Ziehen mit, und das sind pro Woche über zwanzig Sätze zusätzlich.
+
+## Pausen sind Teil des Plans
+
+3 Minuten nach den schweren Grundübungen, 2 bis 2,5 nach den mittelschweren, 60 bis 90 Sekunden bei Isolation. Wer die Pausen kürzt, spart keine Zeit, sondern verliert Gewicht, und dann stimmt das Volumen zwar auf dem Papier, aber der Reiz nicht.
+
+Bei 30 Sätzen landet eine Einheit damit bei etwa 85 bis 95 Minuten inklusive Aufwärmen. Wenn die Zeit knapp wird, fällt die letzte Übung weg, nicht die Pause.
+
+## Steigerung
+
+Doppelte Progression. Erst innerhalb des Wiederholungsbereichs nach oben arbeiten, dann das Gewicht anheben und die Wiederholungen wieder an den unteren Rand fallen lassen. Zwei Einheiten in Folge sauber an der Obergrenze aller Sätze, dann geht das Gewicht hoch. Genau diese Regel steckt in der App.
+
+Startgewichte gibt es keine. Die erste Einheit ist die Eichung: das Gewicht so wählen, dass der angegebene Bereich sauber und nah ans Versagen geht.
+
+## Aufwärmen
+
+Fünf Minuten allgemein, danach pro schwerer Grundübung zwei bis drei Aufwärmsätze mit steigendem Gewicht und wenigen Wiederholungen. Diese Sätze zählen nicht zum Volumen und werden nicht mitgeschrieben.
+
+## Was noch fehlt
+
+Zu jeder Bewegung muss jetzt ein Gerät bestimmt werden. Das steht bewusst nicht hier drin: welche Bewegung an welchem Gerät ausgeführt wird, entscheidet, wer das Studio kennt.

@@ -304,22 +304,42 @@ body {
     width: 100%;
     min-height: 68px;
     padding: 12px 4px;
-    border: 0;
     border-bottom: 1px solid var(--linie);
+}
+
+/* Vorschaubild und Zeilentext sind zwei Ziele: das Bild vergrößert,
+   der Text führt in die Übung. */
+.zeile__foto {
+    flex: 0 0 auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    line-height: 0;
+    cursor: zoom-in;
+}
+
+.zeile__foto .kachel__bild {
+    width: 56px;
+    height: 56px;
+    border-radius: 9px;
+    object-fit: cover;
+}
+
+.zeile__text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    border: 0;
     background: transparent;
     color: inherit;
     text-align: left;
     cursor: pointer;
 }
 
-.zeile:active { background: var(--raum-hoch); }
-
-.zeile__text {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-}
+.zeile__text:active { opacity: 0.7; }
 
 .zeile__name {
     font-size: 18px;
@@ -1016,4 +1036,118 @@ body.hat-pause .inhalt { padding-bottom: 120px; }
 
 @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
+}
+
+/* ---------- Bildauswahl im Übungsformular ----------
+ *
+ * Ein Raster zum Antippen statt eines Textfelds für einen Dateinamen.
+ * Auf einem Foto sieht man das Gerät, aber nicht, welche Übung jemand
+ * daran macht: diese Zuordnung kann nur Frank treffen, also gehört sie
+ * in die App.
+ */
+
+.bildwahl {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    gap: 8px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 8px;
+    border: 1px solid var(--linie);
+    border-radius: 12px;
+    background: var(--raum);
+}
+
+.bildwahl__stueck,
+.bildwahl__keins {
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 9px;
+    background: var(--raum-hoch);
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.bildwahl__stueck {
+    aspect-ratio: 1;
+    line-height: 0;
+}
+
+.bildwahl__stueck img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.bildwahl__keins {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1;
+    color: var(--schrift-leise);
+    font: 11px/1.2 var(--mono);
+    text-align: center;
+}
+
+.bildwahl .ist-gewaehlt {
+    border-color: var(--tag);
+}
+
+/* ---------- Foto hochladen ----------
+ *
+ * Das eigentliche Dateifeld ist unsichtbar, das Label ist der Knopf.
+ * Browser lassen sich das native Feld nicht gestalten, und ein grauer
+ * "Datei auswählen"-Knopf mitten in der Oberfläche sähe aus wie ein
+ * Fremdkörper.
+ */
+
+.hochladen {
+    display: block;
+    min-height: var(--ziel);
+    margin-bottom: 10px;
+    padding: 17px 16px;
+    border: 1px dashed var(--linie);
+    border-radius: 12px;
+    background: transparent;
+    color: var(--schrift);
+    font: 15px/1 var(--sans);
+    text-align: center;
+    cursor: pointer;
+}
+
+.hochladen:active { background: var(--raum-hoch); }
+
+.hochladen input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Löschknopf auf jedem Bild in der Auswahl. Zwei Schritte, wie überall
+   sonst: ein Bild ist schnell weg und nicht wiederzuholen. */
+.bildwahl__feld {
+    position: relative;
+    display: block;
+}
+
+.bildwahl__weg {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 5px;
+    border: 0;
+    border-radius: 6px;
+    background: rgba(12, 14, 18, 0.82);
+    color: var(--schrift);
+    font: 600 13px/1 var(--sans);
+    cursor: pointer;
+}
+
+.bildwahl__weg.ist-scharf {
+    background: var(--vinyl);
+    font: 600 10px/1 var(--sans);
+    color: #fff;
 }

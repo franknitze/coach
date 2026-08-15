@@ -10,12 +10,14 @@
  */
 
 const laeufe = {
+    fotos:      { port: null, modul: './fotos' },
     regel:      { port: null, modul: './regel' },
     verwaltung: { port: 8791, modul: './verwaltung' },
     studio:     { port: 8792, modul: './studio' },
     verlauf:    { port: 8793, modul: './verlauf' },
     coach:      { port: 8794, modul: './coach' },
     einrichtung:{ port: 8790, modul: './einrichtung' },
+    bilder:     { port: 8789, modul: './bilder' },
     pwa:        { port: 8795, modul: './pwa' },
     offline:    { port: 8796, modul: './offline' },
 };
