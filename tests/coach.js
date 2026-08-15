@@ -31,25 +31,41 @@ module.exports = (port) => testlauf('Coach', port, async (t) => {
     const latz = page.locator('.kachel', { hasText: 'Latzug' });
     const schu = page.locator('.kachel', { hasText: 'Schulterdrücken' });
 
+    // Bankdrücken steht als erste unfertige Übung von selbst offen.
     ok((await bank.locator('.kachel__coach').innerText()).includes('82,5 kg'),
        'Handlung steht vorn: "' + (await bank.locator('.kachel__coach').innerText()) + '"');
     ok((await bank.locator('.kachel__grund').innerText()).includes('sauber'),
        'Begründung leise darunter: "' + (await bank.locator('.kachel__grund').innerText()) + '"');
-    ok(await latz.locator('.kachel__grund').count() === 0, 'ohne Begründung keine zweite Zeile');
-
-    ok(await bank.locator('.kachel__coach.ist-faellig').count() === 1, 'fällige Steigerung hervorgehoben');
-    ok(await latz.locator('.kachel__coach.ist-faellig').count() === 0, 'Halten bleibt zurückhaltend');
-    ok(await schu.locator('.kachel__coach.ist-faellig').count() === 0, 'Zurückholen bleibt zurückhaltend');
-
-    ok((await latz.locator('.kachel__coach').innerText()).includes('Ziel 11'),
-       'Halten nennt das nächste Wiederholungsziel');
-    ok((await schu.locator('.kachel__coach').innerText()).includes('zurück auf 8'),
-       'Zurückholen nennt die untere Grenze');
+    ok(await bank.locator('.kachel__coach.ist-faellig').count() === 1,
+       'fällige Steigerung ist hervorgehoben');
 
     const faellig = await bank.locator('.kachel__coach').evaluate((n) => getComputedStyle(n).color);
+    ok(faellig === 'rgb(200, 86, 43)', 'und trägt das Orange: ' + faellig);
+
+    /*
+     * Auf den zugeklappten Kacheln steht nur, was man vorher wissen muss:
+     * eine fällige Steigerung. Halten und Zurückholen bleiben still, sonst
+     * stünde auf allen neun Kacheln ein Hinweis und keiner würde gelesen.
+     */
+    ok(await latz.locator('.kachel__coach').count() === 0,
+       'zugeklappt bleibt ein Halten-Hinweis still');
+    ok(await schu.locator('.kachel__coach').count() === 0,
+       'zugeklappt bleibt auch Zurückholen still');
+
+    // Aufgeklappt steht die Ansage da, dort wird ja gehandelt.
+    await latz.locator('.kachel__kopf').click();
+    await page.waitForFunction(() =>
+        document.querySelectorAll('.kachel:has(.satz--dran)').length === 1);
+    const latzText = await latz.locator('.kachel__coach').innerText();
+    ok(latzText.includes('Ziel 11'), 'aufgeklappt nennt Halten das Ziel: "' + latzText + '"');
     const leise = await latz.locator('.kachel__coach').evaluate((n) => getComputedStyle(n).color);
-    ok(faellig === 'rgb(200, 86, 43)', 'fällige Steigerung trägt das Orange: ' + faellig);
-    ok(faellig !== leise, 'die beiden unterscheiden sich sichtbar');
+    ok(leise !== faellig, 'und ist sichtbar zurückhaltender gesetzt als die Steigerung');
+
+    await schu.locator('.kachel__kopf').click();
+    await page.waitForFunction(() =>
+        document.querySelector('.kachel:has(.satz--dran)').innerText.includes('Schulterdrücken'));
+    ok((await schu.locator('.kachel__coach').innerText()).includes('zurück auf 8'),
+       'Zurückholen nennt die untere Grenze');
 
     // Der Coach entscheidet nicht für Frank
     await bank.locator('.kachel__kopf').click();

@@ -455,16 +455,59 @@
 
     /* ---------- Ansicht: Studio ---------- */
 
+    /** Erste Übung, die heute noch nicht vollständig ist. */
+    function naechsteOffene() {
+        return (zustand.studio.exercises || []).find(function (u) {
+            return (u.today || []).length < u.target_sets;
+        }) || null;
+    }
+
     function zeichneStudio() {
         const s = zustand.studio;
 
+        // Die App soll führen, nicht auflisten: beim Betreten steht die
+        // nächste unfertige Übung offen da, mit den Reglern. Es gibt immer
+        // genau eine Sache zu tun, ohne dass man erst raten muss, dass die
+        // Kacheln antippbar sind.
+        if (zustand.offen === null) {
+            const dran = naechsteOffene();
+            zustand.offen = dran ? dran.id : null;
+        }
+
+        const zielSaetze = s.exercises.reduce(function (n, u) { return n + u.target_sets; }, 0);
+        const fertigSaetze = s.exercises.reduce(function (n, u) {
+            return n + Math.min((u.today || []).length, u.target_sets);
+        }, 0);
+        const fertigeUebungen = s.exercises.filter(function (u) {
+            return (u.today || []).length >= u.target_sets;
+        }).length;
+
         let html = '<div class="titelzeile">'
             + '<h1 class="titel">' + esc(s.day.label) + '</h1>'
-            + '<button class="kopfknopf" data-gehe="start">Fertig</button>'
+            + '<button class="kopfknopf" data-gehe="start">Pause</button>'
+            + '</div>';
+
+        // Wo stehe ich in dieser Einheit? Ohne das ist eine Liste aus neun
+        // gleich aussehenden Kacheln nicht einzuordnen.
+        html += '<div class="fortschritt">'
+            + '<span class="fortschritt__zahl">' + fertigeUebungen + ' von '
+            + s.exercises.length + ' Übungen</span>'
+            + '<span class="fortschritt__balken"><span class="fortschritt__voll" style="width:'
+            + Math.round(fertigSaetze / Math.max(1, zielSaetze) * 100) + '%"></span></span>'
+            + '<span class="fortschritt__zahl">' + fertigSaetze + '/' + zielSaetze + ' Sätze</span>'
             + '</div>';
 
         if (zustand.meldung) {
             html += '<p class="fehler">' + esc(zustand.meldung) + '</p>';
+        }
+
+        if (fertigeUebungen === s.exercises.length) {
+            html += '<section class="geschafft">'
+                + '<p class="geschafft__titel">' + zielSaetze + ' Sätze, alle durch.</p>'
+                + '<p class="leer__text">Beim nächsten Mal ist '
+                + esc(naechsterTagName()) + ' dran.</p>'
+                + '<button class="knopf" data-gehe="start">Einheit beenden</button>'
+                + '</section>';
         }
 
         s.exercises.forEach(function (u) {
@@ -472,6 +515,14 @@
         });
 
         return html;
+    }
+
+    /** Welcher Tag nach dieser Einheit kommt, für die Abschlussmeldung. */
+    function naechsterTagName() {
+        const tage = Object.keys(zustand.studio.days || {});
+        const jetzt = zustand.studio.day.key;
+        const andere = tage.filter(function (t) { return t !== jetzt; });
+        return andere.length ? zustand.studio.days[andere[0]].label : 'die nächste Einheit';
     }
 
     function zeichneKachel(u) {
@@ -494,9 +545,14 @@
         // wird nur die fällige Steigerung, denn genau das bedeutet das
         // Orange in dieser App. Die übrigen Hinweise bleiben zurückhaltend,
         // sonst schreit jede Kachel und keine sagt mehr etwas.
+        // Die Ansage steht auf der offenen Kachel, weil dort gehandelt wird.
+        // Auf den zugeklappten nur die fällige Steigerung, denn die muss man
+        // vorher wissen. Sonst stünde derselbe Hinweis neunmal untereinander
+        // und niemand läse ihn mehr.
         const c = u.coach;
+        const zeigen = c && c.text && (offen || c.status === 'steigern');
         let ansage = '';
-        if (c && c.text) {
+        if (zeigen) {
             ansage = '<span class="kachel__coach'
                    + (c.status === 'steigern' ? ' ist-faellig' : '') + '">'
                    + esc(c.text) + '</span>';
@@ -505,7 +561,10 @@
             }
         }
 
-        let html = '<section class="kachel' + (offen ? ' ist-offen' : '') + '">'
+        const fertig = heute.length >= ziel;
+
+        let html = '<section class="kachel' + (offen ? ' ist-offen' : '')
+            + (fertig ? ' ist-fertig' : '') + '" data-uebung="' + esc(u.id) + '">'
             + '<button class="kachel__kopf" data-oeffne="' + esc(u.id) + '">'
             + bild
             + '<span class="kachel__text">'
@@ -1007,7 +1066,7 @@
     /* ---------- Ereignisse ---------- */
 
     app.addEventListener('click', async function (e) {
-        const ziel = e.target.closest('[data-gehe], [data-tag], [data-oeffne], [data-aendere], '
+        const ziel = e.target.closest('[data-gehe], [data-tag], [data-oeffne], '
             + '[data-bestaetige], [data-korrigiere], [data-extra], [data-bearbeite], '
             + '[data-neu], [data-abbrechen], [data-frage], [data-loesche], [data-prio]');
         if (!ziel) {
@@ -1052,25 +1111,8 @@
             return zeichnen();
         }
 
-        if (d.aendere) {
-            const teile = d.aendere.split(':');
-            const u = uebungImStudio(teile[0]);
-            if (!u) {
-                return;
-            }
-            const e2 = zustand.entwurf[u.id] || vorbelegung(u);
-            const richtung = parseInt(teile[2], 10);
-
-            if (teile[1] === 'weight') {
-                e2.weight = Math.max(0, Math.round(
-                    (e2.weight + richtung * u.weight_step) * 100) / 100);
-            } else {
-                e2.reps = Math.max(1, e2.reps + richtung);
-            }
-
-            zustand.entwurf[u.id] = e2;
-            return zeichnen();
-        }
+        // data-aendere läuft nicht über den Klick, sondern über
+        // pointerdown mit Wiederholung beim Halten (siehe weiter unten).
 
         if (d.korrigiere) {
             const teile = d.korrigiere.split(':');
@@ -1129,10 +1171,28 @@
 
             delete zustand.entwurf[u.id];
             zustand.meldung = '';
+
+            // Ist die Übung durch, rückt die App von selbst zur nächsten und
+            // scrollt sie heran. Im Studio soll man nicht suchen müssen,
+            // was als Nächstes dran ist.
+            let gewechselt = false;
+            if (heute.length >= u.target_sets) {
+                const dran = naechsteOffene();
+                zustand.offen = dran ? dran.id : null;
+                gewechselt = true;
+            }
+
             planMerken();
             zeichnen();
-            pauseStarten(zustand.studio.rest_timer_seconds);
 
+            if (gewechselt && zustand.offen) {
+                const kachel = app.querySelector('[data-uebung="' + zustand.offen + '"]');
+                if (kachel) {
+                    kachel.scrollIntoView({ block: 'start', behavior: 'smooth' });
+                }
+            }
+
+            pauseStarten(zustand.studio.rest_timer_seconds);
             puffernSenden();   // bewusst ohne await: die Pause läuft schon
             return;
         }
@@ -1234,6 +1294,97 @@
             zustand.meldung = err.message;
         }
         zeichnen();
+    });
+
+    /* ---------- Plus und Minus, mit Wiederholung beim Halten ----------
+     *
+     * Ein Tipp ist eine Stufe, Gedrückthalten läuft weiter und wird
+     * schneller. Ohne das wäre die erste Einheit unbedienbar: von 0 auf
+     * 80 kg in 2,5er-Schritten sind 32 Antipper. Eine Tastatur verbietet
+     * SPEC.md §5.2, und ein sinnvoller Startwert lässt sich nicht raten.
+     *
+     * Beim Halten wird nur die Zahl im DOM ausgetauscht und nicht die
+     * ganze Ansicht neu gezeichnet: sonst würde der Knopf unter dem
+     * Daumen zehnmal pro Sekunde ersetzt.
+     */
+
+    let haltenVerzoegerung = null;
+    let haltenTakt = null;
+
+    function haltenStoppen() {
+        clearTimeout(haltenVerzoegerung);
+        clearInterval(haltenTakt);
+        haltenVerzoegerung = haltenTakt = null;
+    }
+
+    function schrittAnwenden(spec, knopf) {
+        const teile = spec.split(':');
+        const u = uebungImStudio(teile[0]);
+        if (!u) {
+            return false;
+        }
+
+        const e2 = zustand.entwurf[u.id] || vorbelegung(u);
+        const richtung = parseInt(teile[2], 10);
+
+        if (teile[1] === 'weight') {
+            e2.weight = Math.max(0, Math.round((e2.weight + richtung * u.weight_step) * 100) / 100);
+        } else {
+            e2.reps = Math.max(1, e2.reps + richtung);
+        }
+        zustand.entwurf[u.id] = e2;
+
+        const anzeige = knopf && knopf.isConnected
+            ? knopf.closest('.regler').querySelector('.regler__wert')
+            : null;
+
+        if (anzeige) {
+            anzeige.textContent = teile[1] === 'weight'
+                ? zahl(e2.weight) + ' kg'
+                : e2.reps + ' Wdh';
+            return true;
+        }
+
+        zeichnen();   // Knopf nicht mehr im DOM, dann eben ganz neu
+        return false;
+    }
+
+    app.addEventListener('pointerdown', function (e) {
+        const knopf = e.target.closest('[data-aendere]');
+        if (!knopf) {
+            return;
+        }
+        e.preventDefault();
+
+        const spec = knopf.dataset.aendere;
+        if (!schrittAnwenden(spec, knopf)) {
+            return;
+        }
+
+        // Erst nach einer kurzen Weile loslaufen, damit ein normaler Tipp
+        // eine einzelne Stufe bleibt. Danach beschleunigen, damit auch
+        // große Sprünge in wenigen Sekunden erreichbar sind.
+        let takt = 130;
+
+        function weiter() {
+            if (!schrittAnwenden(spec, knopf)) {
+                haltenStoppen();
+                return;
+            }
+            if (takt > 45) {
+                takt -= 10;
+                clearInterval(haltenTakt);
+                haltenTakt = setInterval(weiter, takt);
+            }
+        }
+
+        haltenVerzoegerung = setTimeout(function () {
+            haltenTakt = setInterval(weiter, takt);
+        }, 350);
+    });
+
+    ['pointerup', 'pointercancel', 'blur'].forEach(function (ereignis) {
+        addEventListener(ereignis, haltenStoppen);
     });
 
     /*

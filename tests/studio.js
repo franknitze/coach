@@ -37,6 +37,16 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
     await t.studio('Oberkörper');
     ok(await page.locator('.kachel').count() === 3, '3 Kacheln für Oberkörper');
 
+    /* ---------- Die App führt, sie listet nicht ---------- */
+
+    ok(await page.locator('.satz--dran').count() === 1,
+       'die erste unfertige Übung steht beim Betreten von selbst offen');
+    ok((await page.locator('.kachel').first().getAttribute('class')).includes('ist-offen'),
+       'und zwar die oberste, nicht irgendeine');
+    const fortschritt = await page.locator('.fortschritt').innerText();
+    ok(fortschritt.includes('0 von 3') && /0\/\d+ Sätze/.test(fortschritt),
+       'oben steht, wo man in der Einheit ist: "' + fortschritt.replace(/\s+/g, ' ') + '"');
+
     const bank = page.locator('.kachel', { hasText: 'Bankdrücken' });
     ok((await bank.innerText()).includes('zuletzt 80 kg × 10'), 'Kachel zeigt das letzte Ergebnis');
     ok(await bank.locator('.punkt').count() === 4, '4 Punkte für 4 Zielsätze');
@@ -74,12 +84,38 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
     ok(await bank.locator('.regler__wert').first().innerText() === '82,5 kg',
        'nächster Satz übernimmt den bestätigten Wert');
 
+    /* ---------- Ist eine Übung durch, rückt die App weiter ---------- */
+
+    // Bankdrücken bis zum letzten Satz durchziehen und prüfen, dass die
+    // App danach von selbst zur nächsten Übung rückt.
+    while (await bank.locator('.punkt.ist-voll').count() < 4) {
+        await bank.locator('[data-bestaetige]').click();
+        await page.waitForTimeout(250);
+        if (await page.locator('#pause:not([hidden])').count()) {
+            await page.click('#pause-weg');
+        }
+    }
+    ok(await bank.locator('.punkt.ist-voll').count() === 4, 'Bankdrücken vollständig');
+    ok((await bank.getAttribute('class')).includes('ist-fertig'),
+       'die erledigte Kachel ist als erledigt gekennzeichnet');
+    ok(!(await bank.getAttribute('class')).includes('ist-offen'),
+       'und klappt zu');
+
+    const offen = await page.locator('.kachel.ist-offen').innerText();
+    ok(offen.includes('Latzug'),
+       'die nächste Übung öffnet sich von selbst: ' + offen.split('\n')[0]);
+    ok((await page.locator('.fortschritt').innerText()).includes('1 von 3'),
+       'der Fortschritt zählt mit');
+
     await page.reload();
     await page.waitForSelector('[data-gehe="studio"], .leer__titel');
-    ok((await page.locator('.heute__zeile').innerText()).includes('heute schon 1 Satz'),
-       'Startseite meldet den heutigen Fortschritt');
+    ok((await page.locator('.heute__zeile').innerText()).includes('heute schon 4 Sätze'),
+       'Startseite meldet den heutigen Fortschritt: '
+       + (await page.locator('.heute__zeile').innerText()));
     await page.click('[data-gehe="studio"]');
     await page.waitForSelector('.kachel');
-    ok(await page.locator('.kachel', { hasText: 'Bankdrücken' }).locator('.punkt.ist-voll').count() === 1,
-       'der Satz liegt nach dem Neuladen auf der Platte');
+    ok(await page.locator('.kachel', { hasText: 'Bankdrücken' }).locator('.punkt.ist-voll').count() === 4,
+       'die Sätze liegen nach dem Neuladen auf der Platte');
+    ok((await page.locator('.kachel.ist-offen').innerText()).includes('Latzug'),
+       'und die App steht wieder bei der nächsten offenen Übung');
 });

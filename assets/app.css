@@ -645,6 +645,54 @@ body {
     padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
 }
 
+/* ---------- Fortschritt in der Einheit ----------
+ *
+ * Ohne diese Zeile ist eine Liste aus neun gleich aussehenden Kacheln
+ * nicht einzuordnen: man weiß weder, wo man steht, noch wie weit es noch ist.
+ */
+
+.fortschritt {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.fortschritt__zahl {
+    flex: 0 0 auto;
+    font: 12px/1 var(--mono);
+    color: var(--schrift-leise);
+    white-space: nowrap;
+}
+
+.fortschritt__balken {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--linie);
+    overflow: hidden;
+}
+
+.fortschritt__voll {
+    display: block;
+    height: 100%;
+    background: var(--schrift);
+}
+
+.geschafft {
+    margin-bottom: 26px;
+    padding: 22px 20px;
+    border: 1px solid var(--schrift-leise);
+    border-radius: 16px;
+}
+
+.geschafft__titel {
+    margin: 0 0 8px;
+    font: 600 20px/1.3 var(--sans);
+}
+
+.geschafft .knopf { margin-top: 18px; }
+
 /* ---------- Studio: Übungskacheln ---------- */
 
 .kachel {
@@ -654,7 +702,17 @@ body {
     overflow: hidden;
 }
 
-.kachel.ist-offen { border-color: var(--schrift-leise); }
+/* Die offene Kachel ist die, an der gerade gearbeitet wird. Sie hebt sich
+   ab, damit im Studio auf einen Blick klar ist, wo man steht. */
+.kachel.ist-offen {
+    border-color: var(--schrift-leise);
+    background: var(--raum-hoch);
+}
+
+/* Erledigt tritt zurück, ohne zu verschwinden: man will noch nachsehen
+   können, was man gemacht hat. */
+.kachel.ist-fertig { opacity: 0.55; }
+.kachel.ist-fertig.ist-offen { opacity: 1; }
 
 .kachel__kopf {
     display: flex;
