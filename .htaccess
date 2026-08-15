@@ -1,0 +1,23 @@
+# Sicherer Standard für den Schutz der Daten (SPEC.md §8).
+#
+# Greift unabhängig davon, ob data/ auf dem Server eine Ebene über dem
+# Web-Root liegt. Falls beides geht, gilt beides. Prüfen lässt sich das nur
+# auf dem echten Host: der eingebaute PHP-Server liest keine .htaccess.
+
+Options -Indexes
+
+# Der komplette data/-Baum ist aus dem Browser nicht erreichbar.
+RedirectMatch 404 ^/data(/|$)
+
+# Sperr- und Zwischendateien des atomaren Schreibens.
+<FilesMatch "\.(lock|tmp)$">
+    Require all denied
+</FilesMatch>
+
+# Interne Bibliothek und das Einrichtungsskript gehören nicht ins Web.
+# bin/ wird ohnehin nicht hochgeladen, die Regel ist die Absicherung dagegen,
+# es doch einmal zu tun.
+RedirectMatch 404 ^/(lib|bin)(/|$)
+
+# manifest.json und service-worker.js müssen erreichbar bleiben, sonst
+# funktioniert die PWA nicht. Deshalb hier bewusst keine Sperre auf *.json.

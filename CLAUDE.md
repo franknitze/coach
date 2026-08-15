@@ -2,16 +2,31 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Stand: Spezifikation, kein Code
-
-Der Ordner enthält bisher nur `SPEC.md` und 49 Gerätefotos. Kein PHP, kein Frontend, kein Paketmanager, keine Tests, keine Konfiguration.
+## Stand
 
 `SPEC.md` (deutsch, ~290 Zeilen) ist die verbindliche Vorgabe und die einzige Quelle dafür, was gebaut wird. Vor jedem Implementierungsvorschlag lesen; das Dokument ist so geschrieben, dass sich der Plan ohne Rückfragen ableiten lässt. Die Phasen 0 bis 6 in §10 sind die vorgegebene Reihenfolge.
 
-Zwei organisatorische Lücken, die vor der ersten Codezeile geschlossen gehören:
+Gebaut sind Phase 0 (lokal), 1 und 2, also Fundament, Login, Verwaltung und Studio-Modus:
 
-1. **Keine Versionierung.** Der Ordner hat kein eigenes Git-Repo. Er liegt zwar im OS-Repo `/Users/frank/AI-OS`, aber dort ist `/websites/` per `.gitignore` ausgeschlossen (`git check-ignore -v .` zeigt das). Änderungen sind aktuell also nirgends gesichert. Vor dem Start `git init` im Projektordner, dabei die 134 MB Fotos nicht ungefiltert aufnehmen.
-2. **Nicht auf der Landkarte.** In `/Users/frank/AI-OS/CLAUDE.md` fehlt das Projekt in der Tabelle unter `websites/`. Beim ersten echten Schritt dort eintragen.
+| Steht | Fehlt |
+|---|---|
+| `lib/storage.php`, `config.php`, `auth.php`, `uebungen.php`, `logs.php` | `api/history.php` (Phase 3), `coach.php` (Phase 4), `export.php` (Phase 5) |
+| `api/`: `login`, `logout`, `exercises`, `settings`, `plan`, `session` | Verlaufskurven, Coach-Ansage auf der Kachel |
+| `index.php`, `assets/app.css`, `assets/app.js`: Start, Studio, Mein Plan | `manifest.json`, `service-worker.js` |
+| `.htaccess`, `bin/init-config.php` | alles auf dem Server, es ist noch nichts deployed |
+
+Drei Abweichungen von SPEC.md, alle bewusst:
+
+- **`lib/`** gibt es in der Spezifikation nicht. Ohne gemeinsame Bibliothek müssten Pfadkonstante, atomares Schreiben, Session-Gate und Übungsprüfung in jedem Endpunkt neu stehen. `.htaccess` sperrt den Ordner nach außen.
+- **`api/settings.php`** verwaltet die Struktur von `plan.json` (Rotation, Schwerpunkte), weil §3 den Namen `plan.php` für die Studio-Ansicht aus Phase 2 vergibt (heutiger Tag samt Übungen und letzten Werten). Zwei verschiedene Aufgaben, zwei Endpunkte.
+- **Feld `station`** in `exercises.json`, optional, zusätzlich zum Schema in §4: die aufgeklebte Gerätenummer aus dem Studio. Sie ist der Grund, warum man das richtige Gerät wiederfindet, und trägt die Plakette in der Oberfläche.
+- **Feld `rotation_index`** in jeder Session, zusätzlich zum Schema in §4. Die Rotation darf denselben Tag mehrfach enthalten (`oberkoerper, unterkoerper, oberkoerper`), über den Tagesnamen allein wäre die Position also nicht eindeutig und der Vorschlag würde zwischen zwei Positionen hängenbleiben. Ältere Einträge ohne das Feld fallen auf die Namenssuche zurück.
+
+**Sätze werden einzeln gespeichert, nicht am Ende der Einheit.** Jede Bestätigung ist ein eigener POST auf `session.php` mit `set_index`. Damit ist der Aufruf wiederholbar: ein Doppel-Tap oder ein Wiederholungsversuch überschreibt denselben Satz, statt ihn ein zweites Mal anzuhängen, und dasselbe Feld erlaubt das Korrigieren eines bereits bestätigten Satzes. Im Studio kann der Akku leer werden; was bestätigt ist, liegt auf der Platte.
+
+**Die Reihenfolge der Sessions braucht ein zweites Kriterium.** `date` ist auf die Sekunde genau. Zwei Einträge derselben Sekunde wären nicht unterscheidbar, und „welche war die letzte" entschiede der Zufall, was den Tagesvorschlag verdreht. `logs_monat()` sortiert deshalb nach Datum **und** Position in der Datei.
+
+`bin/init-config.php` richtet `data/` ein (Passwort-Hash, API-Key, Grundgerüst von `plan.json`). Läuft nur auf der Kommandozeile und wird nicht auf den Server geladen.
 
 ## Worum es geht
 
@@ -45,20 +60,35 @@ Ausbaustufen (KI-Coach über eine Sprachmodell-API, Dashboard-Widgets) sind in �
 
 Es gibt keinen Build, keinen Linter und kein Test-Framework, und laut Spezifikation soll das so bleiben.
 
-**PHP ist auf diesem Mac nicht installiert** (`php` fehlt im PATH). Für lokales Testen zuerst `brew install php`, danach im Web-Root:
+PHP liegt über Homebrew lokal vor (8.5). Auf All-Inkl läuft eine andere Version, die vor dem Deployment zu prüfen ist. Der Code hält sich an PHP 8.0 und nutzt nichts Neueres.
 
 ```bash
-php -S localhost:8000
+php bin/init-config.php     # data/ einrichten, fragt zweimal nach dem Passwort
+php -S 127.0.0.1:8777       # lokal starten, dann http://127.0.0.1:8777
+for f in lib/*.php api/*.php bin/*.php; do php -l "$f"; done   # Syntax-Check
 ```
 
 Der eingebaute PHP-Server liest **keine** `.htaccess`. Der Schutz von `data/` lässt sich damit nicht prüfen, das geht nur auf dem echten All-Inkl-Host: die JSON-URL im Browser aufrufen und auf 403 prüfen.
 
-Werte für `config.json` erzeugen:
+Es gibt kein Test-Framework, und laut Spezifikation soll das so bleiben. Geprüft wird mit `curl` gegen den laufenden Server. Der Anmeldeablauf muss diese Antworten liefern:
 
 ```bash
-php -r 'echo password_hash("PASSWORT", PASSWORD_DEFAULT), PHP_EOL;'   # password_hash
-openssl rand -hex 32                                                   # api_key für n8n
+curl -s -o /dev/null -w "%{http_code}\n" -X POST localhost:8777/api/logout.php          # 401 ohne Session
+curl -s -o /dev/null -w "%{http_code}\n" localhost:8777/api/login.php                   # 405, nur POST
+curl -s -X POST localhost:8777/api/login.php -H 'Content-Type: application/json' \
+     -d '{"password":"falsch"}'                                                         # 401
 ```
+
+Die Sperre beim parallelen Schreiben ist mit 25 gleichzeitigen Prozessen geprüft, die denselben Zähler hochzählen: es kamen 25 heraus. Wer an `json_update()` etwas ändert, sollte das wiederholen.
+
+**Screenshots der Oberfläche.** Die Chrome-Erweiterung von Claude bricht in diesem Projekt mit „Cannot access a chrome-extension:// URL of different extension" ab. Der Weg, der funktioniert, ist Playwright über `npx`, allerdings mit zwei Fallstricken: das Modul liegt nur im npx-Cache (`~/.npm/_npx/*/node_modules/playwright`), und die dort gecachten Chromium-Versionen passen nicht zur Playwright-Version. Deshalb das installierte Chrome verwenden statt einen Download anzustoßen:
+
+```js
+const browser = await chromium.launch({ channel: 'chrome' });
+const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+```
+
+Damit läuft auch der Durchlauf durch die Oberfläche (anmelden, Übung anlegen, löschen, Schwerpunkt umschalten, neu laden).
 
 Fotos aufbereiten (macOS bringt `sips` mit, ImageMagick und exiftool sind nicht installiert):
 
@@ -98,6 +128,18 @@ Zwei davon blockieren Phasen:
 - **Serverstruktur bei All-Inkl** (existiert eine Ebene über dem Web-Root?). Zwei-Minuten-Check per SFTP, entscheidet Phase 0.
 
 Die Zuordnung Foto zu Gerät hängt am Trainingsplan mit dran.
+
+## Gestaltung
+
+**Für Arbeit an der Oberfläche immer den `frontend-design`-Skill benutzen** (Vorgabe von Frank).
+
+Die Richtung ist aus Franks Studio abgeleitet, nicht aus einer Fitness-App-Schablone. Die Tokens stehen in `:root` in `assets/app.css`:
+
+- **Dunkler Grund** (`--raum` `#1b1e24`) nach dem grau-blauen Sprenkelteppich, warmes Off-White als Schrift nach den ockerfarbenen Wänden. Trainiert wird morgens um sieben, ein weißer Bildschirm blendet.
+- **Zwei Akzente mit fester Bedeutung, sonst nirgends:** `--tag` `#f2b705` (das Gelb der Gerätenummern-Schilder) heißt „hier tippen". `--vinyl` `#c8562b` (das Orange des Bankpolsters) heißt „Steigerung fällig" und ist für die Coach-Ansage aus §7 reserviert. Wer eines der beiden dekorativ verwendet, nimmt ihm die Aussage.
+- **Monospace für alle Zahlen und Kürzel, Sans für Fließtext.** Ein Trainingslog ist eine Zahlentabelle. Keine Webfonts, die PWA muss offline laufen.
+- **Hauptaktionen sitzen unten am Rand**, nicht mittig. Bedienung mit dem Daumen heißt Daumenzone. Touch-Ziele ab 56px, `env(safe-area-inset-*)` beachten.
+- **Signature ist die Geräteplakette** (`.plakette`): das gelbe Nummernschild, das im Studio an den Geräten klebt. Sie trägt ab Phase 2 auf jeder Übungskachel die echte Stationsnummer, damit er das Gerät findet. Bis dahin ist sie definiert, aber ungenutzt, und soll nicht mit erfundenen Nummern dekoriert werden.
 
 ## Konventionen
 

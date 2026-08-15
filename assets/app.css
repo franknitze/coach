@@ -1,0 +1,761 @@
+/*
+ * Oberfläche der Trainings-App.
+ *
+ * Die Farben kommen aus Franks Studio: dunkler Grundton nach dem
+ * grau-blauen Teppich, warmes Off-White nach den ockerfarbenen Wänden,
+ * Gelb nach den Gerätenummern-Schildern, Orange nach dem Bankvinyl.
+ * Das Gelb heißt "hier tippen", das Orange heißt "Steigerung fällig".
+ * Beide sonst nirgends verwenden, sie verlieren sonst ihre Bedeutung.
+ *
+ * Bedient wird mit dem Daumen, oft verschwitzt, morgens um sieben.
+ * Daher: Hauptaktionen unten, Touch-Ziele ab 56px, keine feinen Ziele.
+ */
+
+:root {
+    --raum:        #1b1e24;
+    --raum-hoch:   #262a32;
+    --linie:       #3a404b;
+    --schrift:     #e8e6e1;
+    --schrift-leise: #949aa5;
+    --tag:         #f2b705;
+    --vinyl:       #c8562b;
+
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+
+    --rand: 20px;
+    --ziel: 56px;
+    /* Gebaut fürs Handy. Am Mac soll sich der Inhalt nicht auf
+       Bildschirmbreite ziehen, sondern die Handybreite behalten. */
+    --breite: 460px;
+}
+
+.kopf,
+.tor__mitte,
+.tor__fuss,
+.inhalt {
+    width: 100%;
+    max-width: var(--breite);
+    margin-inline: auto;
+}
+
+* { box-sizing: border-box; }
+
+/* Muss sein, sonst schlägt jede Klasse mit display-Angabe die Browser-Regel
+   für [hidden], weil eine Klasse spezifischer ist als ein Attribut. */
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    min-height: 100svh;
+    background: var(--raum);
+    color: var(--schrift);
+    font: 17px/1.5 var(--sans);
+    -webkit-font-smoothing: antialiased;
+    /* Kein Gummiband-Scrollen und kein Doppeltipp-Zoom im Studio. */
+    overscroll-behavior-y: none;
+    touch-action: manipulation;
+}
+
+/* ---------- Wiederkehrende Teile ---------- */
+
+/* Die Geräteplakette, nachempfunden den gelben Nummernschildern im Studio. */
+.plakette {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 4px;
+    background: var(--tag);
+    color: #1b1e24;
+    font: 600 14px/1.2 var(--mono);
+    letter-spacing: 0.04em;
+}
+
+.wortmarke {
+    font: 600 14px/1 var(--mono);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--schrift);
+}
+
+.kopf {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: calc(env(safe-area-inset-top) + 18px) var(--rand) 18px;
+}
+
+/* ---------- Bedienelemente ---------- */
+
+.knopf {
+    display: block;
+    width: 100%;
+    min-height: 64px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--tag);
+    color: #1b1e24;
+    font: 600 19px/1 var(--sans);
+    cursor: pointer;
+}
+
+.knopf:active { transform: translateY(1px); }
+.knopf:disabled { opacity: 0.5; cursor: default; }
+
+.knopf--leise {
+    min-height: var(--ziel);
+    background: transparent;
+    border: 1px solid var(--linie);
+    color: var(--schrift);
+    font-size: 17px;
+}
+
+:where(a, button, input):focus-visible {
+    outline: 3px solid var(--tag);
+    outline-offset: 3px;
+}
+
+/* ---------- Anmeldung ---------- */
+
+.tor {
+    display: flex;
+    flex-direction: column;
+    min-height: 100svh;
+}
+
+.tor__mitte {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 var(--rand);
+}
+
+.tor__titel {
+    margin: 0 0 6px;
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.tor__hinweis {
+    margin: 0 0 28px;
+    color: var(--schrift-leise);
+    font: 14px/1.5 var(--mono);
+}
+
+/* Kleine Versalien-Beschriftung, dieselbe Sprache wie die Geräteschilder. */
+.mini {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--schrift-leise);
+    font: 600 12px/1 var(--mono);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.feld {
+    width: 100%;
+    min-height: var(--ziel);
+    padding: 0 16px;
+    border: 1px solid var(--linie);
+    border-radius: 12px;
+    background: var(--raum-hoch);
+    color: var(--schrift);
+    font: 20px/1 var(--mono);
+    letter-spacing: 0.1em;
+}
+
+.feld:focus {
+    border-color: var(--tag);
+    outline: none;
+}
+
+.fehler {
+    min-height: 22px;
+    margin: 12px 0 0;
+    color: var(--vinyl);
+    font: 15px/1.4 var(--sans);
+}
+
+.tor__fuss {
+    padding: 0 var(--rand) calc(env(safe-area-inset-bottom) + 24px);
+}
+
+/* ---------- Start ---------- */
+
+.inhalt {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 0 var(--rand) calc(env(safe-area-inset-bottom) + 24px);
+}
+
+.leer {
+    margin-top: 8px;
+    padding: 28px 22px;
+    border: 1px dashed var(--linie);
+    border-radius: 14px;
+}
+
+.leer__titel {
+    margin: 0 0 10px;
+    font-size: 21px;
+    font-weight: 600;
+}
+
+.leer__text {
+    margin: 0;
+    color: var(--schrift-leise);
+    line-height: 1.6;
+}
+
+.schritte {
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--schrift-leise);
+    font: 14px/1.9 var(--mono);
+}
+
+.schritte li::before {
+    content: "□ ";
+    color: var(--tag);
+}
+
+/* ---------- Mein Plan ----------
+ *
+ * Gegenstück zum Studio-Modus: hier wird zu Hause geplant, nicht zwischen
+ * zwei Sätzen getippt. Darf dichter sein und liest sich als Planblatt,
+ * nach Trainingstag gruppiert, Zahlen in einer Spalte untereinander.
+ */
+
+.kopfknopf {
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--linie);
+    border-radius: 9px;
+    background: transparent;
+    color: var(--schrift);
+    font: 14px/1 var(--sans);
+    cursor: pointer;
+}
+
+.titelzeile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 26px;
+}
+
+.titel {
+    margin: 0;
+    font-size: 27px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.tag { margin-bottom: 34px; }
+
+/* Getippte Abschnittsmarke, wie auf einem Planblatt im Spind. */
+.tag__kopf {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 9px;
+    border-bottom: 1px solid var(--linie);
+}
+
+.tag__name {
+    font: 600 12px/1 var(--mono);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--schrift);
+}
+
+.tag__zahl {
+    font: 12px/1 var(--mono);
+    color: var(--schrift-leise);
+}
+
+.tag__leer {
+    margin: 14px 0 0;
+    color: var(--schrift-leise);
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.zeile {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    min-height: 68px;
+    padding: 12px 4px;
+    border: 0;
+    border-bottom: 1px solid var(--linie);
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.zeile:active { background: var(--raum-hoch); }
+
+.zeile__text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.zeile__name {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.zeile__daten {
+    font: 13px/1.3 var(--mono);
+    color: var(--schrift-leise);
+}
+
+/* Ohne Gerätenummer bleibt die Plakette leer statt zu verschwinden,
+   damit die Namen in einer Spalte bleiben. */
+.plakette--leer {
+    background: transparent;
+    border: 1px dashed var(--linie);
+    color: var(--schrift-leise);
+}
+
+.zufuegen {
+    width: 100%;
+    min-height: var(--ziel);
+    margin-top: 14px;
+    border: 1px dashed var(--linie);
+    border-radius: 12px;
+    background: transparent;
+    color: var(--schrift-leise);
+    font: 15px/1 var(--sans);
+    cursor: pointer;
+}
+
+.zufuegen:active { color: var(--schrift); }
+
+/* ---------- Editor ---------- */
+
+.editor {
+    padding: 20px 18px;
+    margin-top: 14px;
+    border: 1px solid var(--linie);
+    border-radius: 14px;
+    background: var(--raum-hoch);
+}
+
+.editor .mini { margin-top: 16px; }
+.editor > .mini:first-child { margin-top: 0; }
+
+.feld--text {
+    font: 17px/1 var(--sans);
+    letter-spacing: normal;
+}
+
+.paar, .drei {
+    display: grid;
+    gap: 12px;
+}
+
+.paar { grid-template-columns: 1fr 1fr; }
+.drei { grid-template-columns: repeat(3, 1fr); }
+
+.paar .mini, .drei .mini { margin-top: 16px; }
+
+.hinweis {
+    margin: 7px 0 0;
+    color: var(--schrift-leise);
+    font: 12px/1.4 var(--mono);
+}
+
+.werkzeuge {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.werkzeuge .knopf {
+    flex: 1;
+    width: auto;
+}
+
+.loeschen {
+    display: block;
+    width: 100%;
+    min-height: var(--ziel);
+    margin-top: 10px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--schrift-leise);
+    font: 15px/1 var(--sans);
+    cursor: pointer;
+}
+
+.loeschen--scharf {
+    border: 1px solid var(--vinyl);
+    color: var(--vinyl);
+    font-weight: 600;
+}
+
+/* ---------- Schwerpunkte ----------
+ *
+ * Kein dritter Akzent: Gelb heißt "hier tippen", Orange heißt "Steigerung
+ * fällig". Der aktive Zustand wird stattdessen invertiert.
+ */
+
+.prio {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: var(--ziel);
+    border-bottom: 1px solid var(--linie);
+}
+
+.prio__name {
+    font: 15px/1 var(--mono);
+    color: var(--schrift);
+}
+
+.schalter {
+    display: inline-flex;
+    padding: 3px;
+    border: 1px solid var(--linie);
+    border-radius: 10px;
+}
+
+.schalter__teil {
+    min-height: 38px;
+    padding: 0 13px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--schrift-leise);
+    font: 13px/1 var(--sans);
+    cursor: pointer;
+}
+
+.schalter__teil.ist-an {
+    background: var(--schrift);
+    color: var(--raum);
+    font-weight: 600;
+}
+
+/* ---------- Start: welcher Tag ist dran ---------- */
+
+.heute { margin-bottom: 30px; }
+
+.heute__tag {
+    margin: 10px 0 8px;
+    font-size: 42px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+}
+
+.heute__zeile {
+    margin: 0;
+    color: var(--schrift-leise);
+    font: 14px/1.5 var(--mono);
+}
+
+.tagwahl { margin-bottom: 26px; }
+
+.tagwahl__reihe {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.tagknopf {
+    min-height: var(--ziel);
+    padding: 0 18px;
+    border: 1px solid var(--linie);
+    border-radius: 12px;
+    background: transparent;
+    color: var(--schrift);
+    font: 16px/1 var(--sans);
+    cursor: pointer;
+}
+
+.tagknopf.ist-an {
+    background: var(--schrift);
+    border-color: var(--schrift);
+    color: var(--raum);
+    font-weight: 600;
+}
+
+.verweis {
+    display: block;
+    width: 100%;
+    min-height: var(--ziel);
+    border: 0;
+    border-top: 1px solid var(--linie);
+    background: transparent;
+    color: var(--schrift-leise);
+    font: 15px/1 var(--sans);
+    text-align: left;
+    cursor: pointer;
+}
+
+/* Die Startseite füllt die Höhe, damit die Hauptaktion unten in der
+   Daumenzone sitzt und nicht auf halber Höhe klebt. */
+.start {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.fussleiste {
+    margin-top: auto;
+    padding-top: 20px;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+}
+
+/* ---------- Studio: Übungskacheln ---------- */
+
+.kachel {
+    margin-bottom: 14px;
+    border: 1px solid var(--linie);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.kachel.ist-offen { border-color: var(--schrift-leise); }
+
+.kachel__kopf {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 14px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.kachel__bild,
+.kachel__platzhalter {
+    flex: 0 0 auto;
+    width: 76px;
+    height: 76px;
+    border-radius: 11px;
+    object-fit: cover;
+}
+
+/* Ohne Foto steht die Gerätenummer groß da: im Studio findet man das
+   Gerät über die Nummer, nicht über den Namen. */
+.kachel__platzhalter {
+    display: grid;
+    place-items: center;
+    background: var(--tag);
+    color: #1b1e24;
+    font: 700 26px/1 var(--mono);
+}
+
+.kachel__text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.kachel__name {
+    font-size: 19px;
+    font-weight: 600;
+}
+
+.kachel__ziel,
+.kachel__zuletzt {
+    font: 13px/1.35 var(--mono);
+    color: var(--schrift-leise);
+}
+
+.punkte {
+    display: flex;
+    gap: 5px;
+    margin-top: 4px;
+}
+
+.punkt {
+    width: 9px;
+    height: 9px;
+    border: 1px solid var(--linie);
+    border-radius: 50%;
+}
+
+.punkt.ist-voll {
+    background: var(--tag);
+    border-color: var(--tag);
+}
+
+/* ---------- Satz-Eingabe ---------- */
+
+.saetze {
+    padding: 4px 14px 16px;
+    border-top: 1px solid var(--linie);
+}
+
+.satz--fertig {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    border-bottom: 1px solid var(--linie);
+}
+
+.satz__mini {
+    flex: 0 0 auto;
+    font: 600 11px/1 var(--mono);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--schrift-leise);
+}
+
+.satz__wert {
+    flex: 1;
+    font: 16px/1 var(--mono);
+}
+
+.satz__korr {
+    min-height: 40px;
+    padding: 0 10px;
+    border: 0;
+    background: transparent;
+    color: var(--schrift-leise);
+    font: 13px/1 var(--sans);
+    cursor: pointer;
+}
+
+.satz--dran { padding: 16px 0 4px; }
+.satz--dran .satz__mini { display: block; margin-bottom: 12px; }
+
+.satz__fertig {
+    margin: 14px 0 0;
+    color: var(--schrift-leise);
+    font: 14px/1.5 var(--mono);
+}
+
+/* Große Ziele, weil im Studio mit dem Daumen und nass getippt wird. */
+.regler {
+    display: grid;
+    grid-template-columns: 68px 1fr 68px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.regler__knopf {
+    height: 62px;
+    border: 1px solid var(--linie);
+    border-radius: 12px;
+    background: var(--raum-hoch);
+    color: var(--schrift);
+    font: 300 28px/1 var(--sans);
+    cursor: pointer;
+}
+
+.regler__knopf:active { background: var(--linie); }
+
+.regler__wert {
+    font: 600 25px/1 var(--mono);
+    text-align: center;
+}
+
+.regler__schritt {
+    grid-column: 1 / -1;
+    margin-top: -4px;
+    font: 11px/1 var(--mono);
+    color: var(--schrift-leise);
+    text-align: center;
+}
+
+.satz__ok { margin-top: 8px; }
+
+/* ---------- Pausen-Timer ---------- */
+
+.pause {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    max-width: var(--breite);
+    margin-inline: auto;
+    padding: 14px var(--rand) calc(env(safe-area-inset-bottom) + 14px);
+    background: var(--raum-hoch);
+    border-top: 1px solid var(--linie);
+}
+
+/* Solange der Balken steht, braucht der Inhalt darunter Platz, sonst liegt
+   die unterste Kachel während der Pause unter dem Balken. */
+body.hat-pause .inhalt { padding-bottom: 120px; }
+
+.pause__mini {
+    font: 600 11px/1 var(--mono);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--schrift-leise);
+}
+
+.pause__zeit {
+    flex: 1;
+    font: 600 24px/1 var(--mono);
+}
+
+.pause__weg {
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--linie);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--schrift);
+    font: 14px/1 var(--sans);
+    cursor: pointer;
+}
+
+/* Pause vorbei: invertiert statt in einer dritten Farbe, damit Gelb
+   weiter "hier tippen" und Orange weiter "Steigerung fällig" heißt. */
+.pause.ist-um {
+    background: var(--schrift);
+    border-top-color: var(--schrift);
+}
+
+.pause.ist-um .pause__mini { color: #5b6069; }
+.pause.ist-um .pause__zeit { color: var(--raum); }
+
+.pause.ist-um .pause__weg {
+    border-color: var(--raum);
+    color: var(--raum);
+    font-weight: 600;
+}
+
+@media (max-width: 360px) {
+    .drei { grid-template-columns: 1fr 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+}
