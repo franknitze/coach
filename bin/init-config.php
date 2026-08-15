@@ -57,7 +57,7 @@ if (!is_file(PLAN_FILE)) {
             'oberkoerper'  => ['label' => 'Oberkörper'],
             'unterkoerper' => ['label' => 'Unterkörper'],
         ],
-        'rotation' => ['oberkoerper', 'unterkoerper', 'oberkoerper'],
+        'rotation' => ['oberkoerper', 'unterkoerper'],
         'muscle_priorities' => [
             'brust'    => 'normal',
             'ruecken'  => 'normal',

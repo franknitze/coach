@@ -108,7 +108,7 @@
     "oberkoerper": { "label": "Oberkörper" },
     "unterkoerper": { "label": "Unterkörper" }
   },
-  "rotation": ["oberkoerper", "unterkoerper", "oberkoerper"],
+  "rotation": ["oberkoerper", "unterkoerper"],
   "muscle_priorities": {
     "brust":    "normal",
     "ruecken":  "normal",
@@ -119,7 +119,7 @@
   }
 }
 ```
-- `rotation` bildet den 3x/Woche-Wechsel ab, der sich wochenweise dreht.
+- `rotation` ist **zweigliedrig**. Über drei Termine pro Woche (Mo/Mi/Fr) verschiebt sich der Wechsel dadurch von selbst: Woche 1 ist OK/UK/OK, Woche 2 ist UK/OK/UK, und jede Hälfte kommt im Schnitt 1,5-mal pro Woche dran, wie §12 es verlangt. *(Korrigiert 15.08.2026: die frühere dreigliedrige Fassung `[OK, UK, OK]` hätte sich jede Woche identisch wiederholt, Montag wäre für immer Oberkörper gewesen und der Unterkörper nur einmal pro Woche drangekommen.)*
 - `muscle_priorities`: `"normal"` oder `"focus"`. `focus` → diese Gruppe bekommt mehr Volumen. Default überall `normal`; Priorisierung ist vorhanden, aber optional nutzbar.
 
 ### `logs/YYYY-MM.json` — Trainings-Logs (Array von Sessions)
@@ -278,15 +278,15 @@ Zwei Wege, kombiniert:
 
 ## 11. Offene Punkte (warten auf Frank)
 
-- [ ] **Gerätefotos** aus dem Studio — echte Fotos verwenden (Wiedererkennung), höchstens dezent vereinheitlichen (Zuschnitt/Ausrichtung), nicht KI-stilisieren. *(nachzureichen)*
+- [x] **Gerätefotos** aus dem Studio — echte Fotos verwenden (Wiedererkennung), höchstens dezent vereinheitlichen (Zuschnitt/Ausrichtung), nicht KI-stilisieren. *(49 Originale in `images/`, aufgenommen 12.08.2026; 14 davon verkleinert und ohne EXIF unter `assets/img/exercises/`)*
 - [ ] **Serverstruktur** bei All-Inkl prüfen: gibt es eine Ebene über dem Web-Root für `data/`? *(bei Einrichtung, 2-Minuten-Check)*
-- [ ] **Konkreter Trainingsplan**: Übungen je Tag (Oberkörper/Unterkörper-Split, 3x/Woche rotierend), plus **aktuelle Geräte + Startgewichte/Wdh** als realistische Startwerte. *(braucht Studiobesuch)*
+- [x] **Konkreter Trainingsplan**: Übungen je Tag (Oberkörper/Unterkörper-Split, 3x/Woche rotierend), plus **aktuelle Geräte + Startgewichte/Wdh** als realistische Startwerte. *(Steht in `TRAININGSPLAN.md` und in `data/`. Aufgestellt aus §12 und der Geräteaufnahme, kein Studiobesuch nötig gewesen. **Startgewichte gibt es bewusst keine**: die erste Einheit ist die Eichung, danach übernimmt die Progressionsregel aus §7. Offen bleiben zwei Gerätenummern, die auf den Fotos nicht lesbar sind, siehe TRAININGSPLAN.md.)*
 
 ---
 
 ## 12. Trainings-Eckdaten (für das Plan-Design)
 
-- 3× pro Woche, morgens ~7–9 Uhr, ca. 1,5 h pro Einheit.
+- 3× pro Woche: **Montag, Mittwoch, Freitag**, morgens ~7–9 Uhr, ca. 1,5 h pro Einheit.
 - >2 Jahre Erfahrung, bereits recht kräftig → oberes Volumen (~15–20 Sätze/Woche für große Gruppen).
 - Wiederholungsbereich 6–15, nah ans Muskelversagen.
 - Split: Oberkörper/Unterkörper über 3 rotierende Tage → jede Gruppe im Schnitt ~1,5×/Woche.

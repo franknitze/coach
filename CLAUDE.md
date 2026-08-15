@@ -77,11 +77,26 @@ PHP liegt über Homebrew lokal vor (8.5). Auf All-Inkl läuft eine andere Versio
 
 ```bash
 php bin/init-config.php     # data/ einrichten, fragt zweimal nach dem Passwort
+php bin/plan-anlegen.php    # den Trainingsplan hineinschreiben
 php -S 127.0.0.1:8777       # lokal starten, dann http://127.0.0.1:8777
 for f in lib/*.php api/*.php bin/*.php; do php -l "$f"; done   # Syntax-Check
 ```
 
 Der eingebaute PHP-Server liest **keine** `.htaccess`. Der Schutz von `data/` lässt sich damit nicht prüfen, das geht nur auf dem echten All-Inkl-Host: die JSON-URL im Browser aufrufen und auf 403 prüfen.
+
+## Der Trainingsplan
+
+Er steht in **`TRAININGSPLAN.md`** (Begründung: Aufteilung, Reihenfolge, Volumen) und in **`bin/plan-anlegen.php`** (die Zahlen, die nach `data/` geschrieben werden). Wer die Zahlen ändert, ändert die Begründung mit, sonst driften beide auseinander.
+
+Ein Skript und keine Datei im Repo, weil `data/` ausgeschlossen ist: dort liegen Passwort-Hash und Trainingshistorie. Der Plan selbst ist weder geheim noch verzichtbar und muss sich nach einem Serverneuaufbau in einem Befehl wiederherstellen lassen.
+
+Drei Punkte, die beim Aufstellen entschieden wurden und nicht versehentlich zurückgedreht werden sollten:
+
+- **Die Rotation ist zweigliedrig**, nicht dreigliedrig. Über drei Termine (Mo/Mi/Fr) verschiebt sich der Wechsel dadurch von selbst, und jede Hälfte kommt im Schnitt 1,5-mal pro Woche dran, wie §12 es verlangt. Das dreigliedrige Beispiel, das ursprünglich in §4 stand, hätte sich jede Woche identisch wiederholt: Montag für immer Oberkörper, Unterkörper nur einmal pro Woche. In SPEC.md korrigiert.
+- **Es gibt keine Startgewichte.** Die erste Einheit ist die Eichung, danach übernimmt die Progressionsregel. Der Coach sagt bei Übungen ohne Historie „Erste Einheit: Gewicht antasten". Startgewichte einzutragen wäre geraten und würde die Regel nur mit falschen Zahlen füttern.
+- **Rumänisches Kreuzheben statt klassischem.** §12 nennt Kreuzheben als Beispiel. Die rumänische Variante trifft die Oberschenkelrückseite gezielter, verlangt weniger Technik unter Ermüdung und belastet den unteren Rücken geringer, was besser zum Gerätefokus aus §12 passt als schweres Kreuzheben nach vier Sätzen Kniebeuge.
+
+Fotos aufbereiten: `sips -Z 900` verkleinert, entfernt aber **keine** Metadaten. Danach `python3 bin/exif-entfernen.py <dateien>`, sonst wandert der Studio-Standort aus dem GPS-EXIF mit ins Repo. Auf diesem Mac liegen weder exiftool noch ImageMagick, daher das eigene Skript.
 
 ## Training ohne Netz
 

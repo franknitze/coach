@@ -512,7 +512,9 @@
             + '<span class="kachel__name">' + esc(u.name) + '</span>'
             + '<span class="kachel__ziel">' + ziel + ' Sätze · '
             + u.rep_min + '–' + u.rep_max + ' Wdh</span>'
-            + '<span class="kachel__zuletzt">' + esc(letztesErgebnis(u)) + '</span>'
+            + (letztesErgebnis(u)
+                ? '<span class="kachel__zuletzt">' + esc(letztesErgebnis(u)) + '</span>'
+                : '')
             + ansage
             + '<span class="punkte">' + punkte + '</span>'
             + '</span></button>';
@@ -526,7 +528,9 @@
 
     function letztesErgebnis(u) {
         if (!u.last || !u.last.sets || u.last.sets.length === 0) {
-            return 'noch kein Ergebnis';
+            // Die Coach-Zeile sagt beim ersten Mal schon, dass hier nichts
+            // steht. Zweimal dieselbe Auskunft untereinander ist eine zu viel.
+            return '';
         }
         const s = u.last.sets[u.last.sets.length - 1];
         return 'zuletzt ' + zahl(s.weight) + ' kg × ' + s.reps

@@ -52,12 +52,14 @@ function coach_empfehlung(array $uebung): array
     $einheiten = logs_letzte_einheiten((string) $uebung['id'], COACH_EINHEITEN);
 
     if ($einheiten === []) {
+        // Kurz halten. Der Wiederholungsbereich steht auf der Kachel schon
+        // eine Zeile darüber, und beim ersten Training trägt jede Kachel
+        // diesen Hinweis. Ein ganzer Satz wäre dort achtmal dieselbe Tapete.
         return [
             'status'        => 'start',
             'target_weight' => null,
             'reason'        => '',
-            'text'          => 'Noch kein Wert. Ein Gewicht wählen, mit dem '
-                             . $repMin . ' bis ' . $repMax . ' Wiederholungen sauber gehen.',
+            'text'          => 'Erste Einheit: Gewicht antasten',
         ];
     }
 
