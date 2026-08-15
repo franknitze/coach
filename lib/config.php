@@ -16,13 +16,18 @@ date_default_timezone_set('Europe/Berlin');
  * Auf dem Server soll data/ möglichst eine Ebene über dem Web-Root liegen
  * (SPEC.md §8). Ob das bei diesem All-Inkl-Paket geht, ist noch nicht geprüft.
  * Wenn ja, ändert sich genau diese eine Zeile, sonst nichts im Code.
+ *
+ * COACH_DATA aus der Umgebung sticht den Standardpfad. Gedacht ist das für
+ * die Tests: die schreiben und löschen Logdateien und dürfen dabei niemals
+ * an die echte Trainingshistorie kommen. Im Betrieb bleibt die Variable
+ * ungesetzt, dann gilt der Pfad aus der Zeile darunter.
  */
-const DATA_DIR = __DIR__ . '/../data';
-const LOGS_DIR = DATA_DIR . '/logs';
+define('DATA_DIR', getenv('COACH_DATA') ?: __DIR__ . '/../data');
+define('LOGS_DIR', DATA_DIR . '/logs');
 
-const CONFIG_FILE    = DATA_DIR . '/config.json';
-const EXERCISES_FILE = DATA_DIR . '/exercises.json';
-const PLAN_FILE      = DATA_DIR . '/plan.json';
+define('CONFIG_FILE',    DATA_DIR . '/config.json');
+define('EXERCISES_FILE', DATA_DIR . '/exercises.json');
+define('PLAN_FILE',      DATA_DIR . '/plan.json');
 
 /** Globale Einstellungen aus config.json, mit den Vorgaben aus SPEC.md §4. */
 function config(): array

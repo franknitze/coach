@@ -32,7 +32,11 @@
             throw new Error('Server antwortet nicht wie erwartet.');
         }
 
-        if (antwort.status === 401) {
+        // 401 heißt im angemeldeten Bereich "Sitzung abgelaufen", dort ist
+        // Neuladen richtig. Auf dem Anmeldebildschirm heißt derselbe Code
+        // "falsches Passwort", und dann muss die Meldung stehen bleiben,
+        // sonst lädt die Seite wortlos neu und niemand weiß, warum.
+        if (antwort.status === 401 && document.getElementById('app')) {
             location.reload();
             throw new Error('Nicht angemeldet.');
         }
@@ -303,6 +307,21 @@
             punkte += '<span class="punkt' + (i < heute.length ? ' ist-voll' : '') + '"></span>';
         }
 
+        // Die Ansage steht laut SPEC.md §5.2 auf der Kachel. Hervorgehoben
+        // wird nur die fällige Steigerung, denn genau das bedeutet das
+        // Orange in dieser App. Die übrigen Hinweise bleiben zurückhaltend,
+        // sonst schreit jede Kachel und keine sagt mehr etwas.
+        const c = u.coach;
+        let ansage = '';
+        if (c && c.text) {
+            ansage = '<span class="kachel__coach'
+                   + (c.status === 'steigern' ? ' ist-faellig' : '') + '">'
+                   + esc(c.text) + '</span>';
+            if (c.reason) {
+                ansage += '<span class="kachel__grund">' + esc(c.reason) + '</span>';
+            }
+        }
+
         let html = '<section class="kachel' + (offen ? ' ist-offen' : '') + '">'
             + '<button class="kachel__kopf" data-oeffne="' + esc(u.id) + '">'
             + bild
@@ -311,6 +330,7 @@
             + '<span class="kachel__ziel">' + ziel + ' Sätze · '
             + u.rep_min + '–' + u.rep_max + ' Wdh</span>'
             + '<span class="kachel__zuletzt">' + esc(letztesErgebnis(u)) + '</span>'
+            + ansage
             + '<span class="punkte">' + punkte + '</span>'
             + '</span></button>';
 
@@ -522,11 +542,23 @@
             + '<button class="kopfknopf" data-gehe="plan">Zurück</button>'
             + '</div>';
 
+        // Der Verlauf steht in einem eigenen Behälter, damit er sich
+        // aktualisieren lässt, ohne das Formular darunter neu zu zeichnen.
+        // Sonst verliert eine Eingabe ihren Text, sobald die Kurve
+        // nachlädt oder man einen Punkt antippt.
         if (!neu) {
-            html += zeichneVerlauf();
+            html += '<div id="verlaufteil">' + zeichneVerlauf() + '</div>';
         }
 
         return html + zeichneEditor(neu ? { day: zustand.neuTag } : u);
+    }
+
+    /** Zeichnet nur den Verlaufsteil neu, nicht die ganze Ansicht. */
+    function verlaufZeichnen() {
+        const behaelter = document.getElementById('verlaufteil');
+        if (behaelter) {
+            behaelter.innerHTML = zeichneVerlauf();
+        }
     }
 
     function zeichneVerlauf() {
@@ -902,7 +934,7 @@
             zustand.punktIndex = null;
             zeichnen();                 // Gerüst sofort, Kurve sobald geladen
             await verlaufLaden(d.bearbeite);
-            return zeichnen();
+            return verlaufZeichnen();
         }
 
         if (d.neu) {
@@ -1019,7 +1051,7 @@
         });
 
         zustand.punktIndex = naechster;
-        zeichnen();
+        verlaufZeichnen();
     });
 
     /* ---------- Start ---------- */

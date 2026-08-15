@@ -678,6 +678,27 @@ body {
     color: var(--schrift-leise);
 }
 
+/* Die Coach-Ansage. Orange heißt in dieser App "Steigerung fällig", und
+   genau dieser eine Fall wird hervorgehoben. Alles andere bleibt leise. */
+.kachel__coach {
+    margin-top: 2px;
+    font: 13px/1.35 var(--mono);
+    color: var(--schrift-leise);
+}
+
+.kachel__coach.ist-faellig {
+    color: var(--vinyl);
+    font-weight: 600;
+    font-size: 15px;
+}
+
+/* Die Begründung unter der Handlung: erklärt, warum, drängt sich aber
+   nicht vor. Im Studio wird nur die erste Zeile gelesen. */
+.kachel__grund {
+    font: 12px/1.35 var(--mono);
+    color: var(--schrift-leise);
+}
+
 .punkte {
     display: flex;
     gap: 5px;

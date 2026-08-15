@@ -6,13 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `SPEC.md` (deutsch, ~290 Zeilen) ist die verbindliche Vorgabe und die einzige Quelle dafür, was gebaut wird. Vor jedem Implementierungsvorschlag lesen; das Dokument ist so geschrieben, dass sich der Plan ohne Rückfragen ableiten lässt. Die Phasen 0 bis 6 in §10 sind die vorgegebene Reihenfolge.
 
-Gebaut sind Phase 0 (lokal) bis 3, also Fundament, Login, Verwaltung, Studio-Modus und Auswertung:
+Gebaut sind Phase 0 (lokal) bis 4. Es fehlt nur noch Phase 5:
 
 | Steht | Fehlt |
 |---|---|
-| `lib/storage.php`, `config.php`, `auth.php`, `uebungen.php`, `logs.php` | `api/coach.php` (Phase 4), `export.php` (Phase 5) |
-| `api/`: `login`, `logout`, `exercises`, `settings`, `plan`, `session`, `history` | Coach-Ansage auf der Kachel |
-| `index.php`, `assets/app.css`, `assets/app.js`: Start, Studio, Mein Plan, Übungsdetail mit Verlauf | `manifest.json`, `service-worker.js` |
+| `lib/`: `storage`, `config`, `auth`, `uebungen`, `logs`, `coach` | `api/export.php` (schlüsselgeschützt für n8n) |
+| `api/`: `login`, `logout`, `exercises`, `settings`, `plan`, `session`, `history`, `coach` | `manifest.json`, `service-worker.js` |
+| `index.php`, `assets/app.css`, `assets/app.js`: Start, Studio, Mein Plan, Übungsdetail mit Verlauf, Coach-Ansage | der n8n-Backup-Workflow |
 | `.htaccess`, `bin/init-config.php` | alles auf dem Server, es ist noch nichts deployed |
 
 Drei Abweichungen von SPEC.md, alle bewusst:
@@ -40,7 +40,7 @@ Der zentrale Bedienfall ist das Studio: Eingabe nur mit dem Daumen, große Plus/
 
 Diese Punkte stehen verteilt in der Spezifikation und ergeben zusammen die Architektur.
 
-**Das Frontend spricht ausschließlich mit der PHP-API, nie mit den JSON-Dateien.** Es gibt keinen Pfad, auf dem der Browser eine Datei aus `data/` direkt liest. Der Schutz von `data/` hat zwei Ebenen (§8): bevorzugt liegt der Ordner eine Ebene über dem Web-Root, zusätzlich sperrt eine `.htaccess`-Regel den Zugriff. Ob die Ebene über dem Web-Root bei diesem All-Inkl-Paket existiert, ist noch nicht geprüft. Deshalb gehört der Pfad zu `data/` in **eine** zentrale Konstante, damit der Umzug später eine Zeile ist und keine Suche über alle Endpunkte.
+**Das Frontend spricht ausschließlich mit der PHP-API, nie mit den JSON-Dateien.** Es gibt keinen Pfad, auf dem der Browser eine Datei aus `data/` direkt liest. Der Schutz von `data/` hat zwei Ebenen (§8): bevorzugt liegt der Ordner eine Ebene über dem Web-Root, zusätzlich sperrt eine `.htaccess`-Regel den Zugriff. Ob die Ebene über dem Web-Root bei diesem All-Inkl-Paket existiert, ist noch nicht geprüft. Deshalb steht der Pfad zu `data/` an **einer** Stelle (`DATA_DIR` in `lib/config.php`), damit der Umzug später eine Zeile ist und keine Suche über alle Endpunkte. Die Umgebungsvariable `COACH_DATA` sticht ihn; darüber laufen die Tests in einem eigenen Verzeichnis.
 
 **Zwei getrennte Zugangswege.** Alle Endpunkte prüfen die Session, mit genau zwei Ausnahmen: `login.php` (setzt sie) und `export.php` (prüft stattdessen `api_key` gegen `config.json`, weil n8n sich nicht einloggen kann). Beim Anlegen eines neuen Endpunkts ist die Session-Prüfung der Normalfall.
 
@@ -50,7 +50,15 @@ Diese Punkte stehen verteilt in der Spezifikation und ergeben zusammen die Archi
 
 **Der Tagesvorschlag wird abgeleitet, nicht gespeichert.** „Heute: Unterkörper" entsteht aus `plan.json → rotation` plus dem `day` der letzten Session in den Logs. Es gibt kein Feld „aktueller Tag", das man pflegen müsste. Die manuelle Auswahl eines anderen Tags muss immer möglich bleiben, Frank soll nie ins Schema gezwungen sein.
 
-**Die Progressionsregel lebt nur in `coach.php`.** Doppelte Progression (§7): erst Wiederholungen bis `rep_max` hochklettern, dann Gewicht um `weight_step` rauf und Wiederholungen zurück Richtung `rep_min`. Die Regel ist deterministisch und ohne Sprachmodell. Das Frontend zeigt die Ansage nur an und rechnet nichts selbst nach.
+**Die Progressionsregel lebt nur in `lib/coach.php`.** Doppelte Progression (§7): erst Wiederholungen bis `rep_max` hochklettern, dann Gewicht um `weight_step` rauf und Wiederholungen zurück Richtung `rep_min`. Deterministisch, ohne Sprachmodell. Das Frontend zeigt die Ansage nur an und rechnet nichts selbst nach.
+
+Sie steht in `lib/` und nicht im Endpunkt, weil sie zwei Zugänge hat: `api/coach.php` gibt sie einzeln aus (so sieht §3 den Endpunkt vor), `api/plan.php` hängt sie an jede Kachel, damit der Studio-Bildschirm mit einem Request auskommt. Wer die Regel ändert, ändert sie an dieser einen Stelle.
+
+Drei Festlegungen, die die Spezifikation offen lässt:
+
+- **`COACH_EINHEITEN = 2`.** §7 nennt „N = 2..3". Zwei ist der zügigere Wert; wer vorsichtiger steigern will, setzt die Konstante auf 3. Eine einzelne saubere Einheit reicht bewusst nicht, sonst schiebt ein guter Tag das Gewicht hoch, das am nächsten Termin wieder einbricht.
+- **„Eingebrochen" heißt: auch der beste Satz liegt unter `rep_min`.** Der letzte Satz fällt bei hartem Training regelmäßig ab, das ist Ermüdung und kein zu schweres Gewicht. Würde jeder einzelne schwache Satz die Warnung auslösen, stünde sie ständig da und niemand läse sie mehr.
+- **Der Coach-Vorschlag befüllt die Eingabe nicht.** Vorbefüllt wird weiter der letzte Wert (§5.2: gleiche Leistung nur bestätigen). Die App sagt, was fällig wäre; das Plus drückt Frank selbst. Sonst bestätigt er im Halbschlaf eine Steigerung, die er nicht geschafft hat.
 
 **`weight_step` gibt es zweimal:** global in `config.json` als Default (5), pro Übung in `exercises.json` als Überschreibung. Erlaubt sind 1,25, 2,5 und 5. Jede Stelle, die Gewicht verändert, muss den Wert der Übung nehmen und auf den globalen zurückfallen.
 
@@ -72,16 +80,24 @@ for f in lib/*.php api/*.php bin/*.php; do php -l "$f"; done   # Syntax-Check
 
 Der eingebaute PHP-Server liest **keine** `.htaccess`. Der Schutz von `data/` lässt sich damit nicht prüfen, das geht nur auf dem echten All-Inkl-Host: die JSON-URL im Browser aufrufen und auf 403 prüfen.
 
-Es gibt kein Test-Framework, und laut Spezifikation soll das so bleiben. Geprüft wird mit `curl` gegen den laufenden Server. Der Anmeldeablauf muss diese Antworten liefern:
+## Tests
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}\n" -X POST localhost:8777/api/logout.php          # 401 ohne Session
-curl -s -o /dev/null -w "%{http_code}\n" localhost:8777/api/login.php                   # 405, nur POST
-curl -s -X POST localhost:8777/api/login.php -H 'Content-Type: application/json' \
-     -d '{"password":"falsch"}'                                                         # 401
+node tests/lauf.js            # alle, dauert etwa eine Minute
+node tests/lauf.js coach      # einzeln: regel, verwaltung, studio, verlauf, coach
 ```
 
-Die Sperre beim parallelen Schreiben ist mit 25 gleichzeitigen Prozessen geprüft, die denselben Zähler hochzählen: es kamen 25 heraus. Wer an `json_update()` etwas ändert, sollte das wiederholen.
+Kein Test-Framework, wie in SPEC.md §2 vorgesehen. `tests/lauf.js` ist ein Skript, das die Läufe nacheinander startet und mit Exit-Code 1 endet, wenn etwas scheitert. Playwright steuert nur den Browser und läuft gegen das installierte Chrome, damit kein Browser nachgeladen wird. Fehlt Playwright, sagt die Fehlermeldung, was zu tun ist.
+
+**Jeder Lauf ist vollständig abgeschottet.** Er startet einen eigenen PHP-Server auf einem eigenen Port mit einem eigenen Datenverzeichnis im Temp-Ordner, gesetzt über `COACH_DATA`. Das ist keine Bequemlichkeit, sondern Notwehr: die Läufe löschen und schreiben Logdateien, und gegen `data/` ausgeführt kosteten sie die Trainingshistorie. Deshalb gilt:
+
+- **Testcode darf `DATA_DIR` niemals umgehen** und nie mit festen Pfaden auf `data/` zugreifen.
+- Antwortet auf dem Port schon etwas, bricht der Lauf ab statt weiterzumachen. Ein übriggebliebener Server aus einem abgestürzten Lauf hat ein anderes Datenverzeichnis, und der Lauf liefe stillschweigend gegen die falschen Daten. Genau das ist einmal passiert und hat einen halben Debug-Durchgang gekostet.
+- Die Läufe sind unabhängig von der Reihenfolge; jeder setzt seinen Ausgangszustand über `t.logs()` selbst.
+
+Was jeder Lauf abdeckt: `regel` prüft `coach_empfehlung()` direkt in PHP über alle Zweige aus §7, ohne Browser. `verwaltung` deckt Anmeldung und Übungsbibliothek ab, `studio` den Trainingsablauf samt Rotation und Pausen-Timer, `verlauf` die Kurven, `coach` die Ansage auf der Kachel.
+
+Nicht automatisiert, aber einmal geprüft und bei Änderungen zu wiederholen: die Sperre in `json_update()` mit 25 gleichzeitigen Prozessen, die denselben Zähler hochzählen. Es kamen 25 heraus.
 
 **Screenshots der Oberfläche.** Die Chrome-Erweiterung von Claude bricht in diesem Projekt mit „Cannot access a chrome-extension:// URL of different extension" ab. Der Weg, der funktioniert, ist Playwright über `npx`, allerdings mit zwei Fallstricken: das Modul liegt nur im npx-Cache (`~/.npm/_npx/*/node_modules/playwright`), und die dort gecachten Chromium-Versionen passen nicht zur Playwright-Version. Deshalb das installierte Chrome verwenden statt einen Download anzustoßen:
 

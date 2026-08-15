@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/_bootstrap.php';
 require_once __DIR__ . '/../lib/uebungen.php';
 require_once __DIR__ . '/../lib/logs.php';
+require_once __DIR__ . '/../lib/coach.php';
 
 auth_require();
 require_method('GET');
@@ -61,6 +62,7 @@ foreach ($alle as $uebung) {
     $id = $uebung['id'];
     $uebung['last']  = logs_letzte_werte($id);
     $uebung['today'] = $erledigt[$id] ?? [];
+    $uebung['coach'] = coach_empfehlung($uebung);
     $heute[] = $uebung;
 }
 
