@@ -31,8 +31,9 @@
         try {
             antwort = await fetch(pfad, einstellungen);
         } catch (e) {
-            throw new Error('Keine Verbindung. Die App braucht Netz, '
-                + 'um Übungen zu laden und Sätze zu speichern.');
+            const fehler = new Error('Keine Verbindung.');
+            fehler.netz = true;   // unterscheidet "später nochmal" von "nie"
+            throw fehler;
         }
 
         let inhalt = {};
@@ -156,9 +157,177 @@
         neuTag: null,          // Trainingstag einer neu angelegten Übung
         verlauf: null,         // Antwort von api/history.php
         punktIndex: null,      // gewählte Einheit im Diagramm, null = letzte
+        ausPuffer: false,      // Studio-Ansicht kommt aus dem lokalen Stand
         loeschfrage: null,
         meldung: '',
     };
+
+    /* ---------- Puffer für schlechten Empfang ----------
+     *
+     * Im Studio ist der Empfang schlecht. Deshalb geht jeder bestätigte
+     * Satz IMMER zuerst in einen lokalen Puffer und erst danach ans
+     * Netz, auch wenn gerade Verbindung besteht. Ein zweiter Weg nur für
+     * den Offline-Fall wäre ein Weg, der selten läuft und deshalb nie
+     * auffällt, wenn er kaputt ist.
+     *
+     * Dass das gefahrlos geht, liegt an set_index: derselbe Satz zweimal
+     * geschickt überschreibt sich, statt sich zu verdoppeln. Und jeder
+     * Eintrag trägt performed_at, damit ein am Dienstagabend gepufferter
+     * Satz nicht in der Mittwochs-Session landet.
+     *
+     * localStorage statt IndexedDB: es geht um wenige Kilobyte, und die
+     * synchrone Schnittstelle spart eine ganze Klasse von Wettläufen.
+     * Zu bedenken: iOS räumt den Speicher einer PWA nach sieben Tagen
+     * ohne Benutzung ab. Bei drei Einheiten pro Woche ist das kein
+     * Thema, und der Puffer soll ohnehin binnen Stunden leer sein.
+     */
+
+    const SCHLUESSEL = {
+        warteschlange: 'coach.warteschlange',
+        gescheitert:   'coach.gescheitert',
+        plan:          'coach.plan.',
+        zuletzt:       'coach.plan.zuletzt',
+    };
+
+    function gelesen(schluessel, ersatz) {
+        try {
+            const roh = localStorage.getItem(schluessel);
+            return roh === null ? ersatz : JSON.parse(roh);
+        } catch (e) {
+            return ersatz;   // privater Modus oder kaputter Eintrag
+        }
+    }
+
+    function geschrieben(schluessel, wert) {
+        try {
+            localStorage.setItem(schluessel, JSON.stringify(wert));
+            return true;
+        } catch (e) {
+            return false;    // Speicher voll oder gesperrt
+        }
+    }
+
+    const warteschlange = {
+        holen() { return gelesen(SCHLUESSEL.warteschlange, []); },
+        setzen(liste) { return geschrieben(SCHLUESSEL.warteschlange, liste); },
+        anhaengen(eintrag) {
+            const liste = this.holen();
+            liste.push(eintrag);
+            return this.setzen(liste);
+        },
+    };
+
+    const gescheitert = {
+        holen() { return gelesen(SCHLUESSEL.gescheitert, []); },
+        anhaengen(eintrag, grund) {
+            const liste = this.holen();
+            liste.push({ eintrag: eintrag, grund: grund });
+            geschrieben(SCHLUESSEL.gescheitert, liste);
+        },
+        leeren() { geschrieben(SCHLUESSEL.gescheitert, []); },
+    };
+
+    /** Merkt sich die Studio-Ansicht, damit sie ohne Netz da ist. */
+    function planMerken() {
+        if (!zustand.studio) {
+            return;
+        }
+        const tag = zustand.studio.day.key;
+        geschrieben(SCHLUESSEL.plan + tag, zustand.studio);
+        geschrieben(SCHLUESSEL.zuletzt, tag);
+    }
+
+    function planErinnern(tag) {
+        const schluessel = tag || gelesen(SCHLUESSEL.zuletzt, null);
+        return schluessel ? gelesen(SCHLUESSEL.plan + schluessel, null) : null;
+    }
+
+    /* ---------- Statusleiste ----------
+     *
+     * Frank muss jederzeit sehen können, ob seine Sätze sicher sind.
+     * Ein stiller Puffer wäre schlimmer als gar keiner: man verließe
+     * sich darauf, ohne zu wissen, ob er noch voll ist.
+     */
+
+    const statusBox = document.getElementById('status');
+    let sendetGerade = false;
+
+    function statusZeichnen() {
+        if (!statusBox) {
+            return;
+        }
+
+        const offen = warteschlange.holen().length;
+        const kaputt = gescheitert.holen();
+        const ohneNetz = !navigator.onLine;
+
+        let text = '';
+        let art = '';
+
+        if (kaputt.length) {
+            art = 'ist-kaputt';
+            text = kaputt.length + (kaputt.length === 1 ? ' Satz wurde' : ' Sätze wurden')
+                 + ' abgelehnt: ' + kaputt[0].grund;
+        } else if (ohneNetz && offen) {
+            art = 'ist-offline';
+            text = 'Ohne Netz · ' + offen + (offen === 1 ? ' Satz' : ' Sätze')
+                 + ' liegen hier, bis wieder Empfang da ist';
+        } else if (ohneNetz) {
+            art = 'ist-offline';
+            text = 'Ohne Netz · gespeichert wird trotzdem';
+        } else if (offen) {
+            art = '';
+            text = offen + (offen === 1 ? ' Satz wird' : ' Sätze werden') + ' gesichert';
+        }
+
+        statusBox.hidden = text === '';
+        statusBox.className = 'status ' + art;
+        statusBox.textContent = text;
+    }
+
+    /**
+     * Arbeitet den Puffer ab, einen Eintrag nach dem anderen.
+     *
+     * Bricht bei einem Netzfehler ab und behält den Rest: beim nächsten
+     * Versuch geht es an derselben Stelle weiter, und die Reihenfolge
+     * bleibt erhalten. Eine Ablehnung des Servers (4xx) wird dagegen nie
+     * gutgehen, der Eintrag wandert dann sichtbar zur Seite statt
+     * endlos wiederholt zu werden.
+     */
+    async function puffernSenden() {
+        if (sendetGerade || !navigator.onLine) {
+            statusZeichnen();
+            return;
+        }
+
+        sendetGerade = true;
+        statusZeichnen();
+
+        try {
+            let liste = warteschlange.holen();
+
+            while (liste.length) {
+                const eintrag = liste[0];
+                try {
+                    await api('api/session.php', { daten: eintrag });
+                } catch (err) {
+                    if (err.netz) {
+                        break;                     // später an derselben Stelle weiter
+                    }
+                    gescheitert.anhaengen(eintrag, err.message);
+                }
+                liste = liste.slice(1);
+                warteschlange.setzen(liste);
+                statusZeichnen();
+            }
+        } finally {
+            sendetGerade = false;
+            statusZeichnen();
+        }
+    }
+
+    addEventListener('online', puffernSenden);
+    addEventListener('offline', statusZeichnen);
 
     /* ---------- Pausen-Timer ----------
      *
@@ -269,7 +438,11 @@
         });
         html += '</div></div>';
 
-        html += '<button class="verweis" data-gehe="plan">Mein Plan</button>';
+        // Der Verwaltungsbereich braucht das Netz und wird zu Hause bedient.
+        // Ohne Verbindung führt der Verweis ins Leere, also weg damit.
+        if (zustand.plan) {
+            html += '<button class="verweis" data-gehe="plan">Mein Plan</button>';
+        }
 
         if (anzahl > 0) {
             html += '<div class="fussleiste"><button class="knopf" data-gehe="studio">'
@@ -798,9 +971,29 @@
         }
     }
 
+    /**
+     * Holt die Studio-Ansicht, mit dem lokalen Stand als Rückfall.
+     *
+     * Ohne Netz ist der gemerkte Stand die einzige Möglichkeit, im Studio
+     * überhaupt etwas zu sehen. Er kann veraltet sein, aber ein veralteter
+     * Plan ist im Zweifel richtig: Übungen und Zielvorgaben ändern sich
+     * selten, und die eigenen Sätze von heute stecken mit drin.
+     */
     async function studioLaden(tag) {
         const pfad = 'api/plan.php' + (tag ? '?day=' + encodeURIComponent(tag) : '');
-        zustand.studio = await api(pfad);
+
+        try {
+            zustand.studio = await api(pfad);
+            zustand.ausPuffer = false;
+            planMerken();
+        } catch (err) {
+            const gemerkt = planErinnern(tag);
+            if (!gemerkt) {
+                throw err;
+            }
+            zustand.studio = gemerkt;
+            zustand.ausPuffer = true;
+        }
     }
 
     function uebungImStudio(id) {
@@ -905,29 +1098,38 @@
             const e2 = zustand.entwurf[u.id] || vorbelegung(u);
             const index = e2.index !== undefined ? e2.index : (u.today || []).length;
 
-            ziel.disabled = true;
-            ziel.textContent = 'Moment';
+            const eintrag = {
+                day: zustand.studio.day.key,
+                rotation_index: zustand.studio.rotation_index,
+                exercise_id: u.id,
+                set_index: index,
+                weight: e2.weight,
+                reps: e2.reps,
+                performed_at: new Date().toISOString(),
+            };
 
-            try {
-                const antwort = await api('api/session.php', {
-                    daten: {
-                        day: zustand.studio.day.key,
-                        rotation_index: zustand.studio.rotation_index,
-                        exercise_id: u.id,
-                        set_index: index,
-                        weight: e2.weight,
-                        reps: e2.reps,
-                    },
-                });
-                u.today = antwort.sets || [];
-                delete zustand.entwurf[u.id];
-                zustand.meldung = '';
-                zeichnen();
-                pauseStarten(zustand.studio.rest_timer_seconds);
-            } catch (err) {
-                zustand.meldung = err.message;
-                zeichnen();
+            // Erst lokal festhalten, dann anzeigen, dann senden. Der Satz
+            // gilt, sobald er im Puffer liegt; ob das Netz mitspielt, ist
+            // eine Frage von später und nicht von jetzt.
+            const gemerkt = warteschlange.anhaengen(eintrag);
+
+            if (!gemerkt) {
+                zustand.meldung = 'Der Satz lässt sich nicht zwischenspeichern. '
+                    + 'Ist der Speicher des Browsers voll oder gesperrt?';
+                return zeichnen();
             }
+
+            const heute = (u.today || []).slice();
+            heute[index] = { weight: e2.weight, reps: e2.reps };
+            u.today = heute;
+
+            delete zustand.entwurf[u.id];
+            zustand.meldung = '';
+            planMerken();
+            zeichnen();
+            pauseStarten(zustand.studio.rest_timer_seconds);
+
+            puffernSenden();   // bewusst ohne await: die Pause läuft schon
             return;
         }
 
@@ -1067,6 +1269,9 @@
     /* ---------- Start ---------- */
 
     (async function laden() {
+        statusZeichnen();
+        puffernSenden();       // was vom letzten Mal liegengeblieben ist
+
         try {
             const [einstellungen, uebungen] = await Promise.all([
                 api('api/settings.php'),
@@ -1084,8 +1289,28 @@
             }
 
             zeichnen();
+            return;
         } catch (err) {
-            app.innerHTML = '<p class="fehler">' + esc(err.message) + '</p>';
+            if (!err.netz) {
+                app.innerHTML = '<p class="fehler">' + esc(err.message) + '</p>';
+                return;
+            }
         }
+
+        // Ohne Netz: mit dem zuletzt gemerkten Stand weiterarbeiten. Die
+        // Verwaltung bleibt zu (sie braucht den Server), das Studio geht.
+        const gemerkt = planErinnern(null);
+
+        if (!gemerkt) {
+            app.innerHTML = '<p class="fehler">Keine Verbindung, und hier liegt '
+                + 'noch kein Trainingstag bereit. Einmal mit Netz öffnen, danach '
+                + 'geht es auch im Funkloch.</p>';
+            return;
+        }
+
+        zustand.studio = gemerkt;
+        zustand.ausPuffer = true;
+        zustand.plan = null;
+        zeichnen();
     })();
 })();

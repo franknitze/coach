@@ -44,9 +44,39 @@ if ($wdh < 1 || $wdh > 100) {
     fail('Die Wiederholungen liegen außerhalb des Erwarteten.', 422);
 }
 
-logs_satz_eintragen($tag, $rotIdx, $uebung, $index, $gewicht, $wdh);
+/*
+ * performed_at kommt aus dem lokalen Puffer: bei schlechtem Empfang im
+ * Studio werden Sätze im Browser gesammelt und später nachgereicht. Ohne
+ * diesen Zeitpunkt landete ein Satz von gestern in der heutigen Session.
+ *
+ * Der Wert kommt vom Client und wird deshalb eingegrenzt. Nach vorn ist
+ * eine Viertelstunde Toleranz nötig, weil die Uhr des Handys von der des
+ * Servers abweichen darf. Nach hinten sind 30 Tage großzügig genug für
+ * jede realistische Funkloch-Geschichte und verhindern trotzdem, dass
+ * sich damit die Historie umschreiben lässt.
+ */
+$zeitpunkt = null;
+$roh = trim((string) ($eingabe['performed_at'] ?? ''));
 
-$heutige = logs_heutige_session($tag);
+if ($roh !== '') {
+    try {
+        $zeitpunkt = new DateTimeImmutable($roh);
+    } catch (Exception $e) {
+        fail('Der Zeitpunkt ist unlesbar.', 422);
+    }
+
+    $jetzt = new DateTimeImmutable('now');
+    if ($zeitpunkt > $jetzt->modify('+15 minutes')) {
+        fail('Der Zeitpunkt liegt in der Zukunft.', 422);
+    }
+    if ($zeitpunkt < $jetzt->modify('-30 days')) {
+        fail('Der Zeitpunkt liegt zu weit zurück.', 422);
+    }
+}
+
+logs_satz_eintragen($tag, $rotIdx, $uebung, $index, $gewicht, $wdh, $zeitpunkt);
+
+$heutige = logs_session_am($tag, $zeitpunkt);
 $saetze  = [];
 foreach ((array) ($heutige['exercises'] ?? []) as $eintrag) {
     if (($eintrag['exercise_id'] ?? '') === $uebung) {

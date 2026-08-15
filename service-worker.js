@@ -73,8 +73,13 @@ self.addEventListener('fetch', (e) => {
         e.respondWith(
             fetch(anfrage)
                 .then((antwort) => {
-                    const kopie = antwort.clone();
-                    caches.open(CACHE).then((c) => c.put('./', kopie));
+                    // Nur die angemeldete Hülle merken. Läge die
+                    // Anmeldeseite im Cache, stünde man ohne Netz vor
+                    // einem Formular, das sich nicht abschicken lässt.
+                    if (antwort.ok && antwort.headers.get('X-Angemeldet') === '1') {
+                        const kopie = antwort.clone();
+                        caches.open(CACHE).then((c) => c.put('./', kopie));
+                    }
                     return antwort;
                 })
                 .catch(() => caches.match('./', { ignoreSearch: true }))

@@ -67,10 +67,15 @@ module.exports = (port) => testlauf('PWA und Export', port, async (t) => {
     ok(await page.locator('.wortmarke').count() === 1,
        'ohne Netz startet die Hülle trotzdem');
 
-    const meldung = (await page.locator('#app').innerText()).trim();
-    ok(meldung.includes('Keine Verbindung'),
-       'und sagt auf Deutsch, woran es liegt: "' + meldung.split('\n')[0] + '"');
-    ok(!/Failed to fetch/i.test(meldung), 'kein englischer Browsertext auf dem Bildschirm');
+    ok((await page.locator('.heute__tag').innerText()) === 'Oberkörper',
+       'und zeigt den gemerkten Trainingstag statt einer Fehlermeldung');
+    ok(await page.locator('#anmeldung').count() === 0,
+       'und nicht die Anmeldeseite, die sich ohne Netz gar nicht abschicken ließe');
+
+    const status = await page.locator('#status').innerText();
+    ok(status.includes('Ohne Netz'), 'die Statusleiste sagt Bescheid: "' + status + '"');
+    ok(!/Failed to fetch/i.test(await page.locator('body').innerText()),
+       'nirgends englischer Browsertext auf dem Bildschirm');
 
     await page.context().setOffline(false);
 

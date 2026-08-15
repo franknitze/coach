@@ -545,6 +545,34 @@ body {
     font-weight: 600;
 }
 
+/* ---------- Statusleiste des Puffers ----------
+ *
+ * Ohne dritte Farbe: Gelb heißt "hier tippen", Orange heißt "Steigerung
+ * fällig". Der Puffer meldet sich über eine abgesetzte Fläche, nicht über
+ * einen neuen Farbton. Nur eine echte Ablehnung durch den Server bekommt
+ * das Orange, denn dann ist tatsächlich etwas schiefgegangen.
+ */
+
+.status {
+    width: 100%;
+    max-width: var(--breite);
+    margin: 0 auto 16px;
+    padding: 11px var(--rand);
+    background: var(--raum-hoch);
+    border-top: 1px solid var(--linie);
+    border-bottom: 1px solid var(--linie);
+    font: 13px/1.45 var(--mono);
+    color: var(--schrift-leise);
+}
+
+.status.ist-offline { color: var(--schrift); }
+
+.status.ist-kaputt {
+    border-color: var(--vinyl);
+    color: var(--vinyl);
+    font-weight: 600;
+}
+
 /* ---------- Start: welcher Tag ist dran ---------- */
 
 .heute { margin-bottom: 30px; }

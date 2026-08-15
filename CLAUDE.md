@@ -83,16 +83,30 @@ for f in lib/*.php api/*.php bin/*.php; do php -l "$f"; done   # Syntax-Check
 
 Der eingebaute PHP-Server liest **keine** `.htaccess`. Der Schutz von `data/` lässt sich damit nicht prüfen, das geht nur auf dem echten All-Inkl-Host: die JSON-URL im Browser aufrufen und auf 403 prüfen.
 
-## PWA: was sie leistet und was nicht
+## Training ohne Netz
 
-`manifest.json` und `service-worker.js` liefern das Homescreen-Symbol und einen sofortigen Start, wie §10 Phase 5 es verlangt. **Sie liefern kein Training ohne Netz.** Die Hülle startet zwar offline, aber Übungen lassen sich nicht laden und Sätze nicht speichern; die App sagt dann „Keine Verbindung".
+Im Studio ist der Empfang schlecht. Das ist keine Randbedingung, sondern der Normalfall, unter dem die App funktionieren muss. Deshalb gilt über die PWA-Hülle hinaus:
 
-Das ist eine echte Lücke, kein Detail: wenn im Studio kein Empfang ist, nützt die App nichts. Sätze lokal zu puffern und später nachzureichen wäre eine eigene Ausbaustufe (IndexedDB plus Abgleich beim nächsten Netz), keine Sache des Cachings. Vor dem Deployment lohnt die Frage, wie gut der Empfang an den Geräten wirklich ist.
+**Jeder bestätigte Satz geht IMMER zuerst in den lokalen Puffer, auch bei bester Verbindung.** Ein eigener Weg nur für den Offline-Fall wäre ein Weg, der selten läuft und deshalb nicht auffällt, wenn er kaputt ist. Der Satz gilt, sobald er im `localStorage` liegt; das Senden ist eine Frage von später.
+
+Drei Eigenschaften tragen das:
+
+- **`set_index` macht das Senden wiederholbar.** Derselbe Satz zweimal übertragen überschreibt sich, statt sich zu verdoppeln. Ohne das wäre jeder Wiederholungsversuch ein Risiko.
+- **`performed_at` reist mit.** Ohne den Zeitpunkt landete ein Satz, der Dienstagabend im Funkloch entstand und Mittwoch übertragen wird, in der Mittwochs-Session. `session.php` grenzt den Wert ein: höchstens 15 Minuten in der Zukunft (die Handyuhr darf abweichen), höchstens 30 Tage zurück, damit sich damit nicht die Historie umschreiben lässt.
+- **Die zuletzt geladene Studio-Ansicht wird mitgemerkt.** Ohne Netz ist sie die einzige Möglichkeit, im Studio überhaupt etwas zu sehen. Sie kann veraltet sein, aber Übungen und Zielvorgaben ändern sich selten.
+
+`localStorage` statt IndexedDB: es geht um wenige Kilobyte, und die synchrone Schnittstelle spart eine ganze Klasse von Wettläufen. Zu wissen: iOS räumt den Speicher einer PWA nach sieben Tagen ohne Benutzung ab. Bei drei Einheiten pro Woche kein Thema, und der Puffer soll ohnehin binnen Stunden leer sein.
+
+**Die Statusleiste ist Teil des Versprechens, kein Schmuck.** Ein stiller Puffer wäre schlimmer als gar keiner: man verließe sich darauf, ohne zu wissen, ob er noch voll ist. Sie nennt immer Zahl und Lage. Lehnt der Server einen Satz ab (4xx), wandert er sichtbar zur Seite statt endlos wiederholt zu werden; ein Netzfehler dagegen behält die Reihenfolge und macht beim nächsten Versuch an derselben Stelle weiter.
+
+Was **nicht** offline geht: der Verwaltungsbereich (wird zu Hause bedient, der Verweis darauf verschwindet ohne Netz), die Verlaufskurven, und die Coach-Ansage bleibt auf dem Stand des letzten Ladens. Letzteres ist Absicht: die Regel lebt an einer Stelle, und die liegt auf dem Server.
+
+## PWA
 
 Drei Regeln im Service Worker, die Reihenfolge ist wichtig:
 
 1. **`api/` kommt nie aus dem Cache.** Ein zwischengespeicherter Trainingsstand wäre schlimmer als eine Fehlermeldung, weil die App Sätze zeigte, die längst anders auf der Platte liegen. Ein Test prüft, dass kein einziger API-Aufruf im Cache landet.
-2. **Seitenaufrufe zuerst aus dem Netz**, Cache nur als Notnagel. `index.php` entscheidet über das Session-Gate, und diese Entscheidung darf nicht altern.
+2. **Seitenaufrufe zuerst aus dem Netz**, Cache nur als Notnagel. `index.php` entscheidet über das Session-Gate, und diese Entscheidung darf nicht altern. Gemerkt wird nur die **angemeldete** Hülle, erkennbar am Header `X-Angemeldet: 1`. Läge die Anmeldeseite im Cache, stünde man im Funkloch vor einem Formular, das sich nicht abschicken lässt.
 3. **Statisches zuerst aus dem Cache** und im Hintergrund erneuern.
 
 Zwei Dinge, die man leicht übersieht:
@@ -126,7 +140,9 @@ Kein Test-Framework, wie in SPEC.md §2 vorgesehen. `tests/lauf.js` ist ein Skri
 - Antwortet auf dem Port schon etwas, bricht der Lauf ab statt weiterzumachen. Ein übriggebliebener Server aus einem abgestürzten Lauf hat ein anderes Datenverzeichnis, und der Lauf liefe stillschweigend gegen die falschen Daten. Genau das ist einmal passiert und hat einen halben Debug-Durchgang gekostet.
 - Die Läufe sind unabhängig von der Reihenfolge; jeder setzt seinen Ausgangszustand über `t.logs()` selbst.
 
-Was jeder Lauf abdeckt: `regel` prüft `coach_empfehlung()` direkt in PHP über alle Zweige aus §7, ohne Browser. `verwaltung` deckt Anmeldung und Übungsbibliothek ab, `studio` den Trainingsablauf samt Rotation und Pausen-Timer, `verlauf` die Kurven, `coach` die Ansage auf der Kachel.
+Was jeder Lauf abdeckt: `regel` prüft `coach_empfehlung()` direkt in PHP über alle Zweige aus §7, ohne Browser. `verwaltung` deckt Anmeldung und Übungsbibliothek ab, `studio` den Trainingsablauf samt Rotation und Pausen-Timer, `verlauf` die Kurven, `coach` die Ansage auf der Kachel, `pwa` Manifest, Service Worker und Export, `offline` eine ganze Einheit ohne Netz samt Übertragung danach.
+
+Der Lauf `offline` ist der wichtigste, weil er den Alltagsfall abbildet: Verbindung weg, drei Sätze eintippen, neu laden, Verbindung zurück. Er prüft am Ende gegen `export.php`, dass auf dem Server genau das steht, was getippt wurde, unter dem richtigen Datum und ohne Verdopplung.
 
 Nicht automatisiert, aber einmal geprüft und bei Änderungen zu wiederholen: die Sperre in `json_update()` mit 25 gleichzeitigen Prozessen, die denselben Zähler hochzählen. Es kamen 25 heraus.
 

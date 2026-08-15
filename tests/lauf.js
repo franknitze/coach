@@ -16,6 +16,7 @@ const laeufe = {
     verlauf:    { port: 8793, modul: './verlauf' },
     coach:      { port: 8794, modul: './coach' },
     pwa:        { port: 8795, modul: './pwa' },
+    offline:    { port: 8796, modul: './offline' },
 };
 
 (async function () {

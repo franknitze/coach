@@ -210,9 +210,13 @@ function logs_satz_eintragen(
     string $uebungId,
     int $satzIndex,
     float $gewicht,
-    int $wiederholungen
+    int $wiederholungen,
+    ?DateTimeImmutable $zeitpunkt = null
 ): array {
-    $jetzt  = new DateTimeImmutable('now');
+    // Der Zeitpunkt darf vom Client kommen, weil Sätze bei schlechtem
+    // Empfang lokal gepuffert und später nachgereicht werden. Ohne ihn
+    // landete ein Satz vom Dienstagabend in der Mittwochs-Session.
+    $jetzt  = $zeitpunkt ?? new DateTimeImmutable('now');
     $monat  = $jetzt->format('Y-m');
     $heute  = $jetzt->format('Y-m-d');
     $datei  = LOGS_DIR . '/' . $monat . '.json';
@@ -267,17 +271,24 @@ function logs_satz_eintragen(
     return $sessions;
 }
 
-/** Die heutige Session dieses Trainingstags, oder null. */
-function logs_heutige_session(string $tag): ?array
+/** Die Session dieses Trainingstags an diesem Kalendertag, oder null. */
+function logs_session_am(string $tag, ?DateTimeImmutable $zeitpunkt = null): ?array
 {
-    $heute = (new DateTimeImmutable('now'))->format('Y-m-d');
+    $wann = $zeitpunkt ?? new DateTimeImmutable('now');
+    $tagesdatum = $wann->format('Y-m-d');
 
-    foreach (logs_monat((new DateTimeImmutable('now'))->format('Y-m')) as $session) {
-        if (str_starts_with((string) ($session['date'] ?? ''), $heute)
+    foreach (logs_monat($wann->format('Y-m')) as $session) {
+        if (str_starts_with((string) ($session['date'] ?? ''), $tagesdatum)
             && ($session['day'] ?? '') === $tag) {
             return $session;
         }
     }
 
     return null;
+}
+
+/** Die heutige Session dieses Trainingstags, oder null. */
+function logs_heutige_session(string $tag): ?array
+{
+    return logs_session_am($tag, null);
 }

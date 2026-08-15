@@ -15,6 +15,13 @@ $angemeldet   = auth_is_logged_in();
 $eingerichtet = is_configured();
 $uebungen     = $angemeldet ? (array) json_read(EXERCISES_FILE, []) : [];
 
+/*
+ * Der Service Worker legt nur die angemeldete Hülle in den Cache. Ohne
+ * diese Auskunft könnte dort die Anmeldeseite landen, und im Funkloch
+ * stünde Frank vor einem Formular, das er nicht abschicken kann.
+ */
+header('X-Angemeldet: ' . ($angemeldet ? '1' : '0'));
+
 function h(string $text): string
 {
     return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
@@ -93,6 +100,10 @@ function version(string $pfad): string
         <span class="wortmarke">Coach</span>
         <button class="kopfknopf" type="button" id="abmelden">Abmelden</button>
     </header>
+
+    <!-- Sagt, ob Sätze noch im lokalen Puffer liegen. Steht außerhalb von
+         #app, damit ein Neuzeichnen der Ansicht die Meldung nicht wegnimmt. -->
+    <div class="status" id="status" hidden></div>
 
     <!-- Ab hier zeichnet assets/app.js gegen die JSON-API. -->
     <main class="inhalt" id="app">
