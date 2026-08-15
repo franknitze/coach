@@ -286,8 +286,8 @@ Zwei Wege, kombiniert:
 
 ## 12. Trainings-Eckdaten (für das Plan-Design)
 
-- 3× pro Woche: **Montag, Mittwoch, Freitag**, morgens ~7–9 Uhr, ca. 1,5 h pro Einheit.
-- >2 Jahre Erfahrung, bereits recht kräftig → oberes Volumen (~15–20 Sätze/Woche für große Gruppen).
-- Wiederholungsbereich 6–15, nah ans Muskelversagen.
-- Split: Oberkörper/Unterkörper über 3 rotierende Tage → jede Gruppe im Schnitt ~1,5×/Woche.
+- Im Schnitt 3× pro Woche, morgens ~7–9 Uhr, ca. 1,5 h pro Einheit. **Nicht an feste Wochentage gebunden**: mal sind es zwei Einheiten, mal vier, dazwischen liegt Urlaub. Was zählt, ist die Reihenfolge der Einheiten, nicht der Kalender.
+- >2 Jahre Erfahrung, bereits recht kräftig → oberes Volumen (~15–20 Sätze/Woche für große Gruppen). **Das ist die wichtigste Vorgabe für den Plan**, Volumen ist der Haupthebel für Muskelaufbau.
+- Wiederholungsbereich 6–15, nah ans Muskelversagen. **Schwerpunkt auf dem unteren Ende:** Grundübungen 5–8, Maschinen 6–12. Über 12 nur dort, wo schwere Sätze technisch schlecht steuerbar sind (Waden, Bauch). Hohe Wiederholungszahlen bauen zwar auch Muskeln auf, aber nur bei echtem Versagen, und daran scheitert es in der Praxis.
+- Split: Oberkörper/Unterkörper im Wechsel. Jede Einheit lädt **wenige Gruppen hoch** (10–11 Sätze je großer Gruppe pro Durchgang) statt viele Gruppen wenig. Nur so ist das Volumenziel in 1,5 h erreichbar. Die Frequenz je Gruppe ergibt sich daraus, wie oft trainiert wird: bei 3 Einheiten/Woche 1,5×, bei 4 Einheiten 2×.
 - Gerätefokus (geringeres Verletzungsrisiko), ergänzt um wenige effiziente Grundübungen (z.B. Kreuzheben am Unterkörpertag).

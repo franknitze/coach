@@ -12,7 +12,7 @@ declare(strict_types=1);
  * geheim noch verzichtbar, und nach einem Serverneuaufbau soll er sich in
  * einem Befehl wiederherstellen lassen.
  *
- * Die Begründung zu Aufteilung, Reihenfolge und Volumen steht in
+ * Die Begründung zu Aufbau, Reihenfolge und Volumen steht in
  * TRAININGSPLAN.md. Wer hier Zahlen ändert, ändert sie dort mit.
  */
 
@@ -32,28 +32,53 @@ if ($vorhanden !== [] && !$force) {
 }
 
 /**
- * Oberkörper: schwer nach vorn, Brust und Rücken im Wechsel, Arme zum
- * Schluss. Unterkörper: Kniebeuge zuerst, dann Maschinen, Waden und Bauch
- * am Ende. Die Gerätenummern stammen von den gelben Schildern im Studio.
+ * Zwei Einheiten im Wechsel, Oberkörper und Unterkörper.
+ *
+ * KEINE festen Wochentage. Die App leitet den nächsten Tag aus der zuletzt
+ * absolvierten Einheit ab, nicht aus dem Kalender. Urlaub, eine Woche mit
+ * vier Einheiten, eine mit zweien: die Reihenfolge läuft einfach weiter.
+ *
+ * ZIEL IST MUSKELAUFBAU, und dafür ist das Wochenvolumen der Haupthebel
+ * (SPEC.md §12: 15 bis 20 Sätze pro Woche für die großen Gruppen). Deshalb
+ * bekommt jede große Gruppe pro Durchgang (A plus B) 10 bis 11 harte
+ * Sätze. Das Volumen skaliert dann mit der Anwesenheit:
+ *
+ *   2 Einheiten/Woche → 10 bis 11 Sätze je großer Gruppe
+ *   3 Einheiten/Woche → 15 bis 17   (Zielfenster)
+ *   4 Einheiten/Woche → 20 bis 22   (oberes Ende)
+ *
+ * WIEDERHOLUNGEN BEWUSST SCHWER. Die Grundübungen laufen bei 5 bis 8, die
+ * Maschinen bei 6 bis 12, jeder Arbeitssatz nah ans Muskelversagen. Hohe
+ * Wiederholungszahlen bauen zwar auch Muskeln auf, aber nur bei echtem
+ * Versagen, und genau daran scheitert es in der Praxis. Über 12
+ * Wiederholungen gehen deshalb nur Waden und Bauch, wo schwere Sätze
+ * technisch schlecht steuerbar sind.
+ *
+ * Innerhalb einer Einheit: schwer nach vorn, Brust und Rücken im Wechsel,
+ * Arme zum Schluss. Die Nummern stammen von den gelben Geräteschildern.
  */
 $plan = [
     // id, Name, Muskelgruppe, Tag, Reihenfolge, Nummer, Sätze, Wdh von, Wdh bis, Schritt, Foto
-    ['bankdruecken',     'Bankdrücken Langhantel',     'brust',    'oberkoerper', 1, '43', 4,  6,  8, 2.5, 'bankdruecken.jpg'],
-    ['latzug',           'Latzug',                     'ruecken',  'oberkoerper', 2, '26', 4,  8, 10, 5.0, 'latzug.jpg'],
-    ['brustpresse',      'Brustpresse',                'brust',    'oberkoerper', 3, '33', 3,  8, 12, 2.5, 'brustpresse.jpg'],
-    ['rudern',           'Rudern sitzend am Kabel',    'ruecken',  'oberkoerper', 4, '25', 4,  8, 12, 5.0, 'rudern.jpg'],
-    ['schulterdruecken', 'Schulterdrücken Kurzhantel', 'schulter', 'oberkoerper', 5, '',   3,  8, 12, 2.5, 'schulterdruecken.jpg'],
-    ['butterfly',        'Butterfly',                  'brust',    'oberkoerper', 6, '36', 2, 12, 15, 5.0, 'butterfly.jpg'],
-    ['trizepsdruecken',  'Trizepsdrücken am Seil',     'trizeps',  'oberkoerper', 7, '26', 3, 10, 15, 5.0, 'trizepsdruecken.jpg'],
-    ['bizepscurl',       'Bizepscurl SZ-Stange',       'bizeps',   'oberkoerper', 8, '',   3,  8, 12, 2.5, 'bizepscurl.jpg'],
 
-    ['kniebeuge',        'Kniebeuge Langhantel',       'beine',    'unterkoerper', 1, '39', 4,  6,  8, 2.5, 'kniebeuge.jpg'],
-    ['beinpresse',       'Beinpresse',                 'beine',    'unterkoerper', 2, '23', 4,  8, 12, 5.0, 'beinpresse.jpg'],
-    ['kreuzheben_rum',   'Rumänisches Kreuzheben',     'beine',    'unterkoerper', 3, '39', 3,  8, 10, 2.5, 'kniebeuge.jpg'],
-    ['beinbeuger',       'Beinbeuger liegend',         'beine',    'unterkoerper', 4, '',   3, 10, 12, 5.0, 'beinbeuger.jpg'],
-    ['beinstrecker',     'Beinstrecker',               'beine',    'unterkoerper', 5, '18', 3, 12, 15, 5.0, 'beinstrecker.jpg'],
-    ['wadenheben',       'Wadenheben stehend',         'beine',    'unterkoerper', 6, '7',  4, 10, 15, 5.0, 'wadenheben.jpg'],
-    ['beinheben',        'Beinheben',                  'beine',    'unterkoerper', 7, '',   3, 10, 15, 5.0, 'beinheben.jpg'],
+    // A: Oberkörper. Brust 10 Sätze, Rücken 10, Schulter 3, Arme je 2.
+    ['bankdruecken',     'Bankdrücken Langhantel',      'brust',    'oberkoerper', 1, '43', 4,  5,  8, 2.5, 'bankdruecken.jpg'],
+    ['latzug',           'Latzug',                      'ruecken',  'oberkoerper', 2, '26', 4,  6, 10, 5.0, 'latzug.jpg'],
+    ['brustpresse',      'Brustpresse',                 'brust',    'oberkoerper', 3, '33', 3,  6, 10, 2.5, 'brustpresse.jpg'],
+    ['rudern',           'Rudern sitzend am Kabel',     'ruecken',  'oberkoerper', 4, '25', 4,  6, 10, 5.0, 'rudern.jpg'],
+    ['schulterdruecken', 'Schulterdrücken Kurzhantel',  'schulter', 'oberkoerper', 5, '',   3,  6, 10, 2.5, 'schulterdruecken.jpg'],
+    ['butterfly',        'Butterfly',                   'brust',    'oberkoerper', 6, '36', 3,  8, 12, 5.0, 'butterfly.jpg'],
+    ['latzug_eng',       'Latzug eng',                  'ruecken',  'oberkoerper', 7, '34', 2,  8, 12, 5.0, 'latzug_eng.jpg'],
+    ['trizepsdruecken',  'Trizepsdrücken am Seil',      'trizeps',  'oberkoerper', 8, '26', 2,  8, 12, 5.0, 'trizepsdruecken.jpg'],
+    ['bizepscurl',       'Bizepscurl SZ-Stange',        'bizeps',   'oberkoerper', 9, '',   2,  8, 12, 2.5, 'bizepscurl.jpg'],
+
+    // B: Unterkörper. Quadrizeps 11 Sätze, Oberschenkelrückseite 8, Waden 4.
+    ['kniebeuge',        'Kniebeuge Langhantel',        'beine',    'unterkoerper', 1, '39', 4,  5,  8, 2.5, 'kniebeuge.jpg'],
+    ['beinpresse',       'Beinpresse',                  'beine',    'unterkoerper', 2, '23', 4,  6, 10, 5.0, 'beinpresse.jpg'],
+    ['kreuzheben_rum',   'Rumänisches Kreuzheben',      'beine',    'unterkoerper', 3, '39', 4,  6, 10, 2.5, 'kniebeuge.jpg'],
+    ['beinbeuger',       'Beinbeuger liegend',          'beine',    'unterkoerper', 4, '',   4,  8, 12, 5.0, 'beinbeuger.jpg'],
+    ['beinstrecker',     'Beinstrecker',                'beine',    'unterkoerper', 5, '18', 3,  8, 12, 5.0, 'beinstrecker.jpg'],
+    ['wadenheben',       'Wadenheben stehend',          'beine',    'unterkoerper', 6, '7',  4, 10, 15, 5.0, 'wadenheben.jpg'],
+    ['beinheben',        'Beinheben',                   'beine',    'unterkoerper', 7, '',   2, 10, 15, 5.0, 'beinheben.jpg'],
 ];
 
 $uebungen = [];
@@ -73,12 +98,8 @@ json_write(PLAN_FILE, [
         'oberkoerper'  => ['label' => 'Oberkörper'],
         'unterkoerper' => ['label' => 'Unterkörper'],
     ],
-    /*
-     * Zweigliedrig, nicht dreigliedrig. Über die drei Termine Montag,
-     * Mittwoch und Freitag verschiebt sich der Wechsel dadurch von selbst
-     * und jede Hälfte kommt im Schnitt 1,5-mal pro Woche dran. Eine
-     * dreigliedrige Rotation würde sich jede Woche identisch wiederholen.
-     */
+    // Zwei Einträge, immer im Wechsel. Nicht an Wochentage gebunden:
+    // was zählt, ist die Reihenfolge, nicht der Kalender.
     'rotation' => ['oberkoerper', 'unterkoerper'],
     'muscle_priorities' => [
         'brust' => 'normal', 'ruecken' => 'normal', 'beine' => 'normal',
@@ -86,14 +107,16 @@ json_write(PLAN_FILE, [
     ],
 ]);
 
-$ok = $uk = $saetzeOk = $saetzeUk = 0;
+$proTag = [];
 foreach ($uebungen as $u) {
-    if ($u['day'] === 'oberkoerper') { $ok++; $saetzeOk += $u['target_sets']; }
-    else { $uk++; $saetzeUk += $u['target_sets']; }
+    $proTag[$u['day']]['anzahl'] = ($proTag[$u['day']]['anzahl'] ?? 0) + 1;
+    $proTag[$u['day']]['saetze'] = ($proTag[$u['day']]['saetze'] ?? 0) + $u['target_sets'];
 }
 
 echo "Plan angelegt.\n";
-echo "  Oberkörper:  $ok Übungen, $saetzeOk Sätze\n";
-echo "  Unterkörper: $uk Übungen, $saetzeUk Sätze\n";
-echo "  Rotation: Oberkörper und Unterkörper im Wechsel (Mo/Mi/Fr)\n";
-echo "\nStartgewichte gibt es bewusst keine. Die erste Einheit ist die Eichung.\n";
+foreach (['oberkoerper' => 'A Oberkörper', 'unterkoerper' => 'B Unterkörper'] as $k => $name) {
+    printf("  %-15s %2d Übungen, %2d Sätze\n", $name, $proTag[$k]['anzahl'], $proTag[$k]['saetze']);
+}
+echo "\nJe Durchgang (A+B): Brust 10, Rücken 10, Quadrizeps 11 Sätze.\n";
+echo "Bei 3 Einheiten pro Woche sind das 15 bis 17 Sätze je großer Gruppe.\n";
+echo "Startgewichte gibt es bewusst keine. Die erste Einheit ist die Eichung.\n";
