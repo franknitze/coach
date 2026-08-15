@@ -21,3 +21,14 @@ RedirectMatch 404 ^/(lib|bin)(/|$)
 
 # manifest.json und service-worker.js müssen erreichbar bleiben, sonst
 # funktioniert die PWA nicht. Deshalb hier bewusst keine Sperre auf *.json.
+
+# Der Service Worker entscheidet, was zwischengespeichert wird. Läge er
+# selbst lange im Cache, bliebe ein Gerät auf einer alten Fassung hängen
+# und bekäme Änderungen erst Tage später zu sehen.
+# IfModule ist Pflicht: fehlt mod_headers, quittiert Apache die Direktive
+# mit einem 500 auf der gesamten Seite.
+<IfModule mod_headers.c>
+    <Files "service-worker.js">
+        Header set Cache-Control "no-cache, must-revalidate"
+    </Files>
+</IfModule>

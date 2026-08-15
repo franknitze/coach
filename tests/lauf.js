@@ -15,6 +15,7 @@ const laeufe = {
     studio:     { port: 8792, modul: './studio' },
     verlauf:    { port: 8793, modul: './verlauf' },
     coach:      { port: 8794, modul: './coach' },
+    pwa:        { port: 8795, modul: './pwa' },
 };
 
 (async function () {

@@ -23,7 +23,17 @@
             delete einstellungen.daten;
         }
 
-        const antwort = await fetch(pfad, einstellungen);
+        // Ein fehlgeschlagener fetch wirft einen englischen Browsertext
+        // ("Failed to fetch"). Im Studio ist schlechter Empfang der
+        // wahrscheinlichste Fehlerfall überhaupt, und dann soll dort auf
+        // Deutsch stehen, was los ist.
+        let antwort;
+        try {
+            antwort = await fetch(pfad, einstellungen);
+        } catch (e) {
+            throw new Error('Keine Verbindung. Die App braucht Netz, '
+                + 'um Übungen zu laden und Sätze zu speichern.');
+        }
 
         let inhalt = {};
         try {

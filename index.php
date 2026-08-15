@@ -19,6 +19,21 @@ function h(string $text): string
 {
     return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
 }
+
+/**
+ * Hängt die Änderungszeit als Version an eine Datei.
+ *
+ * Ein festes ?v=1 wäre wirkungslos: nach einem Deployment behielte der
+ * Browser die alte CSS-Datei, und mit dem Service Worker läge sie
+ * zusätzlich im Cache. Über die Dateizeit ändert sich die URL bei jeder
+ * echten Änderung und sonst nie.
+ */
+function version(string $pfad): string
+{
+    $voll = __DIR__ . '/' . $pfad;
+    $zeit = is_file($voll) ? filemtime($voll) : time();
+    return $pfad . '?v=' . $zeit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -27,8 +42,13 @@ function h(string $text): string
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1b1e24">
 <meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Coach">
 <title>Coach</title>
-<link rel="stylesheet" href="assets/app.css?v=1">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+<link rel="stylesheet" href="<?= h(version('assets/app.css')) ?>">
 </head>
 <body>
 
@@ -89,6 +109,19 @@ function h(string $text): string
 
 <?php endif; ?>
 
-<script src="assets/app.js?v=1"></script>
+<script src="<?= h(version('assets/app.js')) ?>"></script>
+<script>
+// Der Service Worker braucht einen sicheren Kontext. Auf dem eingebauten
+// PHP-Server über http läuft er nicht, das ist im Betrieb egal: All-Inkl
+// liefert per HTTPS aus.
+if ('serviceWorker' in navigator) {
+    addEventListener('load', function () {
+        navigator.serviceWorker.register('service-worker.js').catch(function () {
+            // Ohne Service Worker funktioniert die App vollständig, sie
+            // startet nur nicht ganz so schnell. Kein Grund für eine Meldung.
+        });
+    });
+}
+</script>
 </body>
 </html>

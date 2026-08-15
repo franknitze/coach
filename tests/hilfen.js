@@ -150,14 +150,22 @@ async function testlauf(name, port, lauf) {
     });
 
     const fehlerAusDemBrowser = [];
-    page.on('console', (m) => {
+    // Muster, die ein Lauf ausdrücklich erwartet, etwa beim Offline-Test.
+    const erlaubteKonsole = [
         // "Failed to load resource" mit 4xx ist Browser-Rauschen aus einem
         // fehlgeschlagenen fetch, und die Tests prüfen diese Antworten
         // ohnehin einzeln. 5xx bleibt ein Befund, das wäre ein Serverfehler.
-        const erwartet = /Failed to load resource.*status of 4\d\d/.test(m.text());
-        if (m.type() === 'error' && !erwartet) {
-            fehlerAusDemBrowser.push(m.text());
+        /Failed to load resource.*status of 4\d\d/,
+    ];
+
+    page.on('console', (m) => {
+        if (m.type() !== 'error') {
+            return;
         }
+        if (erlaubteKonsole.some((muster) => muster.test(m.text()))) {
+            return;
+        }
+        fehlerAusDemBrowser.push(m.text());
     });
     page.on('pageerror', (e) => fehlerAusDemBrowser.push('pageerror: ' + e.message));
 
@@ -176,6 +184,15 @@ async function testlauf(name, port, lauf) {
                 gescheitert++;
                 console.log('  FEHL ' + text);
             }
+        },
+
+        /**
+         * Erlaubt eine Sorte Konsolenfehler, die dieser Lauf absichtlich
+         * auslöst. Ohne das würde der Offline-Test an seinen eigenen
+         * Netzwerkfehlern scheitern.
+         */
+        konsoleErlauben(muster) {
+            erlaubteKonsole.push(muster);
         },
 
         /** Setzt die Logdateien auf einen festen Ausgangszustand. */

@@ -6,14 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `SPEC.md` (deutsch, ~290 Zeilen) ist die verbindliche Vorgabe und die einzige Quelle dafür, was gebaut wird. Vor jedem Implementierungsvorschlag lesen; das Dokument ist so geschrieben, dass sich der Plan ohne Rückfragen ableiten lässt. Die Phasen 0 bis 6 in §10 sind die vorgegebene Reihenfolge.
 
-Gebaut sind Phase 0 (lokal) bis 4. Es fehlt nur noch Phase 5:
+Die Phasen 0 bis 5 aus §10 sind gebaut. Was noch fehlt, steht nicht mehr im Code:
 
 | Steht | Fehlt |
 |---|---|
-| `lib/`: `storage`, `config`, `auth`, `uebungen`, `logs`, `coach` | `api/export.php` (schlüsselgeschützt für n8n) |
-| `api/`: `login`, `logout`, `exercises`, `settings`, `plan`, `session`, `history`, `coach` | `manifest.json`, `service-worker.js` |
-| `index.php`, `assets/app.css`, `assets/app.js`: Start, Studio, Mein Plan, Übungsdetail mit Verlauf, Coach-Ansage | der n8n-Backup-Workflow |
-| `.htaccess`, `bin/init-config.php` | alles auf dem Server, es ist noch nichts deployed |
+| `lib/`: `storage`, `config`, `auth`, `uebungen`, `logs`, `coach` | **Deployment auf All-Inkl**, es läuft noch nichts auf dem Server |
+| `api/`: `login`, `logout`, `exercises`, `settings`, `plan`, `session`, `history`, `coach`, `export` | **der n8n-Workflow**, der `export.php` abholt (siehe unten) |
+| `index.php`, `assets/`: Start, Studio, Mein Plan, Übungsdetail mit Verlauf, Coach-Ansage | **der konkrete Trainingsplan** und die Zuordnung der 49 Fotos, beides braucht den Studiobesuch |
+| `manifest.json`, `service-worker.js`, `assets/icons/` | Phase 6 (KI-Coach, Dashboard-Widgets), ausdrücklich optional |
+| `.htaccess`, `bin/init-config.php`, `bin/icons.js`, `tests/` | |
 
 Drei Abweichungen von SPEC.md, alle bewusst:
 
@@ -23,6 +24,8 @@ Drei Abweichungen von SPEC.md, alle bewusst:
 - **Feld `rotation_index`** in jeder Session, zusätzlich zum Schema in §4. Die Rotation darf denselben Tag mehrfach enthalten (`oberkoerper, unterkoerper, oberkoerper`), über den Tagesnamen allein wäre die Position also nicht eindeutig und der Vorschlag würde zwischen zwei Positionen hängenbleiben. Ältere Einträge ohne das Feld fallen auf die Namenssuche zurück.
 
 **Sätze werden einzeln gespeichert, nicht am Ende der Einheit.** Jede Bestätigung ist ein eigener POST auf `session.php` mit `set_index`. Damit ist der Aufruf wiederholbar: ein Doppel-Tap oder ein Wiederholungsversuch überschreibt denselben Satz, statt ihn ein zweites Mal anzuhängen, und dasselbe Feld erlaubt das Korrigieren eines bereits bestätigten Satzes. Im Studio kann der Akku leer werden; was bestätigt ist, liegt auf der Platte.
+
+- **Der Export nimmt `password_hash` und `api_key` nicht mit** und lässt den Schlüssel auch als Header `X-API-Key` zu, nicht nur als `?key=` wie in §9. Query-Strings landen im Zugriffsprotokoll des Webservers, bei All-Inkl liest die Statistik dort mit; ein Header steht nicht drin. Der Weg über `?key=` funktioniert weiter. Und ein Backup, das regelmäßig auf einen Zweitserver wandert und durch n8n-Protokolle läuft, soll keine Geheimnisse tragen: Passwort und Schlüssel sind mit `bin/init-config.php` in zwei Minuten neu gesetzt, die Trainingsdaten nicht.
 
 - **Kein Diagramm-Nachladen.** SPEC.md §2 empfiehlt uPlot oder Chart.js per CDN. Gebraucht wird eine Linie mit zwei Achsen, dafür lohnt keine Bibliothek, und ein CDN-Skript widerspricht der PWA, die offline laufen soll. Die Kurven sind Inline-SVG in `assets/app.js` (`chart()`), rund 60 Zeilen. Falls doch eine Bibliothek gewünscht ist, wäre sie selbst gehostet einzubinden, nicht per CDN.
 
@@ -79,6 +82,34 @@ for f in lib/*.php api/*.php bin/*.php; do php -l "$f"; done   # Syntax-Check
 ```
 
 Der eingebaute PHP-Server liest **keine** `.htaccess`. Der Schutz von `data/` lässt sich damit nicht prüfen, das geht nur auf dem echten All-Inkl-Host: die JSON-URL im Browser aufrufen und auf 403 prüfen.
+
+## PWA: was sie leistet und was nicht
+
+`manifest.json` und `service-worker.js` liefern das Homescreen-Symbol und einen sofortigen Start, wie §10 Phase 5 es verlangt. **Sie liefern kein Training ohne Netz.** Die Hülle startet zwar offline, aber Übungen lassen sich nicht laden und Sätze nicht speichern; die App sagt dann „Keine Verbindung".
+
+Das ist eine echte Lücke, kein Detail: wenn im Studio kein Empfang ist, nützt die App nichts. Sätze lokal zu puffern und später nachzureichen wäre eine eigene Ausbaustufe (IndexedDB plus Abgleich beim nächsten Netz), keine Sache des Cachings. Vor dem Deployment lohnt die Frage, wie gut der Empfang an den Geräten wirklich ist.
+
+Drei Regeln im Service Worker, die Reihenfolge ist wichtig:
+
+1. **`api/` kommt nie aus dem Cache.** Ein zwischengespeicherter Trainingsstand wäre schlimmer als eine Fehlermeldung, weil die App Sätze zeigte, die längst anders auf der Platte liegen. Ein Test prüft, dass kein einziger API-Aufruf im Cache landet.
+2. **Seitenaufrufe zuerst aus dem Netz**, Cache nur als Notnagel. `index.php` entscheidet über das Session-Gate, und diese Entscheidung darf nicht altern.
+3. **Statisches zuerst aus dem Cache** und im Hintergrund erneuern.
+
+Zwei Dinge, die man leicht übersieht:
+
+- **`CACHE = 'coach-v1'` in `service-worker.js` hochzählen**, sobald sich die Liste der gecachten Dateien ändert. Sonst behalten bereits installierte Geräte den alten Stand.
+- CSS und JS tragen die **Dateizeit als Version** (`version()` in `index.php`). Ein festes `?v=1` wäre wirkungslos gewesen: nach einem Deployment hätte der Browser die alte Datei behalten, und mit Service Worker zusätzlich aus dem Cache bedient.
+
+Icons neu erzeugen: `node bin/icons.js`. Die PNG liegen im Repo, auf dem Server wird nichts gebaut.
+
+## Der n8n-Backup-Workflow
+
+Noch nicht angelegt. Was er braucht (SPEC.md §9):
+
+- **Schedule-Trigger**, täglich reicht bei drei Einheiten pro Woche.
+- **HTTP Request** auf `https://<domain>/api/export.php`, Methode GET, Header `X-API-Key` mit dem Wert aus `data/config.json`. Den Schlüssel als n8n-Credential hinterlegen, nicht in den Node schreiben.
+- Antwort ist ein JSON-Bündel mit `settings`, `exercises`, `plan`, `logs` und einer `summary`. Über `summary.sessions` lässt sich ein Alarm bauen, falls die Zahl unerwartet fällt.
+- **Ablage auf einem Zweitserver**, welcher, ist offen. Sinnvoll wäre ein Dateiname mit Datum, damit ältere Stände erhalten bleiben; ein einzelnes überschriebenes Backup wäre bei stiller Datenverfälschung wertlos.
 
 ## Tests
 
