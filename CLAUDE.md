@@ -6,15 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `SPEC.md` (deutsch, ~290 Zeilen) ist die verbindliche Vorgabe und die einzige Quelle dafür, was gebaut wird. Vor jedem Implementierungsvorschlag lesen; das Dokument ist so geschrieben, dass sich der Plan ohne Rückfragen ableiten lässt. Die Phasen 0 bis 6 in §10 sind die vorgegebene Reihenfolge.
 
-Die Phasen 0 bis 5 aus §10 sind gebaut. Was noch fehlt, steht nicht mehr im Code:
+Die Phasen 0 bis 5 aus §10 sind gebaut und laufen unter **https://DOMAIN**. Der Trainingsplan steht mit 25 Übungen in den Daten, jede mit zugeordnetem Bild. Offen sind nur noch zwei Dinge:
 
 | Steht | Fehlt |
 |---|---|
-| `lib/`: `storage`, `config`, `auth`, `uebungen`, `logs`, `coach` | **Deployment auf All-Inkl**, es läuft noch nichts auf dem Server |
-| `api/`: `login`, `logout`, `exercises`, `settings`, `plan`, `session`, `history`, `coach`, `export` | **der n8n-Workflow**, der `export.php` abholt (siehe unten) |
-| `index.php`, `assets/`: Start, Studio, Mein Plan, Übungsdetail mit Verlauf, Coach-Ansage | **der konkrete Trainingsplan** und die Zuordnung der 49 Fotos, beides braucht den Studiobesuch |
-| `manifest.json`, `service-worker.js`, `assets/icons/` | Phase 6 (KI-Coach, Dashboard-Widgets), ausdrücklich optional |
-| `.htaccess`, `bin/init-config.php`, `bin/icons.js`, `tests/` | |
+| `lib/`: `storage`, `config`, `auth`, `uebungen`, `logs`, `coach` | **der n8n-Workflow**, der `export.php` abholt (siehe unten). `data/` auf dem Server hat damit **keine Sicherung**. |
+| `api/`: `login`, `logout`, `exercises`, `settings`, `plan`, `session`, `history`, `coach`, `export`, `setup`, `fotos`, `foto-upload`, `foto-loeschen` | Phase 6 (KI-Coach, Dashboard-Widgets), ausdrücklich optional |
+| `index.php`, `assets/`: Start, Studio, Mein Plan, Übungsdetail mit Verlauf, Coach-Ansage | |
+| `manifest.json`, `service-worker.js`, `assets/icons/`, Offline-Puffer | |
+| `.htaccess`, `bin/` (init-config, plan-anlegen, fotos, deploy, icons), `tests/` (244 Prüfungen) | |
+
+Der flüchtige Arbeitsstand steht in `STATE.md`, nicht hier.
 
 Drei Abweichungen von SPEC.md, alle bewusst:
 
@@ -182,7 +184,16 @@ sips -Z 1200 --setProperty format jpeg images/IMG_1644.JPG --out assets/img/exer
 
 ## Deployment (All-Inkl)
 
-Noch nicht eingerichtet. Das Vorgehen für den gleichen Host steht erprobt in `../lithium-rechner/CLAUDE.md` und gilt hier genauso:
+Eingerichtet und im Betrieb. **`bin/deploy.sh` ist der einzige Weg**, von Hand zu rsyncen ist der Fehler, der schon zweimal Daten gekostet hat. Das Skript prüft erst die Fotos und die PHP-Syntax, bricht bei jeder Datei über 400 KB ab, lädt dann hoch und prüft am Ende die Live-URLs. `bin/deploy.sh --trocken` zeigt vorher, was sich ändern würde.
+
+- Ziel: `allinkl:www/htdocs/KENNUNG/DOMAIN/`, erreichbar unter `https://DOMAIN`.
+- PHP dort ist **8.5**, auf der Kommandozeile heißt es `php85` (nicht `php`).
+- SSH-Alias `allinkl` aus `~/.ssh/config` (HostName `KENNUNG.kasserver.com`, Key `~/.ssh/SSH-SCHLUESSEL`).
+- `scp`/`rsync` immer mit `-o IdentityAgent=none -o IdentitiesOnly=yes`, sonst greift Franks 1Password-SSH-Agent über die `Host *`-Regel und der Login scheitert mit „Too many authentication failures".
+- Zielpfade sind **relativ** zum chroot-Home, ein absoluter Pfad läuft ins Leere. SSH ist chrooted, PHP nicht.
+- `data/` liegt **im** Web-Root und ist per `.htaccess` gesperrt (Vorgabe von Frank, abweichend von SPEC §8). Der 403 wird bei jedem Deploy geprüft.
+
+Das erprobte Vorgehen für denselben Host steht auch in `../lithium-rechner/CLAUDE.md`.
 
 - SSH-Alias `allinkl` aus `~/.ssh/config` (HostName `KENNUNG.kasserver.com`, Key `~/.ssh/SSH-SCHLUESSEL`).
 - `scp`/`rsync` immer mit `-o IdentityAgent=none -o IdentitiesOnly=yes`, sonst greift Franks 1Password-SSH-Agent über die `Host *`-Regel und der Login scheitert mit „Too many authentication failures".
@@ -191,7 +202,7 @@ Noch nicht eingerichtet. Das Vorgehen für den gleichen Host steht erprobt in `.
 
 Anders als beim Lithium-Rechner (eine einzelne Datei) braucht diese App einen Abgleich mehrerer Ordner. `data/` darf dabei **nie** überschrieben oder mitgeladen werden, dort liegen die echten Trainingsdaten und der Passwort-Hash.
 
-## Bilder: drei Ordner, nur einer zählt
+## Bilder: zwei Ordner, nur einer zählt
 
 **Die Anwendung liest ausschließlich `assets/img/exercises/`.** Nirgends im Code steht ein anderer Bildpfad. Wer dort nicht liegt, ist für die App nicht vorhanden, egal was sonst auf der Platte herumliegt.
 
@@ -216,12 +227,9 @@ Regeln fürs Aufbereiten, alle in `bin/fotos.sh` und in `tests/fotos.js` festges
 
 ## Offene Punkte aus §11
 
-Zwei davon blockieren Phasen:
+Beide Blocker sind erledigt: Der Trainingsplan steht (`TRAININGSPLAN.md` plus `bin/plan-anlegen.php`), und die Serverfrage ist entschieden. `data/` liegt **im** Web-Root und wird per `.htaccess` gesperrt, nicht eine Ebene darüber; so wollte Frank es. Die Bildzuordnung ist ebenfalls durch, alle 25 Übungen haben ein Bild.
 
-- **Konkreter Trainingsplan** (Übungen je Tag, aktuelle Geräte, Startgewichte, Wiederholungen). Ohne diese Werte lassen sich `exercises.json` und `plan.json` nicht mit echten Daten füllen. Braucht einen Studiobesuch.
-- **Serverstruktur bei All-Inkl** (existiert eine Ebene über dem Web-Root?). Zwei-Minuten-Check per SFTP, entscheidet Phase 0.
-
-Die Zuordnung Foto zu Gerät hängt am Trainingsplan mit dran.
+Was heute offen ist, steht in `STATE.md`.
 
 ## Gestaltung
 
