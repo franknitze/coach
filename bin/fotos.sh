@@ -4,7 +4,7 @@
 #
 #   bin/fotos.sh
 #
-# Nimmt jedes Original aus images/ und legt eine Webfassung in
+# Nimmt jedes Original aus fotos/ und legt eine Webfassung in
 # assets/img/exercises/ ab: auf 900 Pixel verkleinert, ohne Metadaten.
 # Läuft beliebig oft, überspringt was schon aktuell ist.
 #
@@ -14,14 +14,16 @@
 # Die Webfassung liegt bei 150 KB. Nebenbei fallen die GPS-Koordinaten
 # weg, denn die Bilder liegen auf dem Server ohne Anmeldung.
 #
-# NEUE FOTOS: einfach nach images/ legen und dieses Skript laufen lassen.
+# NEUE FOTOS: einfach nach fotos/ legen und dieses Skript laufen lassen.
 # bin/deploy.sh ruft es ohnehin selbst auf. Zuordnen tust du sie danach
 # in der App unter "Mein Plan", dort gibt es eine Bildauswahl.
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-QUELLE="images"
+# fotos/ sind die iPhone-Originale und per .gitignore ausgeschlossen.
+# Nicht images/, dort liegen die generierten Übungsbilder.
+QUELLE="fotos"
 ZIEL="assets/img/exercises"
 KANTE=900
 

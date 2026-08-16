@@ -1243,7 +1243,7 @@
 
         if (fotos.length === 0) {
             return '<p class="hinweis">Keine Fotos gefunden. Originale nach '
-                 + '<code>images/</code> legen und <code>bin/fotos.sh</code> laufen lassen.</p>';
+                 + '<code>fotos/</code> legen und <code>bin/fotos.sh</code> laufen lassen.</p>';
         }
 
         let html = '<input type="hidden" name="photo" id="e-photo" value="'

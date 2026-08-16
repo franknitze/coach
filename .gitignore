@@ -5,5 +5,12 @@
 # Eine data/config.example.json ohne Werte darf später versioniert werden.
 data/
 
+# --- Die Studiofotos vom iPhone: nie ins Repo ---
+# 49 Originale, zusammen 134 MB, und jede Datei trägt die GPS-Koordinaten
+# des Studios im EXIF. Ins Repo und auf den Server geht ausschließlich die
+# aufbereitete Fassung in assets/img/exercises/: 900 Pixel, ohne Metadaten.
+# Der Ordner heißt auf der Platte klein, deshalb steht er hier klein.
+fotos/
+
 # --- System ---
 .DS_Store
