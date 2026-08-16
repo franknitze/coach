@@ -90,7 +90,7 @@ function datenAnlegen(ordner) {
         latzug: {
             id: 'latzug', name: 'Latzug', muscle_group: 'ruecken',
             day: 'oberkoerper', order: 2, target_sets: 4, rep_min: 8, rep_max: 12,
-            weight_step: 5, photo: 'IMG_1683.jpg', station: '07',
+            weight_step: 5, photo: 'a2-latzug-weit-brust.jpg', station: '07',
         },
         schulterdruecken: {
             id: 'schulterdruecken', name: 'Schulterdrücken', muscle_group: 'schulter',

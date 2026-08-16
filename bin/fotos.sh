@@ -23,11 +23,18 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-# Zwei Quellen, beide per .gitignore aus dem Repo heraus:
-#   fotos/   die iPhone-Aufnahmen aus dem Studio
-#   images/  die generierten Übungsbilder, ein PNG je Übung
-# Beide sind Originale in voller Größe und werden nur hier gelesen.
-QUELLEN=(fotos images)
+# Eine Quelle: images/. Dort liegt alles in voller Größe, die
+# generierten Übungsbilder und die iPhone-Aufnahmen aus dem Studio.
+# Per .gitignore aus dem Repo heraus, nur hier gelesen.
+QUELLE="images"
+
+# Nicht alles daraus gehört in die App. Die iPhone-Aufnahmen heißen
+# IMG_1644.JPG und so weiter, sind Rohmaterial und werden übersprungen;
+# sonst stünden 49 unsortierte Gerätebilder in der Bildauswahl. Soll eine
+# davon doch hinein, bekommt sie einen sprechenden Namen, dann greift
+# das Skript sie ab.
+UEBERSPRINGEN="IMG_*"
+
 ZIEL="assets/img/exercises"
 # 1200 Pixel, weil das Handy im Großformat 390 Punkte mal dreifache
 # Pixeldichte zeigt, also 1170 echte Pixel. Dieselbe Zahl bewacht
@@ -40,12 +47,14 @@ neu=0
 aktuell=0
 
 shopt -s nullglob nocaseglob
-quelldateien=()
-for q in "${QUELLEN[@]}"; do
-    quelldateien+=("$q"/*.jpg "$q"/*.jpeg "$q"/*.png)
-done
-for original in "${quelldateien[@]}"; do
+uebersprungen=0
+for original in "$QUELLE"/*.jpg "$QUELLE"/*.jpeg "$QUELLE"/*.png; do
     name=$(basename "${original%.*}")
+
+    # shellcheck disable=SC2254
+    case "$(basename "$original")" in
+        $UEBERSPRINGEN) uebersprungen=$((uebersprungen + 1)); continue ;;
+    esac
     web="$ZIEL/$name.jpg"
 
     # Nur anfassen, was fehlt oder älter ist als das Original.
@@ -69,5 +78,5 @@ fi
 gesamt=$(ls -1 "$ZIEL"/*.jpg 2>/dev/null | wc -l | tr -d ' ')
 groesse=$(du -sh "$ZIEL" | cut -f1)
 
-echo "  $neu neu aufbereitet, $aktuell schon aktuell"
+echo "  $neu neu aufbereitet, $aktuell schon aktuell, $uebersprungen übersprungen ($UEBERSPRINGEN)"
 echo "  $gesamt Webfassungen, zusammen $groesse"

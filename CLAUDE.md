@@ -197,11 +197,12 @@ Anders als beim Lithium-Rechner (eine einzelne Datei) braucht diese App einen Ab
 
 | Ordner | Was | Im Repo? | Auf dem Server? |
 |---|---|---|---|
-| `fotos/` | 49 iPhone-Aufnahmen aus dem Studio, 2268x4032, zusammen 134 MB | nein | nein |
-| `images/` | 25 generierte Übungsbilder, ein PNG je Übung, 2400x1792, zusammen 176 MB | nein | nein |
-| `assets/img/exercises/` | 74 Webfassungen, 1200 px JPEG, je rund 200 KB | **ja** | **ja** |
+| `images/` | die Werkbank: 25 generierte Übungsbilder (2400x1792 PNG) und 49 iPhone-Aufnahmen aus dem Studio (`IMG_*.JPG`), zusammen rund 310 MB | nein | nein |
+| `assets/img/exercises/` | 25 Webfassungen, 1200 px JPEG, je rund 200 KB | **ja** | **ja** |
 
-Die ersten beiden sind Werkbank, nicht Anwendung. Sie liegen auf Franks Mac, sind per `.gitignore` ausgeschlossen und werden von `bin/deploy.sh` übersprungen. Ihr einziger Zweck: aus ihnen rechnet `bin/fotos.sh` die Webfassung. Ein neues Bild kommt nach `fotos/` (fotografiert) oder `images/` (generiert), dann läuft das Skript, dann steht es in der Bildauswahl der App.
+`images/` ist Werkbank, nicht Anwendung. Der Ordner liegt auf Franks Mac, ist per `.gitignore` ausgeschlossen und wird von `bin/deploy.sh` übersprungen. Sein einziger Zweck: aus ihm rechnet `bin/fotos.sh` die Webfassung.
+
+**Nicht alles darin gehört in die App.** Dateien, die `IMG_*` heißen, überspringt `bin/fotos.sh`: Das sind die iPhone-Rohaufnahmen, 49 unsortierte Gerätebilder, die die Bildauswahl zumüllen würden. Soll eine davon doch hinein, bekommt sie einen sprechenden Namen, dann greift das Skript sie ab. Die 25 gezeichneten Übungsbilder heißen nach Tag und Position im Plan (`a1` bis `a9` für Tag A, `b1` bis `b8`, `c1` bis `c8`), also etwa `b2-klimmzug-untergriff.png`.
 
 Die Zuordnung Bild zu Übung passiert **in der App** unter „Mein Plan", nicht über Dateinamen. Auf einem Foto sieht man das Gerät, aber nicht, welche Übung jemand daran macht; das kann nur Frank entscheiden. Gespeichert wird sie als Feld `photo` in `data/exercises.json`, und weil `data/` nie deployed wird, reist eine lokal gemachte Zuordnung **nicht** mit auf den Server. Zugeordnet wird deshalb auf DOMAIN.
 

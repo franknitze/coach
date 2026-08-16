@@ -7,10 +7,9 @@
 #
 # Warum ein Skript und kein rsync von Hand: die Ausschlussliste ist der
 # heikle Teil. Fehlt --exclude 'data/**', überschreibt ein Deployment die
-# Trainingsdaten auf dem Server. Fehlt ein Quellordner in der Liste,
-# wandern die Originale mit hoch: 134 MB in fotos/, jedes Bild mit den
-# GPS-Koordinaten des Studios, und 176 MB in images/. Beides ist schon
-# passiert, einmal mit data/ und einmal mit fotos/.
+# Trainingsdaten auf dem Server. Fehlt der Quellordner in der Liste,
+# wandern 310 MB Originale mit hoch, darunter 49 iPhone-Aufnahmen mit den
+# GPS-Koordinaten des Studios. Beides ist schon passiert.
 #
 # Eine Ausschlussliste ist aber nur so gut wie ihr letzter Eintrag. Ein
 # neuer Ordner wird vergessen, und niemand merkt es. Deshalb steht unten

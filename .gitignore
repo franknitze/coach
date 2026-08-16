@@ -5,17 +5,12 @@
 # Eine data/config.example.json ohne Werte darf später versioniert werden.
 data/
 
-# --- Die Studiofotos vom iPhone: nie ins Repo ---
-# 49 Originale, zusammen 134 MB, und jede Datei trägt die GPS-Koordinaten
-# des Studios im EXIF. Ins Repo und auf den Server geht ausschließlich die
-# aufbereitete Fassung in assets/img/exercises/: 900 Pixel, ohne Metadaten.
-# Der Ordner heißt auf der Platte klein, deshalb steht er hier klein.
-fotos/
-
-# --- Die generierten Übungsbilder in voller Größe: nie ins Repo ---
-# 25 PNG mit 2400 px, je rund 7 MB, zusammen 176 MB. Angezeigt wird
-# davon nie eines. In der App liegt die 1200er Webfassung aus
-# assets/img/exercises/, rund 220 KB. Die Originale bleiben auf der
+# --- Alle Bildoriginale: nie ins Repo ---
+# images/ ist die Werkbank: 49 iPhone-Aufnahmen aus dem Studio (2268x4032,
+# jede mit den GPS-Koordinaten des Studios im EXIF) und 25 generierte
+# Übungsbilder (2400 px PNG, je rund 7 MB), zusammen rund 310 MB.
+# Angezeigt wird davon nie eines. In der App liegt die 1200er Webfassung
+# aus assets/img/exercises/, rund 220 KB. Die Originale bleiben auf der
 # Platte, damit sich die Webfassung jederzeit neu rechnen lässt.
 images/
 
