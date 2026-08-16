@@ -12,5 +12,12 @@ data/
 # Der Ordner heißt auf der Platte klein, deshalb steht er hier klein.
 fotos/
 
+# --- Die generierten Übungsbilder in voller Größe: nie ins Repo ---
+# 25 PNG mit 2400 px, je rund 7 MB, zusammen 176 MB. Angezeigt wird
+# davon nie eines. In der App liegt die 1200er Webfassung aus
+# assets/img/exercises/, rund 220 KB. Die Originale bleiben auf der
+# Platte, damit sich die Webfassung jederzeit neu rechnen lässt.
+images/
+
 # --- System ---
 .DS_Store

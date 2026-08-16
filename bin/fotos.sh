@@ -4,8 +4,9 @@
 #
 #   bin/fotos.sh
 #
-# Nimmt jedes Original aus fotos/ und legt eine Webfassung in
-# assets/img/exercises/ ab: auf 900 Pixel verkleinert, ohne Metadaten.
+# Nimmt jedes Original aus fotos/ und images/ und legt eine Webfassung
+# in assets/img/exercises/ ab: auf 1200 Pixel verkleinert, als JPEG,
+# ohne Metadaten.
 # Läuft beliebig oft, überspringt was schon aktuell ist.
 #
 # WARUM ÜBERHAUPT: ein Original ist rund 2,7 MB. Neun Kacheln auf einem
@@ -14,18 +15,24 @@
 # Die Webfassung liegt bei 150 KB. Nebenbei fallen die GPS-Koordinaten
 # weg, denn die Bilder liegen auf dem Server ohne Anmeldung.
 #
-# NEUE FOTOS: einfach nach fotos/ legen und dieses Skript laufen lassen.
+# NEUE BILDER: nach fotos/ (fotografiert) oder images/ (generiert) legen
+# und dieses Skript laufen lassen.
 # bin/deploy.sh ruft es ohnehin selbst auf. Zuordnen tust du sie danach
 # in der App unter "Mein Plan", dort gibt es eine Bildauswahl.
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-# fotos/ sind die iPhone-Originale und per .gitignore ausgeschlossen.
-# Nicht images/, dort liegen die generierten Übungsbilder.
-QUELLE="fotos"
+# Zwei Quellen, beide per .gitignore aus dem Repo heraus:
+#   fotos/   die iPhone-Aufnahmen aus dem Studio
+#   images/  die generierten Übungsbilder, ein PNG je Übung
+# Beide sind Originale in voller Größe und werden nur hier gelesen.
+QUELLEN=(fotos images)
 ZIEL="assets/img/exercises"
-KANTE=900
+# 1200 Pixel, weil das Handy im Großformat 390 Punkte mal dreifache
+# Pixeldichte zeigt, also 1170 echte Pixel. Dieselbe Zahl bewacht
+# tests/fotos.js als Obergrenze.
+KANTE=1200
 
 mkdir -p "$ZIEL"
 
@@ -33,7 +40,11 @@ neu=0
 aktuell=0
 
 shopt -s nullglob nocaseglob
-for original in "$QUELLE"/*.jpg "$QUELLE"/*.jpeg; do
+quelldateien=()
+for q in "${QUELLEN[@]}"; do
+    quelldateien+=("$q"/*.jpg "$q"/*.jpeg "$q"/*.png)
+done
+for original in "${quelldateien[@]}"; do
     name=$(basename "${original%.*}")
     web="$ZIEL/$name.jpg"
 
