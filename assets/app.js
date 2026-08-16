@@ -183,12 +183,44 @@
         return;
     }
 
+    /*
+     * Abmelden in zwei Schritten, wie das Löschen eines Fotos.
+     *
+     * Der Knopf steht unten am Seitenende, und unten am Seitenende liegt
+     * auf dem Handy der Daumen. Die Frage kostet einen Tipp und verhindert
+     * den Fehlgriff, der im Studio teuer wäre: Anmelden braucht das Netz,
+     * das dort oft fehlt, und bis dahin lägen die gepufferten Sätze fest.
+     * Jede andere Berührung nimmt die Frage zurück.
+     */
     const abmelden = document.getElementById('abmelden');
     if (abmelden) {
+        let gefragt = false;
+
+        const zuruecknehmen = function () {
+            if (!gefragt) {
+                return;
+            }
+            gefragt = false;
+            abmelden.textContent = 'Abmelden';
+            abmelden.classList.remove('ist-scharf');
+        };
+
         abmelden.addEventListener('click', async function () {
+            if (!gefragt) {
+                gefragt = true;
+                abmelden.textContent = 'Wirklich abmelden?';
+                abmelden.classList.add('ist-scharf');
+                return;
+            }
             await api('api/logout.php', { method: 'POST' });
             location.reload();
         });
+
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('#abmelden')) {
+                zuruecknehmen();
+            }
+        }, true);
     }
 
     const zustand = {
@@ -202,6 +234,7 @@
         neuTag: null,          // Trainingstag einer neu angelegten Übung
         fotos: null,           // Dateinamen aus api/fotos.php
         bildLoeschfrage: null, // Foto, das gerade zum Löschen angefragt ist
+        anleitung: null,       // Übung, deren Ausführung im Studio aufgeklappt ist
         verlauf: null,         // Antwort von api/history.php
         punktIndex: null,      // gewählte Einheit im Diagramm, null = letzte
         ausPuffer: false,      // Studio-Ansicht kommt aus dem lokalen Stand
@@ -707,10 +740,41 @@
             + '</button></div>';
 
         if (offen) {
-            html += zeichneSaetze(u);
+            html += zeichneAnleitung(u) + zeichneSaetze(u);
         }
 
         return html + '</section>';
+    }
+
+    /**
+     * Die Ausführung auf der offenen Kachel, eingeklappt.
+     *
+     * Dieselbe Auskunft steht unter "Mein Plan", aber gebraucht wird sie
+     * hier: vor dem Gerät, kurz bevor man den Satz macht. Verwaltung liest
+     * man zu Hause, "wie ging das nochmal" fragt man im Studio.
+     *
+     * Eingeklappt und leise, weil der Weg über diese Kachel neunmal pro
+     * Einheit führt und die Frage höchstens einmal auftaucht. Stünde der
+     * Text offen da, schöbe er bei jeder Übung die Regler nach unten, an
+     * denen tatsächlich gearbeitet wird.
+     *
+     * Aufklappen statt Popup: eine Überlagerung müsste weggetippt werden,
+     * bevor man weitermachen kann, und mit Pausen-Timer und Bildlupe
+     * liegen schon zwei davon übereinander.
+     */
+    function zeichneAnleitung(u) {
+        if (!u.execution && !u.search) {
+            return '';
+        }
+
+        const auf = zustand.anleitung === u.id;
+
+        return '<button class="anleitung' + (auf ? ' ist-auf' : '') + '" type="button" '
+             + 'aria-expanded="' + (auf ? 'true' : 'false') + '" '
+             + 'data-anleitung="' + esc(u.id) + '">'
+             + '<span class="anleitung__pfeil" aria-hidden="true"></span>'
+             + 'Wie geht die Übung?</button>'
+             + (auf ? zeichneAusfuehrung(u) : '');
     }
 
     function letztesErgebnis(u) {
@@ -1386,7 +1450,8 @@
     app.addEventListener('click', async function (e) {
         const ziel = e.target.closest('[data-gehe], [data-tag], [data-oeffne], [data-foto], [data-bild], [data-bildweg], '
             + '[data-bestaetige], [data-korrigiere], [data-extra], [data-bearbeite], '
-            + '[data-neu], [data-abbrechen], [data-frage], [data-loesche], [data-prio]');
+            + '[data-neu], [data-abbrechen], [data-frage], [data-loesche], [data-prio], '
+            + '[data-anleitung]');
         if (!ziel) {
             return;
         }
@@ -1475,6 +1540,13 @@
         if (d.oeffne) {
             zustand.offen = zustand.offen === d.oeffne ? null : d.oeffne;
             delete zustand.entwurf[d.oeffne];
+            // Eine andere Übung fängt ohne aufgeklappte Anleitung an.
+            zustand.anleitung = null;
+            return zeichnen();
+        }
+
+        if (d.anleitung) {
+            zustand.anleitung = zustand.anleitung === d.anleitung ? null : d.anleitung;
             return zeichnen();
         }
 

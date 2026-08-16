@@ -20,7 +20,7 @@
  * Trainingsstand wäre schlimmer als eine Fehlermeldung.
  */
 
-const CACHE = 'coach-v3';
+const CACHE = 'coach-v4';
 
 // Nur der Notvorrat für den Start ohne Netz. CSS und JS stehen bewusst
 // nicht drin: die tragen die Dateizeit in der URL und landen beim ersten

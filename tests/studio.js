@@ -136,4 +136,54 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
        'die Sätze liegen nach dem Neuladen auf der Platte');
     ok((await page.locator('.kachel.ist-offen').innerText()).includes('Latzug'),
        'und die App steht wieder bei der nächsten offenen Übung');
+
+    /* ---------- Die Anleitung an der Übung ----------
+     *
+     * "Wie geht das nochmal" fragt man vor dem Gerät, nicht zu Hause in der
+     * Verwaltung. Eingeklappt, weil der Weg über diese Kachel neunmal pro
+     * Einheit führt und die Frage höchstens einmal auftaucht.
+     */
+
+    // Latzug ist gerade offen und hat in der Vorgabe keine Ausführung.
+    ok(await page.locator('.kachel.ist-offen [data-anleitung]').count() === 0,
+       'ohne hinterlegte Ausführung gibt es keinen Aufklapper');
+
+    await page.locator('.kachel', { hasText: 'Bankdrücken' }).locator('.kachel__text').click();
+    await page.waitForSelector('.kachel.ist-offen [data-anleitung]');
+    const kachel = page.locator('.kachel.ist-offen');
+    ok(await kachel.locator('[data-anleitung]').count() === 1,
+       'die offene Kachel bietet die Ausführung an');
+    ok(await kachel.locator('.ausfuehrung').count() === 0,
+       'aber eingeklappt, die Regler bleiben oben');
+
+    await kachel.locator('[data-anleitung]').click();
+    await page.waitForSelector('.kachel .ausfuehrung');
+    const text = await kachel.locator('.ausfuehrung__text').innerText();
+    ok(text.length > 20, 'aufgeklappt steht die Ausführung da: "'
+        + text.slice(0, 46) + '…"');
+    ok(await kachel.locator('[data-anleitung]').getAttribute('aria-expanded') === 'true',
+       'und der Aufklapper sagt es auch der Vorlesehilfe');
+
+    const video = kachel.locator('.ausfuehrung__suche a').first();
+    ok((await video.getAttribute('href')).includes('youtube.com'),
+       'das Video ist von hier aus erreichbar');
+    ok(await video.getAttribute('target') === '_blank',
+       'und öffnet daneben, damit die Einheit nicht verlassen wird');
+
+    // Die Regler müssen erreichbar bleiben, sonst verdeckt die Anleitung
+    // genau das, wofür man die Kachel geöffnet hat.
+    ok(await kachel.locator('.satz__fertig, .satz--dran').count() >= 1,
+       'die Eingabe steht weiter darunter');
+
+    await kachel.locator('[data-anleitung]').click();
+    await page.waitForSelector('.kachel .ausfuehrung', { state: 'detached' });
+    ok(true, 'ein zweiter Tipp klappt sie wieder zu');
+
+    // Eine andere Übung fängt zugeklappt an
+    await kachel.locator('[data-anleitung]').click();
+    await page.waitForSelector('.kachel .ausfuehrung');
+    await page.locator('.kachel', { hasText: 'Schulterdrücken' }).locator('.kachel__text').click();
+    await page.waitForSelector('.kachel.ist-offen .satz--dran');
+    ok(await page.locator('.kachel .ausfuehrung').count() === 0,
+       'die nächste Übung beginnt wieder zugeklappt');
 });

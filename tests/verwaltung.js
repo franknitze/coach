@@ -16,6 +16,37 @@ module.exports = (port) => testlauf('Verwaltung', port, async (t) => {
     ok((await page.locator('#fehler').innerText()).includes('Passwort'), 'falsches Passwort wird abgewiesen');
 
     await t.anmelden();
+
+    /* ---------- Abmelden: unten und in zwei Schritten ----------
+     *
+     * Der Knopf saß oben rechts im Kopf, also da, wo der Daumen beim
+     * Halten des Handys ohnehin liegt. Ein Fehlgriff kostet im Studio den
+     * Zugang, denn Anmelden braucht das Netz, das dort oft fehlt.
+     */
+
+    ok(await page.locator('.kopf #abmelden').count() === 0,
+       'im Kopf steht kein Abmelden mehr');
+    ok(await page.locator('.fuss #abmelden').count() === 1,
+       'es steht in der Fußzeile');
+
+    const raus = page.locator('#abmelden');
+    await raus.click();
+    ok((await raus.innerText()).toLowerCase().includes('wirklich'),
+       'ein Tipp fragt erst nach: "' + (await raus.innerText()) + '"');
+    ok(await page.locator('#app').count() === 1,
+       'und meldet noch niemanden ab');
+
+    // Jede andere Berührung nimmt die Frage zurück
+    await page.locator('.kopf').click();
+    ok((await raus.innerText()) === 'Abmelden',
+       'ein Tipp woanders nimmt die Frage zurück');
+
+    await raus.click();
+    await raus.click();
+    await page.waitForSelector('#anmeldung');
+    ok(true, 'zweimal getippt meldet ab');
+
+    await t.anmelden();
     await page.click('[data-gehe="plan"]');
     await page.waitForSelector('.zeile');
     const vorher = await page.locator('.zeile').count();

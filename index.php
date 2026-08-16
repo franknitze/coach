@@ -124,7 +124,6 @@ function version(string $pfad): string
 
     <header class="kopf">
         <span class="wortmarke">Coach</span>
-        <button class="kopfknopf" type="button" id="abmelden">Abmelden</button>
     </header>
 
     <!-- Sagt, ob Sätze noch im lokalen Puffer liegen. Steht außerhalb von
@@ -145,6 +144,15 @@ function version(string $pfad): string
             <span class="lupe__name" id="lupe-name"></span>
         </div>
     </div>
+
+    <!-- Abmelden steht ganz unten und leise, nicht im Kopf.
+         Oben rechts lag es genau da, wo der Daumen beim Halten des Handys
+         ohnehin liegt, und ein Fehlgriff kostet im Studio den Zugang: neu
+         anmelden geht nur mit Netz, und im Funkloch gibt es keins. Der
+         zweite Tipp bestätigt, so wie beim Löschen eines Fotos. -->
+    <footer class="fuss">
+        <button class="fuss__knopf" type="button" id="abmelden">Abmelden</button>
+    </footer>
 
     <!-- Der Pausen-Timer liegt außerhalb von #app, damit das Sekundenzählen
          nicht die ganze Übungsliste neu zeichnet. -->
