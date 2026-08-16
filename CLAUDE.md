@@ -16,7 +16,7 @@ Die Phasen 0 bis 5 aus §10 sind gebaut und laufen live auf dem Server. Der Trai
 | `manifest.json`, `service-worker.js`, `assets/icons/`, Offline-Puffer | |
 | `.htaccess`, `bin/` (init-config, plan-anlegen, fotos, deploy, icons), `tests/` (244 Prüfungen) | |
 
-Der flüchtige Arbeitsstand steht in `STATE.md`, nicht hier.
+Der flüchtige Arbeitsstand steht in `STATE.md`. Die Datei ist **nicht versioniert** (siehe `.gitignore`): Sie handelt nur von dieser einen Installation und liegt ausschließlich auf Franks Rechner. Wer das Repo frisch klont, hat sie nicht, und das ist Absicht.
 
 Drei Abweichungen von SPEC.md, alle bewusst:
 
@@ -251,4 +251,4 @@ Die Richtung ist aus Franks Studio abgeleitet, nicht aus einer Fitness-App-Schab
 - Kein Framework, keine Paketmanager-Abhängigkeit, keine Datenbank. Wenn eine Lösung eine dieser drei Sachen braucht, ist sie für dieses Projekt die falsche Lösung.
 - Charts über eine schlanke Bibliothek per CDN (uPlot oder Chart.js), erst in Phase 3.
 - `config.json` enthält den Passwort-Hash und den API-Key und gehört niemals in ein Repo.
-- Übergeordnete Regeln und die Landkarte: `/Users/frank/AI-OS/CLAUDE.md`. Flüchtiger Arbeitsstand gehört in eine `STATE.md` (Skills `save-state` / `read-state`), nicht hierher.
+- Übergeordnete Regeln und die Landkarte: `/Users/frank/AI-OS/CLAUDE.md`. Flüchtiger Arbeitsstand gehört in die (nicht versionierte) `STATE.md` (Skills `save-state` / `read-state`), nicht hierher.

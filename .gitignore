@@ -14,6 +14,14 @@ data/
 # Platte, damit sich die Webfassung jederzeit neu rechnen lässt.
 images/
 
+# --- Der Arbeitsstand: bleibt auf diesem Rechner ---
+# STATE.md ist das Übergabedokument für die nächste Sitzung und handelt
+# ausschließlich von dieser einen Installation: offene Baustellen, Stand
+# des Servers, was als Nächstes zu testen wäre. Für andere, die dieses
+# Repo als Vorlage nehmen, ist davon nichts brauchbar. Die Datei liegt
+# weiter im Projektordner, sie wird nur nicht versioniert.
+STATE.md
+
 # --- Wohin deployed wird ---
 # Hostname, Paketkennung und Zielpfad sagen einem Fremden genau, wo der
 # Server steht. Zugangsdaten stehen nicht darin, der Schlüssel liegt in
