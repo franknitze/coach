@@ -14,5 +14,11 @@ data/
 # Platte, damit sich die Webfassung jederzeit neu rechnen lässt.
 images/
 
+# --- Wohin deployed wird ---
+# Hostname, Paketkennung und Zielpfad sagen einem Fremden genau, wo der
+# Server steht. Zugangsdaten stehen nicht darin, der Schlüssel liegt in
+# ~/.ssh/config. Vorlage im Repo: bin/ziel.conf.beispiel
+bin/ziel.conf
+
 # --- System ---
 .DS_Store

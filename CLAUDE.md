@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `SPEC.md` (deutsch, ~290 Zeilen) ist die verbindliche Vorgabe und die einzige Quelle dafür, was gebaut wird. Vor jedem Implementierungsvorschlag lesen; das Dokument ist so geschrieben, dass sich der Plan ohne Rückfragen ableiten lässt. Die Phasen 0 bis 6 in §10 sind die vorgegebene Reihenfolge.
 
-Die Phasen 0 bis 5 aus §10 sind gebaut und laufen unter **https://DOMAIN**. Der Trainingsplan steht mit 25 Übungen in den Daten, jede mit zugeordnetem Bild. Offen sind nur noch zwei Dinge:
+Die Phasen 0 bis 5 aus §10 sind gebaut und laufen live auf dem Server. Der Trainingsplan steht mit 25 Übungen in den Daten, jede mit zugeordnetem Bild. Offen sind nur noch zwei Dinge:
 
 | Steht | Fehlt |
 |---|---|
@@ -186,21 +186,15 @@ sips -Z 1200 --setProperty format jpeg images/IMG_1644.JPG --out assets/img/exer
 
 Eingerichtet und im Betrieb. **`bin/deploy.sh` ist der einzige Weg**, von Hand zu rsyncen ist der Fehler, der schon zweimal Daten gekostet hat. Das Skript prüft erst die Fotos und die PHP-Syntax, bricht bei jeder Datei über 400 KB ab, lädt dann hoch und prüft am Ende die Live-URLs. `bin/deploy.sh --trocken` zeigt vorher, was sich ändern würde.
 
-- Ziel: `allinkl:www/htdocs/KENNUNG/DOMAIN/`, erreichbar unter `https://DOMAIN`.
-- PHP dort ist **8.5**, auf der Kommandozeile heißt es `php85` (nicht `php`).
-- SSH-Alias `allinkl` aus `~/.ssh/config` (HostName `KENNUNG.kasserver.com`, Key `~/.ssh/SSH-SCHLUESSEL`).
+**Wohin deployed wird, steht nicht in diesem Repo.** Server-Alias, Zielpfad und Domain liegen in `bin/ziel.conf`, das per `.gitignore` ausgeschlossen ist; die Vorlage dazu ist `bin/ziel.conf.beispiel`. Fehlt die Datei, bricht der Deploy mit einer Anleitung ab. Grund: Hostname, Paketkennung und Pfad sind zwar keine Zugangsdaten, sagen einem Fremden aber genau, wo die Kiste steht. Zugangsdaten stehen auch dort nicht, der Schlüssel liegt in `~/.ssh/config`.
+
+- PHP auf dem Server ist **8.5**, auf der Kommandozeile heißt es `php85` (nicht `php`).
 - `scp`/`rsync` immer mit `-o IdentityAgent=none -o IdentitiesOnly=yes`, sonst greift Franks 1Password-SSH-Agent über die `Host *`-Regel und der Login scheitert mit „Too many authentication failures".
 - Zielpfade sind **relativ** zum chroot-Home, ein absoluter Pfad läuft ins Leere. SSH ist chrooted, PHP nicht.
-- `data/` liegt **im** Web-Root und ist per `.htaccess` gesperrt (Vorgabe von Frank, abweichend von SPEC §8). Der 403 wird bei jedem Deploy geprüft.
+- `data/` liegt **im** Web-Root und ist per `.htaccess` gesperrt (Vorgabe von Frank, abweichend von SPEC §8). Der 403 wird bei jedem Deploy geprüft, ebenso der 404 auf `lib/` und `bin/`.
+- `bin/` liegt auf dem Server, weil `plan-anlegen.php` und `init-config.php` dort über die Kommandozeile laufen. Aus dem Browser ist davon nichts erreichbar.
 
 Das erprobte Vorgehen für denselben Host steht auch in `../lithium-rechner/CLAUDE.md`.
-
-- SSH-Alias `allinkl` aus `~/.ssh/config` (HostName `KENNUNG.kasserver.com`, Key `~/.ssh/SSH-SCHLUESSEL`).
-- `scp`/`rsync` immer mit `-o IdentityAgent=none -o IdentitiesOnly=yes`, sonst greift Franks 1Password-SSH-Agent über die `Host *`-Regel und der Login scheitert mit „Too many authentication failures".
-- Zielpfade sind **relativ** zum chroot-Home (`www/htdocs/KENNUNG/<domain>/`), ein absoluter Pfad läuft ins Leere.
-- Domain und Zielordner für diese App stehen noch nicht fest.
-
-Anders als beim Lithium-Rechner (eine einzelne Datei) braucht diese App einen Abgleich mehrerer Ordner. `data/` darf dabei **nie** überschrieben oder mitgeladen werden, dort liegen die echten Trainingsdaten und der Passwort-Hash.
 
 ## Bilder: zwei Ordner, nur einer zählt
 
@@ -215,7 +209,7 @@ Anders als beim Lithium-Rechner (eine einzelne Datei) braucht diese App einen Ab
 
 **Nicht alles darin gehört in die App.** Dateien, die `IMG_*` heißen, überspringt `bin/fotos.sh`: Das sind die iPhone-Rohaufnahmen, 49 unsortierte Gerätebilder, die die Bildauswahl zumüllen würden. Soll eine davon doch hinein, bekommt sie einen sprechenden Namen, dann greift das Skript sie ab. Die 25 gezeichneten Übungsbilder heißen nach Tag und Position im Plan (`a1` bis `a9` für Tag A, `b1` bis `b8`, `c1` bis `c8`), also etwa `b2-klimmzug-untergriff.png`.
 
-Die Zuordnung Bild zu Übung passiert **in der App** unter „Mein Plan", nicht über Dateinamen. Auf einem Foto sieht man das Gerät, aber nicht, welche Übung jemand daran macht; das kann nur Frank entscheiden. Gespeichert wird sie als Feld `photo` in `data/exercises.json`, und weil `data/` nie deployed wird, reist eine lokal gemachte Zuordnung **nicht** mit auf den Server. Zugeordnet wird deshalb auf DOMAIN.
+Die Zuordnung Bild zu Übung passiert **in der App** unter „Mein Plan", nicht über Dateinamen. Auf einem Foto sieht man das Gerät, aber nicht, welche Übung jemand daran macht; das kann nur Frank entscheiden. Gespeichert wird sie als Feld `photo` in `data/exercises.json`, und weil `data/` nie deployed wird, reist eine lokal gemachte Zuordnung **nicht** mit auf den Server. Zugeordnet wird deshalb direkt auf dem Live-Server.
 
 Regeln fürs Aufbereiten, alle in `bin/fotos.sh` und in `tests/fotos.js` festgeschrieben:
 

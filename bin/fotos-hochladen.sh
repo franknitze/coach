@@ -12,17 +12,33 @@
 # lässt den Ordner bewusst aus.
 
 set -euo pipefail
+# Server, Zielpfad und Domain stehen in einer gitignorierten Datei und
+# nicht hier: Hostname, Paketkennung und Pfad sagen einem Fremden genau,
+# wo die Kiste steht. Vorlage: bin/ziel.conf.beispiel
+KONF="$(dirname "$0")/ziel.conf"
+if [ ! -f "$KONF" ]; then
+    echo "Es fehlt bin/ziel.conf. Anlegen mit:"
+    echo "  cp bin/ziel.conf.beispiel bin/ziel.conf   und die Werte eintragen"
+    exit 1
+fi
+# shellcheck source=/dev/null
+. "$KONF"
+
 cd "$(dirname "$0")/.."
 
 SSH="ssh -o IdentityAgent=none -o IdentitiesOnly=yes"
-ZIEL="allinkl:www/htdocs/KENNUNG/DOMAIN/assets/img/exercises/"
+ORDNER="$FERNPFAD/assets/img/exercises"
+ZIEL="$SSH_HOST:$ORDNER/"
 
-vorher=$(ssh -o IdentityAgent=none -o IdentitiesOnly=yes -o BatchMode=yes allinkl \
-    'ls -1 www/htdocs/KENNUNG/DOMAIN/assets/img/exercises/*.jpg 2>/dev/null | wc -l' | tr -d ' ')
+zaehlen() {
+    ssh -o IdentityAgent=none -o IdentitiesOnly=yes -o BatchMode=yes "$SSH_HOST" \
+        "ls -1 $ORDNER/*.jpg 2>/dev/null | wc -l" | tr -d ' '
+}
+
+vorher=$(zaehlen)
 
 rsync -az --ignore-existing -e "$SSH" assets/img/exercises/ "$ZIEL"
 
-nachher=$(ssh -o IdentityAgent=none -o IdentitiesOnly=yes -o BatchMode=yes allinkl \
-    'ls -1 www/htdocs/KENNUNG/DOMAIN/assets/img/exercises/*.jpg 2>/dev/null | wc -l' | tr -d ' ')
+nachher=$(zaehlen)
 
 echo "$vorher Fotos auf dem Server, jetzt $nachher. Nichts gelöscht."

@@ -1,0 +1,16 @@
+# Vorlage für bin/ziel.conf.
+#
+# Kopieren, die eigenen Werte eintragen, fertig. Die echte Datei ist per
+# .gitignore ausgeschlossen: Hostname, Paketkennung und Zielpfad sagen
+# einem Fremden genau, wo der Server steht, und gehören deshalb nicht ins
+# Repo. Zugangsdaten stehen hier keine, der Schlüssel liegt in
+# ~/.ssh/config.
+
+# Alias aus ~/.ssh/config, nicht der Hostname selbst.
+SSH_HOST="meinserver"
+
+# Zielordner, RELATIV zum chroot-Home. Ein absoluter Pfad läuft ins Leere.
+FERNPFAD="www/htdocs/kennung/beispiel.de"
+
+# Wofür die Live-Prüfung am Ende des Deploys die URLs baut.
+DOMAIN="beispiel.de"

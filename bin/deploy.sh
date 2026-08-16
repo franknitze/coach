@@ -22,9 +22,21 @@
 
 set -euo pipefail
 
+# Server, Zielpfad und Domain stehen in einer gitignorierten Datei und
+# nicht hier: Hostname, Paketkennung und Pfad sagen einem Fremden genau,
+# wo die Kiste steht. Vorlage: bin/ziel.conf.beispiel
+KONF="$(dirname "$0")/ziel.conf"
+if [ ! -f "$KONF" ]; then
+    echo "Es fehlt bin/ziel.conf. Anlegen mit:"
+    echo "  cp bin/ziel.conf.beispiel bin/ziel.conf   und die Werte eintragen"
+    exit 1
+fi
+# shellcheck source=/dev/null
+. "$KONF"
+
 cd "$(dirname "$0")/.."
 
-ZIEL="allinkl:www/htdocs/KENNUNG/DOMAIN/"
+ZIEL="$SSH_HOST:$FERNPFAD/"
 SSH="ssh -o IdentityAgent=none -o IdentitiesOnly=yes"
 # IdentityAgent=none umgeht Franks 1Password-SSH-Agenten, der über die
 # Host-*-Regel in ~/.ssh/config alles abfängt ("Too many authentication
@@ -85,6 +97,7 @@ rsync -az --delete $TROCKEN -e "$SSH" \
     --exclude 'assets/img/exercises/' \
     --exclude 'tests/' --exclude 'images/' --exclude 'fotos/' --exclude '.git/' \
     --exclude '.DS_Store' --exclude 'bin/icons.js' --exclude 'bin/deploy.sh' \
+    --exclude 'bin/ziel.conf*' \
     --exclude '*.md' --exclude '.gitignore' \
     --itemize-changes \
     ./ "$ZIEL" | sed 's/^/  /'
@@ -99,7 +112,7 @@ bash "$(dirname "$0")/fotos-hochladen.sh" | sed 's/^/  /'
 echo
 echo "── Live-Prüfung ──"
 pruefe() {
-    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "https://DOMAIN/$1")
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "https://$DOMAIN/$1")
     if [ "$code" = "$2" ]; then
         printf "  ok   /%-22s %s\n" "$1" "$code"
     else
@@ -112,3 +125,6 @@ pruefe "assets/app.css"    200
 pruefe "api/exercises.php" 401
 pruefe "data/config.json"  403
 pruefe "lib/config.php"    404
+# bin/ liegt auf dem Server, plan-anlegen.php wird dort gebraucht. Aus dem
+# Browser darf davon nichts erreichbar sein.
+pruefe "bin/plan-anlegen.php" 404
