@@ -428,6 +428,17 @@ body {
     touch-action: manipulation;
 }
 
+/*
+ * Leseanleitung unter einem Diagramm, dessen Richtung nicht selbsterklärend
+ * ist. Bislang nur die Unterstützungsmaschine: dort ist die fallende Kurve
+ * die gute. Bewusst in Fließtextgröße und leise, nicht als Warnung.
+ */
+.chart__fuss {
+    margin: 4px 0 0;
+    color: var(--schrift-leise);
+    font: 12px/1.45 var(--sans);
+}
+
 .ch-linie {
     fill: none;
     stroke: var(--schrift);
@@ -1217,4 +1228,14 @@ body.hat-pause .inhalt { padding-bottom: 120px; }
     flex: 0 1 auto;
     min-width: 0;
     letter-spacing: 0.08em;
+}
+
+/* Die umgekehrte Gewichtsrichtung muss auffallen, sonst dreht man im
+   Studio in die falsche Richtung. Kein Orange: das heißt "Steigerung
+   fällig". Eine abgesetzte Fläche mit kräftiger Kante reicht. */
+.wechsel--hilfe {
+    border-left-color: var(--schrift);
+    background: var(--raum-hoch);
+    border-radius: 0 8px 8px 0;
+    color: var(--schrift);
 }

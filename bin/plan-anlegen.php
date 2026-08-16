@@ -132,13 +132,13 @@ $plan = [
      'Rücken liegt am Polster an, Schultern unter den Auflagen, Füße schulterbreit mittig auf der Platte. Mindestens bis Oberschenkel waagerecht. Die Schulter ist an dieser Übung nicht beteiligt, deshalb steht sie hier statt der Langhantel-Kniebeuge. Gibt es keine Hackenschmidt-Maschine: schwere Beinpresse mit hoher Fußstellung, oder eine Safety Squat Bar, falls das Studio eine hat.',
      'hack squat machine'],
 
-    ['klimmzug_eng', 'Klimmzug im Untergriff', 'ruecken', 'ganzkoerper', 2, 4, 6, 10, 5.0,
-     'Untergriff etwa schulterbreit, Handflächen zum Gesicht. Bis das Kinn über die Stange kommt, unten vollständig ausstrecken. Geht das nicht für alle Sätze, am Latzug mit engem Untergriff arbeiten.',
-     'chin up underhand grip'],
+    ['klimmzug_eng', 'Klimmzug im Untergriff, unterstützt', 'ruecken', 'ganzkoerper', 2, 4, 6, 10, 5.0,
+     'An der Unterstützungsmaschine, Knie oder Füße auf dem Polster. Untergriff etwa schulterbreit, Handflächen zum Gesicht. Bis das Kinn über die Stange, unten vollständig ausstrecken. ACHTUNG: hier zählt weniger Gewicht als Fortschritt, das Gegengewicht nimmt Körpergewicht ab.',
+     'assisted chin up machine'],
 
-    ['dips_brust', 'Dips am Barren, Oberkörper vorgeneigt', 'brust', 'ganzkoerper', 3, 4, 6, 10, 2.5,
-     'Oberkörper deutlich nach vorn geneigt und Ellenbogen leicht abgespreizt, dann trägt die Brust. Aufrecht mit engen Ellenbogen wäre es eine Trizepsübung. Bis Oberarm waagerecht, nicht tiefer.',
-     'chest dips forward lean'],
+    ['dips_brust', 'Dips vorgeneigt, unterstützt', 'brust', 'ganzkoerper', 3, 4, 6, 10, 2.5,
+     'An der Unterstützungsmaschine, Knie auf dem Polster. Oberkörper deutlich nach vorn geneigt und Ellenbogen leicht abgespreizt, dann trägt die Brust. Aufrecht mit engen Ellenbogen wäre es eine Trizepsübung. Bis Oberarm waagerecht, nicht tiefer. ACHTUNG: weniger Gewicht ist hier der Fortschritt.',
+     'assisted dip machine chest'],
 
     ['kreuzheben_rum', 'Rumänisches Kreuzheben mit der Langhantel', 'beinbeuger', 'ganzkoerper', 4, 4, 8, 10, 2.5,
      'Aus dem Stand starten, nicht vom Boden. Knie leicht gebeugt und in diesem Winkel bleiben, Hüfte weit nach hinten, Stange dicht am Bein entlang bis etwa Mitte Schienbein. Rücken durchgehend gerade.',
@@ -198,6 +198,7 @@ $plan = [
 const AUS_DEM_PLAN = [
     'name', 'muscle_group', 'day', 'order', 'target_sets',
     'rep_min', 'rep_max', 'weight_step', 'execution', 'search', 'partner',
+    'assisted',
 ];
 
 /*
@@ -228,6 +229,13 @@ $paare = [
     ['trizeps_ueberkopf', 'curl_schraeg'],     // Kabel und Kurzhantel, kleiner Platzbedarf
 ];
 
+/*
+ * Übungen an der Unterstützungsmaschine. Dort hebt ein Gegengewicht einen
+ * Teil des Körpergewichts an: mehr Gewicht heißt LEICHTER. Ohne diese
+ * Kennzeichnung schickte die Progressionsregel in die falsche Richtung.
+ */
+$unterstuetzt = ['klimmzug_eng', 'dips_brust'];
+
 $partnerVon = [];
 foreach ($paare as [$a, $b]) {
     $partnerVon[$a] = $b;
@@ -249,6 +257,7 @@ foreach ($plan as $z) {
         'search'    => $z[10],
         // Übung, mit der diese im Wechsel ausgeführt wird, oder leer.
         'partner'   => $partnerVon[$z[0]] ?? '',
+        'assisted'  => in_array($z[0], $unterstuetzt, true),
         // Gerät und Foto bleiben leer, das wird in der App zugeordnet.
         'station' => '', 'photo' => '',
     ];

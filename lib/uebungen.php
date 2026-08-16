@@ -96,6 +96,15 @@ function uebung_pruefen(array $roh, array $plan): array
         // Übung, mit der diese im Wechsel läuft. Drücken gegen Ziehen: die
         // Einheit wird kürzer, ohne dass ein Muskel weniger Pause bekommt.
         'partner'      => trim((string) ($roh['partner'] ?? '')),
+        /*
+         * Unterstützungsmaschine: mehr Gewicht heißt LEICHTER.
+         *
+         * An einer Klimmzug- oder Dip-Maschine hebt das Gegengewicht einen
+         * Teil des Körpergewichts an. Fortschritt heißt hier also weniger
+         * Gewicht, nicht mehr. Ohne dieses Feld schickte die
+         * Progressionsregel genau in die falsche Richtung.
+         */
+        'assisted'     => !empty($roh['assisted']),
         // Ergänzung zum Schema aus SPEC.md §4: die aufgeklebte Gerätenummer
         // aus dem Studio. Optional, dient dem Wiederfinden des Geräts.
         'station'      => trim((string) ($roh['station'] ?? '')),

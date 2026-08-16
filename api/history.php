@@ -23,5 +23,5 @@ if (!isset($alle[$id])) {
 
 json_out([
     'exercise' => $alle[$id],
-    'points'   => logs_verlauf($id),
+    'points'   => logs_verlauf($id, !empty($alle[$id]['assisted'])),
 ]);

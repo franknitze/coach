@@ -159,20 +159,26 @@ function logs_letzte_einheiten(string $uebungId, int $anzahl): array
 /**
  * Der komplette Verlauf einer Übung, älteste Einheit zuerst.
  *
- * Rechnet je Einheit zwei Größen aus:
- * - max_weight: das schwerste Gewicht des Tages.
+ * Rechnet je Einheit aus:
+ * - work_weight: das Arbeitsgewicht des Tages. Normalerweise der schwerste
+ *   Satz; an einer Unterstützungsmaschine ($unterstuetzt) der mit der
+ *   geringsten Hilfe, denn dort ist weniger Gewicht die schwerere Übung.
+ * - top_reps: die Wiederholungen dieses Satzes.
  * - volume: Summe aus Gewicht mal Wiederholungen über alle Sätze. SPEC.md
  *   §5.4 nennt es "Gewicht × Wdh × Sätze"; die Summe ist dasselbe, sobald
  *   die Sätze unterschiedlich ausfallen, was der Normalfall ist.
+ * - reps_total: Summe der Wiederholungen. Für Unterstützungsübungen die
+ *   ehrlichere Menge: dort wäre "Gewicht × Wdh" die abgenommene Last und
+ *   stiege genau dann, wenn man sich mehr helfen lässt.
  *
  * Gerechnet wird hier und nicht im Browser: das Frontend zeigt an, es
  * rechnet nicht. Sonst driften Kurve und spätere Coach-Ansage auseinander.
  */
-function logs_verlauf(string $uebungId): array
+function logs_verlauf(string $uebungId, bool $unterstuetzt = false): array
 {
     $punkte = [];
 
-    logs_rueckwaerts(function (array $session) use ($uebungId, &$punkte): bool {
+    logs_rueckwaerts(function (array $session) use ($uebungId, $unterstuetzt, &$punkte): bool {
         foreach ((array) ($session['exercises'] ?? []) as $eintrag) {
             if (($eintrag['exercise_id'] ?? '') !== $uebungId) {
                 continue;
@@ -182,26 +188,32 @@ function logs_verlauf(string $uebungId): array
                 continue;
             }
 
-            $maxGewicht = 0.0;
-            $topWdh     = 0;
-            $volumen    = 0.0;
+            $arbeit  = null;
+            $topWdh  = 0;
+            $volumen = 0.0;
+            $wdhGes  = 0;
 
             foreach ($saetze as $satz) {
                 $gewicht = (float) ($satz['weight'] ?? 0);
                 $wdh     = (int) ($satz['reps'] ?? 0);
                 $volumen += $gewicht * $wdh;
-                if ($gewicht > $maxGewicht) {
-                    $maxGewicht = $gewicht;
-                    $topWdh     = $wdh;
+                $wdhGes  += $wdh;
+
+                $besser = $arbeit === null
+                    || ($unterstuetzt ? $gewicht < $arbeit : $gewicht > $arbeit);
+                if ($besser) {
+                    $arbeit = $gewicht;
+                    $topWdh = $wdh;
                 }
             }
 
             $punkte[] = [
-                'date'       => $session['date'] ?? '',
-                'max_weight' => $maxGewicht,
-                'top_reps'   => $topWdh,
-                'volume'     => round($volumen, 1),
-                'sets'       => count($saetze),
+                'date'        => $session['date'] ?? '',
+                'work_weight' => $arbeit ?? 0.0,
+                'top_reps'    => $topWdh,
+                'volume'      => round($volumen, 1),
+                'reps_total'  => $wdhGes,
+                'sets'        => count($saetze),
             ];
         }
         return false;   // den ganzen Verlauf durchgehen, nicht abbrechen

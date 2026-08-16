@@ -49,6 +49,13 @@ function coach_empfehlung(array $uebung): array
     $repMax = (int) ($uebung['rep_max'] ?? 12);
     $schritt = (float) ($uebung['weight_step'] ?? config()['default_weight_step']);
 
+    /*
+     * An einer Unterstützungsmaschine läuft alles andersherum: das
+     * Gegengewicht nimmt Körpergewicht ab, mehr davon macht die Übung
+     * leichter. Fortschritt heißt dann weniger Gewicht.
+     */
+    $unterstuetzt = !empty($uebung['assisted']);
+
     $einheiten = logs_letzte_einheiten((string) $uebung['id'], COACH_EINHEITEN);
 
     if ($einheiten === []) {
@@ -68,21 +75,38 @@ function coach_empfehlung(array $uebung): array
         static fn (array $satz): float => (float) ($satz['weight'] ?? 0),
         $letzte['sets']
     );
-    $aktGewicht = max($gewichte);
+    // Das Arbeitsgewicht ist der schwerste Satz, an der
+    // Unterstützungsmaschine also der mit der GERINGSTEN Hilfe.
+    $aktGewicht = $unterstuetzt ? min($gewichte) : max($gewichte);
 
     // Zweig 1: steigern.
     // Verlangt werden volle COACH_EINHEITEN. Eine einzelne saubere Einheit
     // reicht nicht, sonst schiebt ein guter Tag das Gewicht hoch, das am
     // nächsten Termin wieder einbricht.
     if (coach_sauber($einheiten, $aktGewicht, $repMax)) {
-        $ziel = $aktGewicht + $schritt;
+        $ziel = $unterstuetzt
+            ? max(0.0, $aktGewicht - $schritt)
+            : $aktGewicht + $schritt;
+
+        if ($unterstuetzt && $ziel <= 0.0) {
+            return [
+                'status'        => 'steigern',
+                'target_weight' => 0.0,
+                'text'          => 'Heute ohne Unterstützung',
+                'reason'        => COACH_EINHEITEN . ' Einheiten sauber bei '
+                                 . coach_zahl($aktGewicht) . ' kg Hilfe',
+            ];
+        }
+
         return [
             'status'        => 'steigern',
             'target_weight' => $ziel,
             // Erst die Handlung, dann die Begründung. Auf der Kachel steht
             // die Handlung vorn und hervorgehoben, die Begründung leise
             // darunter: gelesen wird im Studio nur die erste Zeile.
-            'text'          => 'Heute ' . coach_zahl($ziel) . ' kg',
+            'text'          => $unterstuetzt
+                ? 'Heute ' . coach_zahl($ziel) . ' kg Unterstützung, ' . coach_zahl($schritt) . ' weniger'
+                : 'Heute ' . coach_zahl($ziel) . ' kg',
             'reason'        => COACH_EINHEITEN . ' Einheiten sauber, '
                              . coach_zahl($aktGewicht) . ' kg × ' . $repMax,
         ];
@@ -103,8 +127,10 @@ function coach_empfehlung(array $uebung): array
             'status'        => 'zurueckholen',
             'target_weight' => $aktGewicht,
             'reason'        => '',
-            'text'          => coach_zahl($aktGewicht) . ' kg halten, Wiederholungen zurück auf '
-                             . $repMin . '.',
+            'text'          => $unterstuetzt
+                ? 'Mehr Unterstützung, bis ' . $repMin . ' Wiederholungen wieder gehen.'
+                : coach_zahl($aktGewicht) . ' kg halten, Wiederholungen zurück auf '
+                  . $repMin . '.',
         ];
     }
 
@@ -122,7 +148,8 @@ function coach_empfehlung(array $uebung): array
             'reason'        => '',
             'text'          => 'Noch ' . ($fehlend === 1 ? 'eine saubere Einheit' : $fehlend
                              . ' saubere Einheiten') . ' mit ' . coach_zahl($aktGewicht)
-                             . ' kg × ' . $repMax . ', dann geht es hoch.',
+                             . ' kg × ' . $repMax . ', dann '
+                             . ($unterstuetzt ? 'geht die Hilfe runter.' : 'geht es hoch.'),
         ];
     }
 

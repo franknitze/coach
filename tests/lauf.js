@@ -18,6 +18,7 @@ const laeufe = {
     verlauf:    { port: 8793, modul: './verlauf' },
     coach:      { port: 8794, modul: './coach' },
     paare:      { port: 8787, modul: './paare' },
+    hilfe:      { port: 8786, modul: './hilfe' },
     einrichtung:{ port: 8790, modul: './einrichtung' },
     bilder:     { port: 8789, modul: './bilder' },
     pwa:        { port: 8795, modul: './pwa' },

@@ -707,7 +707,7 @@
             return '';
         }
         const s = u.last.sets[u.last.sets.length - 1];
-        return 'zuletzt ' + zahl(s.weight) + ' kg × ' + s.reps
+        return 'zuletzt ' + zahl(s.weight) + (u.assisted ? ' kg Hilfe × ' : ' kg × ') + s.reps
              + (u.last.date ? ' · ' + datumKurz(u.last.date) : '');
     }
 
@@ -738,7 +738,8 @@
         heute.forEach(function (satz, i) {
             html += '<div class="satz satz--fertig">'
                 + '<span class="satz__mini">Satz ' + (i + 1) + '</span>'
-                + '<span class="satz__wert">' + zahl(satz.weight) + ' kg × ' + satz.reps + '</span>'
+                + '<span class="satz__wert">' + zahl(satz.weight)
+                + (u.assisted ? ' kg Hilfe × ' : ' kg × ') + satz.reps + '</span>'
                 + '<button class="satz__korr" data-korrigiere="' + esc(u.id) + ':' + i
                 + '">ändern</button></div>';
         });
@@ -755,16 +756,30 @@
             ? zustand.entwurf[u.id].index + 1
             : heute.length + 1;
 
+        /*
+         * An der Unterstützungsmaschine ist die Richtung umgekehrt. Das
+         * gehört sichtbar dorthin, wo eingetippt wird, sonst dreht man
+         * das Gewicht nach oben und macht die Übung damit leichter.
+         */
+        const hilfeHinweis = u.assisted
+            ? '<p class="wechsel wechsel--hilfe">Unterstützungsmaschine: '
+              + '<strong>weniger Gewicht heißt schwerer.</strong> '
+              + 'Das Gegengewicht nimmt dir Körpergewicht ab.</p>'
+            : '';
+
         const partner = u.partner ? uebungImStudio(u.partner) : null;
         const partnerHinweis = partner
             ? '<p class="wechsel">Im Wechsel mit <strong>' + esc(partner.name)
               + '</strong>. Nach dem Satz führt die App dorthin.</p>'
             : '';
 
-        html += partnerHinweis
+        html += hilfeHinweis + partnerHinweis
             + '<div class="satz satz--dran">'
             + '<span class="satz__mini">Satz ' + nummer + '</span>'
-            + regler(u.id, 'weight', zahl(e.weight) + ' kg', '± ' + zahl(u.weight_step) + ' kg')
+            + regler(u.id, 'weight', zahl(e.weight) + ' kg',
+                u.assisted
+                    ? '± ' + zahl(u.weight_step) + ' kg Hilfe · weniger ist schwerer'
+                    : '± ' + zahl(u.weight_step) + ' kg')
             + regler(u.id, 'reps', e.reps + ' Wdh', '')
             + '<button class="knopf satz__ok" data-bestaetige="' + esc(u.id) + '">'
             + 'Satz bestätigen</button>'
@@ -975,12 +990,26 @@
                            punkte.length - 1);
         const p = punkte[i];
 
+        /*
+         * An einer Unterstützungsmaschine misst dieselbe Zahl das Gegenteil.
+         * Das Arbeitsgewicht ist die geringste Hilfe, und die Kurve fällt,
+         * wenn es besser läuft. "Gewicht × Wdh" wäre dort die abgenommene
+         * Last: sie stiege genau dann, wenn man sich mehr helfen lässt.
+         * Deshalb zählt im zweiten Diagramm die Wiederholungsmenge.
+         */
+        const hilfe = !!(zustand.verlauf.exercise && zustand.verlauf.exercise.assisted);
+        const gewichtKopf = hilfe ? 'Geringste Unterstützung' : 'Schwerstes Gewicht';
+        const mengeFeld   = hilfe ? 'reps_total' : 'volume';
+        const mengeKopf   = hilfe ? 'Wiederholungen' : 'Volumen';
+        const mengeEinh   = hilfe ? 'Wdh gesamt' : 'kg × Wdh';
+        const kg          = (w) => zahl(w) + (hilfe ? ' kg Hilfe' : ' kg');
+
         // Bei einem einzigen Datenpunkt ist eine Kurve eine Lüge: es gibt
         // keinen Verlauf, nur einen Wert.
         if (punkte.length === 1) {
             return '<section class="verlauf">'
                 + '<p class="verlauf__lese">' + esc(datum(p.date)) + ' · '
-                + esc(zahl(p.max_weight)) + ' kg × ' + p.top_reps + ' · '
+                + esc(kg(p.work_weight)) + ' × ' + p.top_reps + ' · '
                 + p.sets + (p.sets === 1 ? ' Satz' : ' Sätze') + '</p>'
                 + '<p class="tag__leer">Eine Einheit reicht für keine Kurve. '
                 + 'Ab der zweiten wird hier ein Verlauf sichtbar.</p></section>';
@@ -990,17 +1019,20 @@
             + '<div class="verlauf__lese">'
             + '<span class="verlauf__datum">' + esc(datum(p.date)) + '</span>'
             + '<span class="verlauf__werte">'
-            + esc(zahl(p.max_weight)) + ' kg × ' + p.top_reps + '  ·  '
+            + esc(kg(p.work_weight)) + ' × ' + p.top_reps + '  ·  '
             + p.sets + (p.sets === 1 ? ' Satz' : ' Sätze') + '  ·  '
-            + esc(zahl(p.volume)) + ' Volumen</span></div>'
+            + (hilfe ? p.reps_total + ' Wdh' : esc(zahl(p.volume)) + ' Volumen')
+            + '</span></div>'
 
-            + '<div class="chart__kopf"><span class="mini">Schwerstes Gewicht</span>'
+            + '<div class="chart__kopf"><span class="mini">' + gewichtKopf + '</span>'
             + '<span class="chart__einheit">kg</span></div>'
-            + chart(punkte, 'max_weight', 'Kilogramm', i)
+            + chart(punkte, 'work_weight', 'Kilogramm', i)
+            + (hilfe ? '<p class="chart__fuss">Eine fallende Kurve ist der Fortschritt: '
+                     + 'weniger Hilfe heißt mehr eigene Kraft.</p>' : '')
 
-            + '<div class="chart__kopf"><span class="mini">Volumen</span>'
-            + '<span class="chart__einheit">kg × Wdh</span></div>'
-            + chart(punkte, 'volume', 'Volumen', i)
+            + '<div class="chart__kopf"><span class="mini">' + mengeKopf + '</span>'
+            + '<span class="chart__einheit">' + mengeEinh + '</span></div>'
+            + chart(punkte, mengeFeld, mengeKopf, i)
 
             + '<p class="hinweis">' + punkte.length + ' Einheiten. '
             + 'Tippen wählt eine Einheit aus.</p>'
@@ -1144,6 +1176,14 @@
                  + zahl(s) + ' kg</option>';
         });
         html += '</select>'
+
+            + '<label class="mini" for="e-assisted">Gewichtsrichtung</label>'
+            + '<select class="feld feld--text" id="e-assisted" name="assisted">'
+            + '<option value=""' + (u.assisted ? '' : ' selected')
+            + '>mehr Gewicht ist schwerer (normal)</option>'
+            + '<option value="1"' + (u.assisted ? ' selected' : '')
+            + '>weniger Gewicht ist schwerer (Unterstützungsmaschine)</option>'
+            + '</select>'
 
             + '<label class="mini" for="e-execution">Ausführung</label>'
             + '<textarea class="feld feld--text feld--lang" id="e-execution" '
