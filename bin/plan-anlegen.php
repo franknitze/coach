@@ -123,9 +123,14 @@ $plan = [
      'incline dumbbell curl'],
 
     // ---------- B: Ganzkörper, 30 Sätze ----------
-    ['kniebeuge', 'Langhantel-Kniebeuge, Stange hoch', 'quadrizeps', 'ganzkoerper', 1, 4, 5, 8, 2.5,
-     'Stange hoch auf dem Trapez, nicht tief auf den hinteren Schultern. Füße schulterbreit, Zehen leicht nach außen. Mindestens bis Oberschenkel waagerecht, tiefer wenn die Beweglichkeit es zulässt.',
-     'high bar back squat'],
+    // Ersetzt die Langhantel-Kniebeuge: die Stange hinter dem Kopf
+    // abzulegen verlangt Außenrotation und Streckung der Schulter
+    // gleichzeitig, und das gibt nicht jedes Schultergelenk her. Die
+    // Hackenschmidt-Maschine trainiert dasselbe Muster ohne jede
+    // Beteiligung der Schulter.
+    ['kniebeuge', 'Hackenschmidt-Kniebeuge', 'quadrizeps', 'ganzkoerper', 1, 4, 5, 8, 2.5,
+     'Rücken liegt am Polster an, Schultern unter den Auflagen, Füße schulterbreit mittig auf der Platte. Mindestens bis Oberschenkel waagerecht. Die Schulter ist an dieser Übung nicht beteiligt, deshalb steht sie hier statt der Langhantel-Kniebeuge. Gibt es keine Hackenschmidt-Maschine: schwere Beinpresse mit hoher Fußstellung, oder eine Safety Squat Bar, falls das Studio eine hat.',
+     'hack squat machine'],
 
     ['klimmzug_eng', 'Klimmzug im Untergriff', 'ruecken', 'ganzkoerper', 2, 4, 6, 10, 5.0,
      'Untergriff etwa schulterbreit, Handflächen zum Gesicht. Bis das Kinn über die Stange kommt, unten vollständig ausstrecken. Geht das nicht für alle Sätze, am Latzug mit engem Untergriff arbeiten.',
@@ -192,8 +197,42 @@ $plan = [
 /** Welche Felder aus dem Plan stammen und bei --aktualisieren gesetzt werden. */
 const AUS_DEM_PLAN = [
     'name', 'muscle_group', 'day', 'order', 'target_sets',
-    'rep_min', 'rep_max', 'weight_step', 'execution', 'search',
+    'rep_min', 'rep_max', 'weight_step', 'execution', 'search', 'partner',
 ];
+
+/*
+ * Paare, die im Wechsel ausgeführt werden.
+ *
+ * Drücken gegen Ziehen: während die eine Seite arbeitet, erholt sich die
+ * andere. Jeder Muskel bekommt weiterhin die volle Pause, die Einheit wird
+ * aber kürzer, ohne dass ein Satz wegfällt.
+ *
+ * DIE AUSWAHL FOLGT DER PRAXIS, NICHT DER THEORIE. Ein Wechsel geht nur,
+ * wenn er im Studio wirklich durchführbar ist. Bedingung:
+ *
+ * 1. Kein Umbau zwischen den Sätzen. Also Eigengewicht, Kabelzug mit
+ *    Steckgewicht oder Kurzhanteln, keine Langhantel mit Scheiben.
+ * 2. Beide Stationen liegen nah beieinander und sind klein genug, dass
+ *    man sie kurz belegen kann.
+ *
+ * Deshalb NICHT gepaart, obwohl es fachlich naheläge:
+ * - Bankdrücken mit Latzug: zwei weit auseinanderliegende Stationen, und
+ *   die beladene Bank steht morgens nicht lange leer.
+ * - Schrägbankdrücken mit Rudern: dasselbe Problem, zwei belegte Plätze.
+ * - Beinübungen überhaupt: dort teilen sich die Übungen den Kreislauf,
+ *   mit halber Pause sinkt das Gewicht.
+ */
+$paare = [
+    ['dips_brust', 'klimmzug_eng'],            // beides Eigengewicht, oft dasselbe Gestell
+    ['kabel_fliegende', 'kabelrudern_eng'],    // beides Kabel, Steckgewicht
+    ['trizeps_ueberkopf', 'curl_schraeg'],     // Kabel und Kurzhantel, kleiner Platzbedarf
+];
+
+$partnerVon = [];
+foreach ($paare as [$a, $b]) {
+    $partnerVon[$a] = $b;
+    $partnerVon[$b] = $a;
+}
 
 $uebungen = [];
 foreach ($plan as $z) {
@@ -208,6 +247,8 @@ foreach ($plan as $z) {
         // sich nicht nachschlagen, welche Übung gemeint ist.
         'execution' => $z[9],
         'search'    => $z[10],
+        // Übung, mit der diese im Wechsel ausgeführt wird, oder leer.
+        'partner'   => $partnerVon[$z[0]] ?? '',
         // Gerät und Foto bleiben leer, das wird in der App zugeordnet.
         'station' => '', 'photo' => '',
     ];
@@ -300,3 +341,4 @@ echo "\n  neu angelegt: $neuAngelegt";
 echo ", aufgefrischt: $aufgefrischt";
 echo ", unberührt gelassen: $unberuehrt\n";
 echo "  Übungen mit zugeordnetem Foto: $mitFoto\n";
+echo "  Paare im Wechsel: " . count($paare) . "\n";

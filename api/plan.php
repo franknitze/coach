@@ -73,6 +73,7 @@ json_out([
     'days'               => $tage,
     'exercises'          => uebungen_sortiert($heute),
     'rest_timer_seconds' => (int) config()['rest_timer_seconds'],
+    'rest_pair_seconds'  => (int) config()['rest_pair_seconds'],
 ]);
 
 /**

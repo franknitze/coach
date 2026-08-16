@@ -93,6 +93,9 @@ function uebung_pruefen(array $roh, array $plan): array
          */
         'execution'    => trim((string) ($roh['execution'] ?? '')),
         'search'       => trim((string) ($roh['search'] ?? '')),
+        // Übung, mit der diese im Wechsel läuft. Drücken gegen Ziehen: die
+        // Einheit wird kürzer, ohne dass ein Muskel weniger Pause bekommt.
+        'partner'      => trim((string) ($roh['partner'] ?? '')),
         // Ergänzung zum Schema aus SPEC.md §4: die aufgeklebte Gerätenummer
         // aus dem Studio. Optional, dient dem Wiederfinden des Geräts.
         'station'      => trim((string) ($roh['station'] ?? '')),

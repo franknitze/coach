@@ -1196,3 +1196,25 @@ body.hat-pause .inhalt { padding-bottom: 120px; }
     line-height: 1.5;
     resize: vertical;
 }
+
+/* Hinweis auf die Partnerübung, steht über den Reglern der offenen Kachel. */
+.wechsel {
+    margin: 0 0 16px;
+    padding: 10px 12px;
+    border-left: 3px solid var(--linie);
+    font: 13px/1.45 var(--mono);
+    color: var(--schrift-leise);
+}
+
+.wechsel strong {
+    color: var(--schrift);
+    font-weight: 600;
+}
+
+/* Beim Wechsel steht in der Pausenleiste, was als Nächstes kommt. Der
+   Text wird dann länger als das kurze "Pause". */
+.pause__mini {
+    flex: 0 1 auto;
+    min-width: 0;
+    letter-spacing: 0.08em;
+}

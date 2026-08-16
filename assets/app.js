@@ -437,11 +437,16 @@
     const pauseWeg  = document.getElementById('pause-weg');
     let pauseUhr = null;
 
-    function pauseStarten(sekunden) {
+    function pauseStarten(sekunden, naechstes) {
         if (!sekunden) {
             return;
         }
         pauseBeenden();
+
+        const beschriftung = document.querySelector('.pause__mini');
+        if (beschriftung) {
+            beschriftung.textContent = naechstes ? 'Dann ' + naechstes : 'Pause';
+        }
 
         const ende = Date.now() + sekunden * 1000;
         pauseBox.hidden = false;
@@ -750,7 +755,14 @@
             ? zustand.entwurf[u.id].index + 1
             : heute.length + 1;
 
-        html += '<div class="satz satz--dran">'
+        const partner = u.partner ? uebungImStudio(u.partner) : null;
+        const partnerHinweis = partner
+            ? '<p class="wechsel">Im Wechsel mit <strong>' + esc(partner.name)
+              + '</strong>. Nach dem Satz führt die App dorthin.</p>'
+            : '';
+
+        html += partnerHinweis
+            + '<div class="satz satz--dran">'
             + '<span class="satz__mini">Satz ' + nummer + '</span>'
             + regler(u.id, 'weight', zahl(e.weight) + ' kg', '± ' + zahl(u.weight_step) + ' kg')
             + regler(u.id, 'reps', e.reps + ' Wdh', '')
@@ -1474,11 +1486,29 @@
             delete zustand.entwurf[u.id];
             zustand.meldung = '';
 
-            // Ist die Übung durch, rückt die App von selbst zur nächsten und
-            // scrollt sie heran. Im Studio soll man nicht suchen müssen,
-            // was als Nächstes dran ist.
+            /*
+             * Wohin als Nächstes?
+             *
+             * Hat die Übung einen Partner, der noch Sätze offen hat, geht
+             * es dorthin: Drücken und Ziehen im Wechsel. Jeder Muskel
+             * bekommt dadurch trotzdem die volle Pause, weil er ruht,
+             * während der Gegenspieler arbeitet, und die Einheit wird
+             * rund ein Viertel kürzer.
+             *
+             * Sonst wie bisher: ist die Übung durch, zur nächsten offenen.
+             */
             let gewechselt = false;
-            if (heute.length >= u.target_sets) {
+            let imWechsel = false;
+
+            const partner = u.partner ? uebungImStudio(u.partner) : null;
+            const partnerOffen = partner
+                && (partner.today || []).length < partner.target_sets;
+
+            if (partnerOffen) {
+                zustand.offen = partner.id;
+                gewechselt = true;
+                imWechsel = true;
+            } else if (heute.length >= u.target_sets) {
                 const dran = naechsteOffene();
                 zustand.offen = dran ? dran.id : null;
                 gewechselt = true;
@@ -1494,7 +1524,16 @@
                 }
             }
 
-            pauseStarten(zustand.studio.rest_timer_seconds);
+            // Beim Wechsel die kürzere Pause: die volle bekommt der Muskel
+            // trotzdem, verteilt über zwei Durchgänge.
+            const naechste = zustand.offen ? uebungImStudio(zustand.offen) : null;
+            pauseStarten(
+                imWechsel
+                    ? (zustand.studio.rest_pair_seconds || 90)
+                    : zustand.studio.rest_timer_seconds,
+                imWechsel && naechste ? naechste.name : ''
+            );
+
             puffernSenden();   // bewusst ohne await: die Pause läuft schon
             return;
         }
