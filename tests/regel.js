@@ -83,6 +83,72 @@ module.exports = function regel() {
         console.log('  ok   Ansage zielt nie über rep_max hinaus');
     }
 
+    /* ---------- Unterstützungsmaschine: die Leiter bis ans Ende ---------- */
+
+    // Dort läuft alles andersherum, und sie hat ein Ende: bei 0 kg Hilfe
+    // hängt man am eigenen Gewicht, wegnehmen lässt sich nichts mehr.
+    // Ohne den letzten Fall stünde dort für immer "Heute ohne Hilfe".
+    const hilfeFaelle = [
+        ['keine Einheit',                 [],                    'start',        'Hilfe antasten'],
+        ['zweimal sauber bei 30 kg Hilfe', [s(30, 12, 12, 12), s(30, 12, 12, 12)],
+                                                                 'steigern',     '27,5 kg Hilfe, 2,5 weniger'],
+        ['sauber bei genau einem Schritt', [s(2.5, 12, 12, 12), s(2.5, 12, 12, 12)],
+                                                                 'steigern',     'Heute ohne Hilfe'],
+        ['zweimal sauber ohne Hilfe',      [s(0, 12, 12, 12), s(0, 12, 12, 12)],
+                                                                 'steigern',     'Zusatzgewicht ist dran'],
+        ['einmal sauber ohne Hilfe',       [s(0, 12, 12, 12)],   'halten',       'dann kommt Zusatzgewicht'],
+        ['ohne Hilfe eingebrochen',        [s(0, 7, 6, 5)],      'zurueckholen', 'Mehr Hilfe'],
+        ['ohne Hilfe mitten im Bereich',   [s(0, 10, 9, 9)],     'halten',       'Ohne Hilfe, Ziel 11'],
+        ['ohne Hilfe, nur der beste oben', [s(0, 12, 12, 9)],    'halten',       'Ohne Hilfe, alle Sätze auf 12'],
+    ];
+
+    for (const [titel, einheiten, erwartet, teil] of hilfeFaelle) {
+        const sessions = einheiten.map((sets, i) => ({
+            date: '2026-08-' + String(1 + i * 2).padStart(2, '0') + 'T07:00:00+02:00',
+            day: 'oberkoerper', rotation_index: 0,
+            exercises: [{ exercise_id: 'test', sets: sets }],
+        }));
+        fs.writeFileSync(path.join(ordner, 'logs', '2026-08.json'), JSON.stringify(sessions));
+
+        const ausgabe = execFileSync('php', ['-r', `
+            require "${WURZEL}/lib/coach.php";
+            $e = coach_empfehlung(['id' => 'test', 'rep_min' => 8, 'rep_max' => 12,
+                                   'weight_step' => 2.5, 'assisted' => true]);
+            echo $e['status'], "\\t", $e['text'];
+        `], { env: Object.assign({}, process.env, { COACH_DATA: ordner }) }).toString();
+
+        const [status, txt] = ausgabe.split('\t');
+
+        if (status === erwartet && txt.includes(teil)) {
+            bestanden++;
+            console.log('  ok   Hilfe: ' + titel.padEnd(30) + status.padEnd(13) + txt);
+        } else {
+            gescheitert++;
+            console.log('  FEHL Hilfe: ' + titel.padEnd(30) + 'erwartet ' + erwartet
+                + ' mit "' + teil + '", bekam ' + status + ' mit "' + txt + '"');
+        }
+    }
+
+    // Keine Ansage darf an der Maschine "0 kg" sagen: dort steht keine Last
+    // auf der Stange, sondern das eigene Gewicht.
+    fs.writeFileSync(path.join(ordner, 'logs', '2026-08.json'), JSON.stringify([{
+        date: '2026-08-01T07:00:00+02:00', day: 'oberkoerper', rotation_index: 0,
+        exercises: [{ exercise_id: 'test', sets: s(0, 10, 9, 9) }],
+    }]));
+    const nullText = execFileSync('php', ['-r', `
+        require "${WURZEL}/lib/coach.php";
+        echo coach_empfehlung(['id' => 'test', 'rep_min' => 8, 'rep_max' => 12,
+                               'weight_step' => 2.5, 'assisted' => true])['text'];
+    `], { env: Object.assign({}, process.env, { COACH_DATA: ordner }) }).toString();
+
+    if (/0 kg/.test(nullText)) {
+        gescheitert++;
+        console.log('  FEHL "0 kg" in der Ansage: ' + nullText);
+    } else {
+        bestanden++;
+        console.log('  ok   ohne Hilfe steht nie "0 kg" in der Ansage');
+    }
+
     fs.rmSync(ordner, { recursive: true, force: true });
     console.log('  ' + bestanden + ' bestanden, ' + gescheitert + ' Fehlschläge\n');
     return { bestanden, gescheitert };

@@ -71,6 +71,19 @@
     }
 
     /*
+     * Wie ein Ergebnis heißt. An der Unterstützungsmaschine ist die Zahl
+     * keine Last, sondern die Hilfe, und bei 0 ist sie gar keine Zahl mehr:
+     * dort hängt man am eigenen Gewicht. "0 kg Hilfe" gäbe nichts an.
+     * Gegenstück zu coach_last() in lib/coach.php.
+     */
+    function last(gewicht, hilfe) {
+        if (!hilfe) {
+            return zahl(gewicht) + ' kg';
+        }
+        return gewicht <= 0 ? 'ohne Hilfe' : zahl(gewicht) + ' kg Hilfe';
+    }
+
+    /*
      * In plan.json sind die Muskelgruppen umlautfreie Schlüssel, damit sie
      * sich als JSON-Schlüssel und in IDs sauber verhalten. Angezeigt wird
      * aber der lesbare Name: "ruecken" ist kein Wort.
@@ -707,7 +720,7 @@
             return '';
         }
         const s = u.last.sets[u.last.sets.length - 1];
-        return 'zuletzt ' + zahl(s.weight) + (u.assisted ? ' kg Hilfe × ' : ' kg × ') + s.reps
+        return 'zuletzt ' + last(s.weight, u.assisted) + ' × ' + s.reps
              + (u.last.date ? ' · ' + datumKurz(u.last.date) : '');
     }
 
@@ -738,8 +751,8 @@
         heute.forEach(function (satz, i) {
             html += '<div class="satz satz--fertig">'
                 + '<span class="satz__mini">Satz ' + (i + 1) + '</span>'
-                + '<span class="satz__wert">' + zahl(satz.weight)
-                + (u.assisted ? ' kg Hilfe × ' : ' kg × ') + satz.reps + '</span>'
+                + '<span class="satz__wert">' + last(satz.weight, u.assisted)
+                + ' × ' + satz.reps + '</span>'
                 + '<button class="satz__korr" data-korrigiere="' + esc(u.id) + ':' + i
                 + '">ändern</button></div>';
         });
@@ -1002,7 +1015,7 @@
         const mengeFeld   = hilfe ? 'reps_total' : 'volume';
         const mengeKopf   = hilfe ? 'Wiederholungen' : 'Volumen';
         const mengeEinh   = hilfe ? 'Wdh gesamt' : 'kg × Wdh';
-        const kg          = (w) => zahl(w) + (hilfe ? ' kg Hilfe' : ' kg');
+        const kg          = (w) => last(w, hilfe);
 
         // Bei einem einzigen Datenpunkt ist eine Kurve eine Lüge: es gibt
         // keinen Verlauf, nur einen Wert.

@@ -37,6 +37,22 @@ function coach_zahl(float $wert): string
 }
 
 /**
+ * Wie das Arbeitsgewicht in einer Ansage heißt.
+ *
+ * An der Unterstützungsmaschine ist die Zahl keine Last, sondern die Hilfe,
+ * und bei 0 ist sie gar keine Zahl mehr: dort hängt man am eigenen Gewicht.
+ * "0 kg halten" wäre an dieser Stelle schlicht falsch.
+ */
+function coach_last(float $gewicht, bool $unterstuetzt): string
+{
+    if (!$unterstuetzt) {
+        return coach_zahl($gewicht) . ' kg';
+    }
+
+    return $gewicht <= 0.0 ? 'ohne Hilfe' : coach_zahl($gewicht) . ' kg Hilfe';
+}
+
+/**
  * Empfehlung für eine Übung.
  *
  * @return array{status: string, text: string, reason: string, target_weight: float|null}
@@ -66,7 +82,9 @@ function coach_empfehlung(array $uebung): array
             'status'        => 'start',
             'target_weight' => null,
             'reason'        => '',
-            'text'          => 'Erste Einheit: Gewicht antasten',
+            'text'          => $unterstuetzt
+                ? 'Erste Einheit: Hilfe antasten'
+                : 'Erste Einheit: Gewicht antasten',
         ];
     }
 
@@ -88,11 +106,30 @@ function coach_empfehlung(array $uebung): array
             ? max(0.0, $aktGewicht - $schritt)
             : $aktGewicht + $schritt;
 
+        /*
+         * Ende der Leiter. Die Hilfe steht schon auf 0, es lässt sich nichts
+         * mehr wegnehmen; weiter geht es nur noch mit Zusatzgewicht, und
+         * dafür ist die Übung umzustellen. Ohne diesen Zweig stünde hier
+         * für immer "Heute ohne Unterstützung", ein Vorschlag, der nichts
+         * mehr vorschlägt.
+         */
+        if ($unterstuetzt && $aktGewicht <= 0.0) {
+            return [
+                'status'        => 'steigern',
+                'target_weight' => 0.0,
+                'text'          => 'Zusatzgewicht ist dran',
+                'reason'        => COACH_EINHEITEN . ' Einheiten ohne Hilfe × '
+                                 . $repMax . '. Im Plan die Gewichtsrichtung auf '
+                                 . '"mehr Gewicht ist schwerer" stellen, dann zählt '
+                                 . 'die App wieder nach oben.',
+            ];
+        }
+
         if ($unterstuetzt && $ziel <= 0.0) {
             return [
                 'status'        => 'steigern',
                 'target_weight' => 0.0,
-                'text'          => 'Heute ohne Unterstützung',
+                'text'          => 'Heute ohne Hilfe',
                 'reason'        => COACH_EINHEITEN . ' Einheiten sauber bei '
                                  . coach_zahl($aktGewicht) . ' kg Hilfe',
             ];
@@ -105,10 +142,10 @@ function coach_empfehlung(array $uebung): array
             // die Handlung vorn und hervorgehoben, die Begründung leise
             // darunter: gelesen wird im Studio nur die erste Zeile.
             'text'          => $unterstuetzt
-                ? 'Heute ' . coach_zahl($ziel) . ' kg Unterstützung, ' . coach_zahl($schritt) . ' weniger'
+                ? 'Heute ' . coach_zahl($ziel) . ' kg Hilfe, ' . coach_zahl($schritt) . ' weniger'
                 : 'Heute ' . coach_zahl($ziel) . ' kg',
             'reason'        => COACH_EINHEITEN . ' Einheiten sauber, '
-                             . coach_zahl($aktGewicht) . ' kg × ' . $repMax,
+                             . coach_last($aktGewicht, $unterstuetzt) . ' × ' . $repMax,
         ];
     }
 
@@ -128,7 +165,7 @@ function coach_empfehlung(array $uebung): array
             'target_weight' => $aktGewicht,
             'reason'        => '',
             'text'          => $unterstuetzt
-                ? 'Mehr Unterstützung, bis ' . $repMin . ' Wiederholungen wieder gehen.'
+                ? 'Mehr Hilfe, bis ' . $repMin . ' Wiederholungen wieder gehen.'
                 : coach_zahl($aktGewicht) . ' kg halten, Wiederholungen zurück auf '
                   . $repMin . '.',
         ];
@@ -140,16 +177,25 @@ function coach_empfehlung(array $uebung): array
     // Wiederholung mehr, sondern eine zweite saubere Einheit.
     $letzteSauber = coach_einheit_sauber($letzte, $aktGewicht, $repMax);
 
+    // Ohne Hilfe gibt es nichts mehr zu halten, dort steht nur noch das
+    // eigene Gewicht auf der Stange. "0 kg halten" wäre eine leere Ansage.
+    $last = coach_last($aktGewicht, $unterstuetzt);
+    $halten = $unterstuetzt && $aktGewicht <= 0.0 ? 'Ohne Hilfe' : $last . ' halten';
+
     if ($letzteSauber) {
         $fehlend = COACH_EINHEITEN - 1;
+        $danach = !$unterstuetzt        ? 'geht es hoch.'
+                : ($aktGewicht <= 0.0   ? 'kommt Zusatzgewicht.'
+                                        : 'geht die Hilfe runter.');
+        // "mit ohne Hilfe" wäre kein Deutsch.
+        $womit = $unterstuetzt && $aktGewicht <= 0.0 ? 'ohne Hilfe' : 'mit ' . $last;
         return [
             'status'        => 'halten',
             'target_weight' => $aktGewicht,
             'reason'        => '',
             'text'          => 'Noch ' . ($fehlend === 1 ? 'eine saubere Einheit' : $fehlend
-                             . ' saubere Einheiten') . ' mit ' . coach_zahl($aktGewicht)
-                             . ' kg × ' . $repMax . ', dann '
-                             . ($unterstuetzt ? 'geht die Hilfe runter.' : 'geht es hoch.'),
+                             . ' saubere Einheiten') . ' ' . $womit
+                             . ' × ' . $repMax . ', dann ' . $danach,
         ];
     }
 
@@ -158,8 +204,7 @@ function coach_empfehlung(array $uebung): array
             'status'        => 'halten',
             'target_weight' => $aktGewicht,
             'reason'        => '',
-            'text'          => coach_zahl($aktGewicht) . ' kg halten, alle Sätze auf '
-                             . $repMax . ' bringen.',
+            'text'          => $halten . ', alle Sätze auf ' . $repMax . ' bringen.',
         ];
     }
 
@@ -167,7 +212,7 @@ function coach_empfehlung(array $uebung): array
         'status'        => 'halten',
         'target_weight' => $aktGewicht,
         'reason'        => '',
-        'text'          => coach_zahl($aktGewicht) . ' kg halten, Ziel '
+        'text'          => $halten . ', Ziel '
                          . min($besteWdh + 1, $repMax) . ' Wiederholungen.',
     ];
 }
