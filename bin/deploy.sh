@@ -7,8 +7,15 @@
 #
 # Warum ein Skript und kein rsync von Hand: die Ausschlussliste ist der
 # heikle Teil. Fehlt --exclude 'data/**', überschreibt ein Deployment die
-# Trainingsdaten auf dem Server. Fehlt --exclude 'images/', wandern 134 MB
-# Originalfotos mit hoch. Beides ist mir beim Tippen schon passiert.
+# Trainingsdaten auf dem Server. Fehlt ein Quellordner in der Liste,
+# wandern die Originale mit hoch: 134 MB in fotos/, jedes Bild mit den
+# GPS-Koordinaten des Studios, und 176 MB in images/. Beides ist schon
+# passiert, einmal mit data/ und einmal mit fotos/.
+#
+# Eine Ausschlussliste ist aber nur so gut wie ihr letzter Eintrag. Ein
+# neuer Ordner wird vergessen, und niemand merkt es. Deshalb steht unten
+# zusätzlich eine Obergrenze: nichts über 400 KB geht hoch. Größer ist
+# hier ausschließlich ein unaufbereitetes Original.
 #
 # Vor dem Hochladen läuft die Fotoprüfung. Anlass: zwei ausgetauschte
 # Fotos gingen als iPhone-Originale mit GPS-Koordinaten auf den
@@ -42,6 +49,23 @@ node --check service-worker.js
 echo "  in Ordnung"
 echo
 
+# Obergrenze als zweite Sicherung, unabhängig von der Ausschlussliste.
+# Dieselbe Zahl bewacht tests/fotos.js für die Webfassungen: was darüber
+# liegt, ist kein aufbereitetes Bild, sondern ein Original.
+echo "── Nichts Übergroßes dabei? ──"
+GRENZE=409600
+zuviel=$(find . -type f -size +${GRENZE}c \
+    ! -path './.git/*' ! -path './fotos/*' ! -path './images/*' \
+    ! -path './data/*' ! -path './tests/*' ! -name '*.md' 2>/dev/null)
+if [ -n "$zuviel" ]; then
+    echo "  Abbruch. Diese Dateien sind über 400 KB und gehören nicht auf den Server:"
+    echo "$zuviel" | sed 's/^/    /'
+    echo "  Original nach fotos/ oder images/ legen, dann bin/fotos.sh."
+    exit 1
+fi
+echo "  in Ordnung"
+echo
+
 TROCKEN=""
 if [ "${1:-}" = "--trocken" ]; then
     TROCKEN="--dry-run"
@@ -60,7 +84,7 @@ fi
 rsync -az --delete $TROCKEN -e "$SSH" \
     --include='data/' --include='data/.htaccess' --exclude='data/**' \
     --exclude 'assets/img/exercises/' \
-    --exclude 'tests/' --exclude 'images/' --exclude '.git/' \
+    --exclude 'tests/' --exclude 'images/' --exclude 'fotos/' --exclude '.git/' \
     --exclude '.DS_Store' --exclude 'bin/icons.js' --exclude 'bin/deploy.sh' \
     --exclude '*.md' --exclude '.gitignore' \
     --itemize-changes \

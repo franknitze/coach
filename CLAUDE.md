@@ -191,18 +191,27 @@ Noch nicht eingerichtet. Das Vorgehen für den gleichen Host steht erprobt in `.
 
 Anders als beim Lithium-Rechner (eine einzelne Datei) braucht diese App einen Abgleich mehrerer Ordner. `data/` darf dabei **nie** überschrieben oder mitgeladen werden, dort liegen die echten Trainingsdaten und der Passwort-Hash.
 
-## Die Fotos in `images/`
+## Bilder: drei Ordner, nur einer zählt
 
-49 iPhone-Originale, alle 2268x4032 hochkant, zusammen 134 MB, Dateinamen `IMG_16xx.JPG` ohne jede Zuordnung. Das ist das Rohmaterial für den offenen Punkt „Gerätefotos" aus §11: echte Studio-Geräte, teils mit aufgeklebter Gerätenummer, die für die Wiedererkennung wichtig ist.
+**Die Anwendung liest ausschließlich `assets/img/exercises/`.** Nirgends im Code steht ein anderer Bildpfad. Wer dort nicht liegt, ist für die App nicht vorhanden, egal was sonst auf der Platte herumliegt.
 
-Beim Aufbereiten für `assets/img/exercises/`:
+| Ordner | Was | Im Repo? | Auf dem Server? |
+|---|---|---|---|
+| `fotos/` | 49 iPhone-Aufnahmen aus dem Studio, 2268x4032, zusammen 134 MB | nein | nein |
+| `images/` | 25 generierte Übungsbilder, ein PNG je Übung, 2400x1792, zusammen 176 MB | nein | nein |
+| `assets/img/exercises/` | 74 Webfassungen, 1200 px JPEG, je rund 200 KB | **ja** | **ja** |
 
-- Nach Übungs-ID benennen (`beinpresse.jpg`), so verweist `exercises.json → photo` darauf.
-- Verkleinern. In voller Auflösung sind sie für Kacheln auf dem Handy sinnlos groß.
-- **EXIF entfernen.** Alle 49 Dateien enthalten GPS-Koordinaten, also den Standort des Studios.
-- Nicht mit KI stilisieren. Nur dezent vereinheitlichen (Zuschnitt, Ausrichtung), sonst geht die Wiedererkennung im Studio verloren.
+Die ersten beiden sind Werkbank, nicht Anwendung. Sie liegen auf Franks Mac, sind per `.gitignore` ausgeschlossen und werden von `bin/deploy.sh` übersprungen. Ihr einziger Zweck: aus ihnen rechnet `bin/fotos.sh` die Webfassung. Ein neues Bild kommt nach `fotos/` (fotografiert) oder `images/` (generiert), dann läuft das Skript, dann steht es in der Bildauswahl der App.
 
-Die Originale in `images/` bleiben liegen, aufbereitet wird in einen eigenen Ordner.
+Die Zuordnung Bild zu Übung passiert **in der App** unter „Mein Plan", nicht über Dateinamen. Auf einem Foto sieht man das Gerät, aber nicht, welche Übung jemand daran macht; das kann nur Frank entscheiden. Gespeichert wird sie als Feld `photo` in `data/exercises.json`, und weil `data/` nie deployed wird, reist eine lokal gemachte Zuordnung **nicht** mit auf den Server. Zugeordnet wird deshalb auf DOMAIN.
+
+Regeln fürs Aufbereiten, alle in `bin/fotos.sh` und in `tests/fotos.js` festgeschrieben:
+
+- **1200 px lange Kante, JPEG Qualität 80, höchstens 400 KB.** Das Handy zeigt im Großformat 390 Punkte bei dreifacher Pixeldichte, also 1170 echte Pixel. Als PNG wären dieselben Bilder 7 MB statt 220 KB: PNG ist für Strichgrafik gedacht, nicht für gerenderte Bilder mit weichen Verläufen.
+- **EXIF entfernen.** Alle 49 iPhone-Aufnahmen enthalten GPS-Koordinaten, also den Standort des Studios, und die Webfassungen liegen ohne Anmeldung im Netz. `sips` nimmt die Metadaten beim Verkleinern mit, deshalb hinterher `bin/exif-entfernen.py`.
+- **Fotos nicht mit KI stilisieren.** Nur dezent vereinheitlichen (Zuschnitt, Ausrichtung), sonst geht die Wiedererkennung im Studio verloren. Die aufgeklebte Gerätenummer ist der Grund, warum man das richtige Gerät wiederfindet.
+
+`bin/deploy.sh` hat dafür zwei Sicherungen, und beide sind aus Schaden entstanden. Die Ausschlussliste hält `fotos/`, `images/`, `data/` und `tests/` zurück. Darüber hinaus bricht das Skript ab, sobald irgendeine hochzuladende Datei über 400 KB liegt: Eine Ausschlussliste ist nur so gut wie ihr letzter Eintrag, und ein neu angelegter Quellordner fehlt darin garantiert. Genau so wären die 49 Originale samt GPS auf den öffentlichen Server gegangen.
 
 ## Offene Punkte aus §11
 
