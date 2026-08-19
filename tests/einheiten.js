@@ -42,8 +42,9 @@ module.exports = (port) => testlauf('Rückblick', port, async (t) => {
     ok(erste.includes('Mi, 12. Aug'), 'die jüngste steht oben: "' + erste.split('\n')[0] + '"');
     ok(erste.includes('Oberkörper'), 'mit der Kategorie');
 
-    const rest = await page.locator('.rueckblick__rest').innerText();
-    ok(rest === '10 von 13 Einheiten', 'der Deckel wird benannt: "' + rest + '"');
+    const rest = await page.locator('.rueckblick .tag__zahl').innerText();
+    ok(rest === '10 von 13',
+       'der Deckel steht in der Abschnittsmarke: "' + rest + '"');
 
     /* ---------- Abgebrochene Einheiten sind erkennbar ---------- */
 
@@ -56,15 +57,18 @@ module.exports = (port) => testlauf('Rückblick', port, async (t) => {
 
     /* ---------- Die Fortschrittskurve ---------- */
 
-    ok(await page.locator('.fortschritt-block .chart').count() === 1,
+    ok(await page.locator('.start .chart').count() === 1,
        'über der Liste steht die Fortschrittskurve');
     const stand = (await page.locator('.fortschritt__stand').innerText()).replace(/\s+/g, ' ');
-    ok(/^\d/.test(stand) && stand.includes('Punkte') && stand.includes('seit dem Start'),
-       'mit dem heutigen Stand und dem Abstand zum Start: "' + stand + '"');
+    ok(/^\d/.test(stand) && stand.includes('Punkte'),
+       'mit dem heutigen Stand: "' + stand + '"');
+    const seit = await page.locator('.abschnitt .tag__zahl').first().innerText();
+    ok(seit.includes('seit dem Start'),
+       'und dem Abstand zum Start in der Abschnittsmarke: "' + seit + '"');
 
     // Die Kurve auf der Startseite trägt dieselbe Klasse wie die im
     // Übungsverlauf. Ein Tipp darauf darf nicht in fremde Daten laufen.
-    await page.locator('.fortschritt-block .chart').click({ position: { x: 100, y: 40 } });
+    await page.locator('.start .chart').click({ position: { x: 100, y: 40 } });
     await page.waitForTimeout(200);
     ok(await page.locator('.heute__tag').count() === 1,
        'ein Tipp auf die Kurve wirft die Startseite nicht um');
@@ -133,6 +137,20 @@ module.exports = (port) => testlauf('Rückblick', port, async (t) => {
     ok(await page.locator('.heute__tag').count() === 1,
        'und von dort auf die Startseite');
 
+    /*
+     * Die Startseite war ein einziger Textblock: vier gleich aussehende
+     * Beschriftungen untereinander, ohne Trennung. Jetzt trägt jeder
+     * Abschnitt dieselbe Marke wie unter "Mein Plan".
+     */
+    const abschnitte = await page.locator('.start .tag__name').allInnerTexts();
+    // Versalien kommen aus dem CSS, innerText liefert sie so, wie sie stehen.
+    ok(abschnitte.join(' · ') === 'FORTSCHRITT · LETZTE EINHEITEN',
+       'die Abschnitte sind benannt und abgesetzt: ' + abschnitte.join(' · '));
+    ok(!(await page.locator('.start').innerText()).includes('ANDERER TAG'),
+       '"Anderer Tag" ist weg, die Knöpfe gehören zu "Heute"');
+    ok(await page.locator('.tagknopf').count() === 2,
+       'die Tagesknöpfe stehen weiter da');
+
     /* ---------- Der Kalender ---------- */
 
     await page.locator('[data-gehe="kalender"]').click();
@@ -192,6 +210,17 @@ module.exports = (port) => testlauf('Rückblick', port, async (t) => {
 
     await page.click('[data-gehe="plan"]');
     await page.waitForSelector('#gewicht-form');
+
+    /*
+     * Das Formular soll aussehen wie das Übungsformular: beschriftete
+     * Felder statt zweier nackter Kästen nebeneinander.
+     */
+    const marken = await page.locator('#gewicht-form .mini').allInnerTexts();
+    ok(marken.join(' ') === 'DATUM GEWICHT IN KG',
+       'beide Felder sind beschriftet: ' + marken.join(' · '));
+    ok(await page.locator('#gewicht-form input[type="date"]').getAttribute('max')
+       === new Date().toISOString().slice(0, 10),
+       'in der Zukunft war noch niemand auf der Waage');
 
     await page.fill('#gewicht-form input[name="date"]', '2026-08-04');
     await page.fill('#gewicht-form input[name="kg"]', '84,5');

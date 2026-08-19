@@ -14,7 +14,7 @@ Die Phasen 0 bis 5 aus §10 sind gebaut und laufen live auf dem Server. Der Trai
 | `api/`: `login`, `logout`, `exercises`, `settings`, `plan`, `session`, `history`, `coach`, `einheiten`, `gewicht`, `export`, `setup`, `fotos`, `foto-upload`, `foto-loeschen` | Phase 6 (KI-Coach), ausdrücklich optional |
 | `index.php`, `assets/`: Start mit Rückblick und Fortschrittskurve, Studio, Mein Plan, Übungsdetail mit Verlauf, abgeschlossene Einheit, Kalender, Coach-Ansage | |
 | `manifest.json`, `service-worker.js`, `assets/icons/`, Offline-Puffer | |
-| `.htaccess`, `bin/` (init-config, plan-anlegen, fotos, deploy, icons), `tests/` (314 Prüfungen) | |
+| `.htaccess`, `bin/` (init-config, plan-anlegen, fotos, deploy, icons), `tests/` (321 Prüfungen) | |
 
 Der flüchtige Arbeitsstand steht in `STATE.md`. Die Datei ist **nicht versioniert** (siehe `.gitignore`): Sie handelt nur von dieser einen Installation und liegt ausschließlich auf Franks Rechner. Wer das Repo frisch klont, hat sie nicht, und das ist Absicht.
 
@@ -95,6 +95,8 @@ Eine neu aufgenommene Übung startet bei 100 und dellt den Tagesmittelwert einma
 Das Eingabefeld ist `type="text"` mit `inputmode="decimal"`, nicht `type="number"`. Auf der deutschen Tastatur ist die Dezimaltaste ein Komma, und ein Zahlenfeld weist das als ungültig zurück — das Feld bliebe beim Absenden leer. Komma und Punkt sind beide erlaubt.
 
 **Geprüft wird mit einem Muster, nicht mit `(float)`.** `gewicht_zahl()` verlangt `/^\d{1,3}(\.\d{1,2})?$/`, nachdem das Komma ersetzt ist. PHPs Umwandlung ist nachsichtig: `(float) "84,5kg"` ergibt 84,5 und `(float) "84,5,3"` ebenfalls, beides ohne einen Mucks — ein Vertipper käme als plausible Zahl in der Datei an und wäre später nicht mehr als solcher zu erkennen. Die Plausibilitätsgrenzen 30 bis 300 kg kommen zusätzlich, sie fangen den Faktor-Zehn-Fehler.
+
+**`json_write()` legt `serialize_precision` selbst fest.** Auf der Kommandozeile steht sie auf -1, also auf der kürzesten verlustfrei rücklesbaren Form; im Webserver bei All-Inkl steht sie anders, und dort schrieb `json_encode` aus 96,8 die volle Binärentwicklung `96.7999999999999971578290569595992565155029296875`. Zurückgelesen ergibt das denselben Wert, kaputt ist also nichts — aber die Datei ist unlesbar, das n8n-Backup trägt es mit, und beim Vergleich zweier Stände sieht jede Kommazahl nach einem Unterschied aus. **Lokal fällt das nie auf**, weil dort die Kommandozeilen-Einstellung gilt; ein Test führt PHP deshalb ausdrücklich mit `serialize_precision=17` aus. Aufgefallen ist es erst am ersten Wert, der binär nicht exakt darstellbar war — die Trainingsgewichte sind alle Viertel und Halbe und damit exakt.
 
 **Der Verwaltungsbereich zeigt `zustand.meldung` an.** Ohne das scheiterte eine abgelehnte Eingabe stumm: das Formular zeichnete sich leer neu und nichts sagte, warum. Wer dort einen Endpunkt anbindet, der etwas ablehnen kann, braucht diese Zeile.
 

@@ -41,6 +41,22 @@ function json_write(string $path, $data): void
 {
     ensure_dir(dirname($path));
 
+    /*
+     * serialize_precision entscheidet, wie Kommazahlen in JSON landen. Auf
+     * der Kommandozeile steht sie auf -1, also auf der kürzesten Form, die
+     * sich verlustfrei zurücklesen lässt: aus 96,8 wird "96.8". Im
+     * Webserver von All-Inkl steht sie anders, und dort schrieb dieselbe
+     * Zahl als "96.7999999999999971578290569595992565155029296875" in die
+     * Datei.
+     *
+     * Gelesen wird daraus wieder derselbe Wert, kaputt ist also nichts.
+     * Aber die Datei ist nicht mehr zu lesen, das n8n-Backup trägt es mit,
+     * und beim Vergleich zweier Stände sieht jede Zahl nach einem
+     * Unterschied aus. Deshalb hier festgelegt statt der Umgebung
+     * überlassen — lokal wäre es nie aufgefallen.
+     */
+    ini_set('serialize_precision', '-1');
+
     $json = json_encode(
         $data,
         JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES

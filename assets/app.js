@@ -599,19 +599,25 @@
             + '<span class="mini">' + (s.is_suggestion ? 'Heute' : 'Gewählt') + '</span>'
             + '<h1 class="heute__tag">' + esc(s.day.label) + '</h1>'
             + '<p class="heute__zeile">' + anzahl + (anzahl === 1 ? ' Übung' : ' Übungen')
-            + zusatz + '</p></section>';
+            + zusatz + '</p>';
 
         if (anzahl === 0) {
             html += '<p class="tag__leer">Für diesen Tag ist noch keine Übung '
                  + 'eingetragen. Wähle einen anderen Tag oder ergänze den Plan.</p>';
         }
 
-        html += '<div class="tagwahl"><span class="mini">Anderer Tag</span><div class="tagwahl__reihe">';
+        /*
+         * Die Tagesknöpfe gehören zu "Heute" und stehen deshalb im selben
+         * Abschnitt. Sie sind keine eigene Rubrik, sondern die Alternativen
+         * zu dem Tag, der darüber steht; eine Überschrift "Anderer Tag"
+         * machte daraus einen dritten Block und zerschnitt den Zusammenhang.
+         */
+        html += '<div class="tagwahl__reihe">';
         Object.keys(s.days).forEach(function (t) {
             html += '<button class="tagknopf' + (t === s.day.key ? ' ist-an' : '')
                  + '" data-tag="' + esc(t) + '">' + esc(s.days[t].label) + '</button>';
         });
-        html += '</div></div>';
+        html += '</div></section>';
 
         html += zeichneRueckblick();
 
@@ -648,8 +654,16 @@
         }
 
         let html = zeichneFortschritt()
-                 + '<section class="rueckblick">'
-                 + '<span class="mini">Letzte Einheiten</span>';
+                 + '<section class="abschnitt rueckblick">'
+                 + '<div class="tag__kopf">'
+                 + '<span class="tag__name">Letzte Einheiten</span>'
+                 // Die Zahl gehört in die Abschnittsmarke, wie unter "Mein
+                 // Plan" die Zahl der Übungen je Trainingstag.
+                 + (r.total > r.sessions.length
+                     ? '<span class="tag__zahl">' + r.sessions.length + ' von '
+                       + r.total + '</span>'
+                     : '')
+                 + '</div>';
 
         r.sessions.forEach(function (e) {
             html += '<button class="einheit" data-einheit="' + esc(e.key) + '">'
@@ -665,13 +679,6 @@
                      : e.set_count + ' von ' + e.set_target + ' Sätzen')
                  + '</span></button>';
         });
-
-        // Ehrlich sagen, dass die Liste einen Deckel hat. Eine abgeschnittene
-        // Liste ohne Hinweis liest sich wie "mehr war da nicht".
-        if (r.total > r.sessions.length) {
-            html += '<p class="rueckblick__rest">' + r.sessions.length + ' von '
-                 + r.total + ' Einheiten</p>';
-        }
 
         return html + '</section>';
     }
@@ -696,8 +703,8 @@
         // Aus einem Punkt keine Linie machen: sie behauptete einen Verlauf,
         // den es nicht gibt. Dieselbe Regel wie beim Übungsverlauf.
         if (punkte.length === 1) {
-            return '<section class="fortschritt-block">'
-                 + '<span class="mini">Fortschritt</span>'
+            return '<section class="abschnitt">'
+                 + '<div class="tag__kopf"><span class="tag__name">Fortschritt</span></div>'
                  + '<p class="fortschritt__stand"><b>' + esc(zahl(jetzt.wert))
                  + '</b> Punkte</p>'
                  + '<p class="hinweis">Der Startwert. Ab der zweiten Einheit '
@@ -708,12 +715,12 @@
         const erste = punkte[0];
         const diff = Math.round((jetzt.wert - erste.wert) * 10) / 10;
 
-        return '<section class="fortschritt-block">'
-             + '<span class="mini">Fortschritt</span>'
+        return '<section class="abschnitt">'
+             + '<div class="tag__kopf"><span class="tag__name">Fortschritt</span>'
+             + '<span class="tag__zahl">seit dem Start '
+             + (diff >= 0 ? '+' : '−') + esc(zahl(Math.abs(diff))) + '</span></div>'
              + '<p class="fortschritt__stand"><b>' + esc(zahl(jetzt.wert))
-             + '</b> Punkte<span class="fortschritt__diff">'
-             + (diff >= 0 ? '+' : '−') + esc(zahl(Math.abs(diff)))
-             + ' seit dem Start</span></p>'
+             + '</b> Punkte</p>'
              + chart(punkte, 'wert', 'Fortschritt', punkte.length - 1)
              + '</section>';
     }
@@ -1540,7 +1547,7 @@
                 html += zeichneZeile(u);
             });
 
-            html += '<button class="zufuegen" data-neu="' + esc(tag) + '">'
+            html += '<button class="knopf knopf--zufuegen" data-neu="' + esc(tag) + '">'
                  + 'Übung zufügen</button></section>';
         });
 
@@ -1763,9 +1770,19 @@
             + '<p class="tag__leer">Nur nötig für Klimmzug und Dips: dort ist die '
             + 'bewegte Last dein Gewicht minus der Hilfe. Jeder Eintrag gilt ab '
             + 'seinem Datum.</p>'
+            /*
+             * Dieselbe Form wie das Übungsformular: Beschriftung darüber,
+             * zwei Felder nebeneinander, Knopf darunter. Vorher standen
+             * Datum und Kilo ohne Beschriftung nebeneinander, beide in der
+             * großen Monospace des Passwortfelds — das Datum füllte sein
+             * Feld bis an den Rand und schob die Kalenderschaltfläche
+             * hinaus, und welches Feld was war, stand nirgends.
+             */
             + '<form class="gewicht" id="gewicht-form">'
-            + '<input class="feld" type="date" name="date" value="' + esc(heute) + '" '
-            + 'aria-label="Datum">'
+            + '<div class="paar">'
+            + '<div><label class="mini" for="g-datum">Datum</label>'
+            + '<input class="feld feld--text" type="date" id="g-datum" name="date" '
+            + 'value="' + esc(heute) + '" max="' + esc(heute) + '"></div>'
             /*
              * type="text" und nicht type="number": Auf der deutschen
              * Tastatur ist die Dezimaltaste ein Komma, und ein
@@ -1774,9 +1791,11 @@
              * ohnehin überall mit Komma, also nimmt sie hier auch eins
              * entgegen. Die Prüfung macht der Server.
              */
-            + '<input class="feld" type="text" name="kg" inputmode="decimal" '
-            + 'placeholder="kg" aria-label="Körpergewicht in Kilogramm">'
-            + '<button class="knopf knopf--leise" type="submit">Eintragen</button>'
+            + '<div><label class="mini" for="g-kg">Gewicht in kg</label>'
+            + '<input class="feld feld--text" type="text" id="g-kg" name="kg" '
+            + 'inputmode="decimal" placeholder="84,5"></div>'
+            + '</div>'
+            + '<button class="knopf" type="submit">Eintragen</button>'
             + '</form>';
 
         // Jüngste zuerst: der letzte Gang auf die Waage ist der, den man

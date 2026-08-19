@@ -655,7 +655,16 @@ body {
 
 /* ---------- Start: welcher Tag ist dran ---------- */
 
-.heute { margin-bottom: 30px; }
+/*
+ * Ein Abschnitt der Startseite. Sie trug vorher vier gleich aussehende
+ * Beschriftungen untereinander, ohne Linie und mit fast gleichen
+ * Abständen — das las sich als ein einziger Textblock, und was zu was
+ * gehörte, war nicht zu sehen. Jetzt dieselbe Abschnittsmarke wie unter
+ * "Mein Plan": Versalien mit Strich darunter, davor viel Luft.
+ */
+.abschnitt { margin-bottom: 34px; }
+
+.heute { margin-bottom: 34px; }
 
 .heute__tag {
     margin: 10px 0 8px;
@@ -671,13 +680,11 @@ body {
     font: 14px/1.5 var(--mono);
 }
 
-.tagwahl { margin-bottom: 26px; }
-
 .tagwahl__reihe {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    margin-top: 10px;
+    margin-top: 18px;
 }
 
 .tagknopf {
@@ -737,20 +744,36 @@ body {
     background: var(--raum);
 }
 
-/* Körpergewicht eintragen: Datum und Kilo nebeneinander, der Knopf
-   darunter über die volle Breite. Auf 390 Punkten stünden drei Felder
-   nebeneinander zu eng für den Daumen. */
-.gewicht {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 10px;
-    margin-bottom: 18px;
+/* Körpergewicht eintragen. Die Felder erben .paar aus dem
+   Übungsformular, hier bleibt nur der Abstand zum Knopf und zur Liste. */
+.gewicht { margin-bottom: 18px; }
+.gewicht .knopf { margin-top: 16px; }
+
+/*
+ * Datumsfeld. Safari zeichnet den Inhalt sonst mittig und die
+ * Kalenderschaltfläche daneben; linksbündig steht der Wert dort, wo in
+ * jedem anderen Feld auch etwas steht. min-height statt fester Höhe,
+ * damit das native Bedienelement Platz behält.
+ */
+.feld[type="date"] {
+    display: block;
+    padding-block: 0;
+    text-align: left;
 }
 
-.gewicht .knopf { grid-column: 1 / -1; }
-.gewicht input[type="number"] { width: 110px; text-align: center; }
-
 .zeile--schmal { min-height: 44px; }
+
+/*
+ * "Übung zufügen" ist auf der Planseite ein Knopf wie jeder andere.
+ * Er trägt nur weniger Gewicht als eine Hauptaktion, deshalb etwas
+ * flacher. Die gestrichelte Fassung (.zufuegen) bleibt dem Studio, wo
+ * "Noch einen Satz" eine Nebenhandlung neben den fertigen Sätzen ist.
+ */
+.knopf--zufuegen {
+    min-height: var(--ziel);
+    margin-top: 14px;
+    font-size: 17px;
+}
 
 /* ---------- Kalender ---------- */
 
@@ -831,14 +854,14 @@ body {
 
 /* ---------- Fortschrittskurve ---------- */
 
-.fortschritt-block { margin-bottom: 24px; }
-
+/* Zahl und Wort auf einer Grundlinie beieinander, wie am Regler und an
+   der Vorgabe auf der Kachel. Der Abstand zum Start steht in der
+   Abschnittsmarke, nicht hier. */
 .fortschritt__stand {
     display: flex;
     align-items: baseline;
-    justify-content: space-between;
-    gap: 10px;
-    margin: 0 0 4px;
+    gap: 8px;
+    margin: 14px 0 6px;
     font: 14px/1.2 var(--mono);
     color: var(--schrift-leise);
 }
@@ -852,11 +875,9 @@ body {
     color: var(--schrift);
 }
 
-.fortschritt__diff { font-size: 13px; }
-
 /* ---------- Rückblick: die letzten Einheiten ---------- */
 
-.rueckblick { margin-bottom: 26px; }
+.rueckblick .einheit:first-of-type { padding-top: 14px; }
 
 .einheit {
     display: flex;
@@ -897,12 +918,6 @@ body {
 .einheit__offen {
     color: var(--schrift-leise);
     font-style: italic;
-}
-
-.rueckblick__rest {
-    margin: 12px 0 0;
-    color: var(--schrift-leise);
-    font: 13px/1.3 var(--mono);
 }
 
 /* Die Bilanzzeile über den Kacheln einer abgeschlossenen Einheit. */

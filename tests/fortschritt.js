@@ -141,6 +141,25 @@ module.exports = function fortschritt() {
     ok(p[1].wert < 100,
        'ein späterer Eintrag gilt erst ab seinem Datum, die alte Einheit bleibt: ' + p[1].wert);
 
+    /* ---------- Kommazahlen landen kurz in der Datei ---------- */
+
+    /*
+     * Mit serialize_precision=17 — so steht sie im Webserver bei All-Inkl,
+     * anders als auf der Kommandozeile — schrieb json_encode aus 96,8 die
+     * volle Binärentwicklung "96.79999999999999715...". Gelesen wird daraus
+     * derselbe Wert, aber die Datei ist unlesbar und das Backup trägt es
+     * mit. Deshalb legt json_write() die Einstellung selbst fest.
+     */
+    fs.writeFileSync(path.join(ordner, 'gewicht.json'), '[]');
+    execFileSync('php', ['-d', 'serialize_precision=17', '-r', `
+        require "${WURZEL}/lib/gewicht.php";
+        gewicht_setzen("2026-08-19", gewicht_zahl("96,8"));
+    `], { env: Object.assign({}, process.env, { COACH_DATA: ordner }) });
+
+    const roh = fs.readFileSync(path.join(ordner, 'gewicht.json'), 'utf8');
+    ok(roh.includes('96.8') && !roh.includes('96.79'),
+       'auch bei serialize_precision=17 steht 96.8 in der Datei');
+
     fs.rmSync(ordner, { recursive: true, force: true });
     console.log('  ' + bestanden + ' bestanden, ' + gescheitert + ' Fehlschläge\n');
     return { bestanden, gescheitert };
