@@ -12,7 +12,7 @@ Die Phasen 0 bis 5 aus §10 sind gebaut und laufen live auf dem Server. Der Trai
 |---|---|
 | `lib/`: `storage`, `config`, `auth`, `uebungen`, `logs`, `coach`, `gewicht`, `fortschritt` | **der n8n-Workflow**, der `export.php` abholt (siehe unten). `data/` auf dem Server hat damit **keine Sicherung**. |
 | `api/`: `login`, `logout`, `exercises`, `settings`, `plan`, `session`, `history`, `coach`, `einheiten`, `gewicht`, `export`, `setup`, `fotos`, `foto-upload`, `foto-loeschen` | Phase 6 (KI-Coach), ausdrücklich optional |
-| `index.php`, `assets/`: Start mit Rückblick und Fortschrittskurve, Studio, Mein Plan, Übungsdetail mit Verlauf, abgeschlossene Einheit, Kalender, Coach-Ansage | |
+| `index.php`, `assets/`: Start mit Rückblick und Fortschrittskurve, Studio, Einstellungen, Übungsdetail mit Verlauf, abgeschlossene Einheit, Kalender, Coach-Ansage | |
 | `manifest.json`, `service-worker.js`, `assets/icons/`, Offline-Puffer | |
 | `.htaccess`, `bin/` (init-config, plan-anlegen, fotos, deploy, icons), `tests/` (321 Prüfungen) | |
 
@@ -106,7 +106,7 @@ Er läuft über denselben Endpunkt, mit `?monat=YYYY-MM` statt der Zehnerliste. 
 
 Geblättert wird nur zwischen dem ältesten Monat mit Daten und dem laufenden; darüber hinaus sind die Knöpfe gesperrt. Ein Knopf, der ins Leere führt, ist schlimmer als keiner, weil man ihn zweimal drückt.
 
-**„Zurück" merkt sich die Herkunft, an zwei Stellen.** `zustand.einheitHer` führt aus einer Einheit dorthin zurück, wo sie aufgeschlagen wurde (Startseite oder Kalendermonat), `zustand.uebungHer` aus dem Übungsverlauf entsprechend (Mein Plan oder Einheit). Ohne das landet man nach zwei Tippern in einer Ansicht, die man nie besucht hat.
+**„Zurück" merkt sich die Herkunft, an zwei Stellen.** `zustand.einheitHer` führt aus einer Einheit dorthin zurück, wo sie aufgeschlagen wurde (Startseite oder Kalendermonat), `zustand.uebungHer` aus dem Übungsverlauf entsprechend (Einstellungen oder Einheit). Ohne das landet man nach zwei Tippern in einer Ansicht, die man nie besucht hat.
 
 **Studio und Rückblick teilen sich den Kachelkopf.** `zeichneKachelKopf()` zeichnet Foto, Name, Vorgabe und Punktreihe für beide. Beim Zurückblicken ist „welches Gerät war das" dieselbe Frage wie im Studio, und eine zweite Darstellung dafür wäre eine zweite Bildsprache für denselben Gegenstand. Bewusst als eigene Funktion und nicht als Modus-Schalter quer durch `zeichneKachel()`: die hat schon genug Verzweigungen.
 
@@ -253,7 +253,7 @@ Das erprobte Vorgehen für denselben Host steht auch in `../lithium-rechner/CLAU
 
 **Nicht alles darin gehört in die App.** Dateien, die `IMG_*` heißen, überspringt `bin/fotos.sh`: Das sind die iPhone-Rohaufnahmen, 49 unsortierte Gerätebilder, die die Bildauswahl zumüllen würden. Soll eine davon doch hinein, bekommt sie einen sprechenden Namen, dann greift das Skript sie ab. Die 25 gezeichneten Übungsbilder heißen nach Tag und Position im Plan (`a1` bis `a9` für Tag A, `b1` bis `b8`, `c1` bis `c8`), also etwa `b2-klimmzug-untergriff.png`.
 
-Die Zuordnung Bild zu Übung passiert **in der App** unter „Mein Plan", nicht über Dateinamen. Auf einem Foto sieht man das Gerät, aber nicht, welche Übung jemand daran macht; das kann nur Frank entscheiden. Gespeichert wird sie als Feld `photo` in `data/exercises.json`, und weil `data/` nie deployed wird, reist eine lokal gemachte Zuordnung **nicht** mit auf den Server. Zugeordnet wird deshalb direkt auf dem Live-Server.
+Die Zuordnung Bild zu Übung passiert **in der App** unter „Einstellungen", nicht über Dateinamen. Auf einem Foto sieht man das Gerät, aber nicht, welche Übung jemand daran macht; das kann nur Frank entscheiden. Gespeichert wird sie als Feld `photo` in `data/exercises.json`, und weil `data/` nie deployed wird, reist eine lokal gemachte Zuordnung **nicht** mit auf den Server. Zugeordnet wird deshalb direkt auf dem Live-Server.
 
 Regeln fürs Aufbereiten, alle in `bin/fotos.sh` und in `tests/fotos.js` festgeschrieben:
 

@@ -140,7 +140,7 @@ module.exports = (port) => testlauf('Rückblick', port, async (t) => {
     /*
      * Die Startseite war ein einziger Textblock: vier gleich aussehende
      * Beschriftungen untereinander, ohne Trennung. Jetzt trägt jeder
-     * Abschnitt dieselbe Marke wie unter "Mein Plan".
+     * Abschnitt dieselbe Marke wie in den Einstellungen.
      */
     const abschnitte = await page.locator('.start .tag__name').allInnerTexts();
     // Versalien kommen aus dem CSS, innerText liefert sie so, wie sie stehen.

@@ -628,7 +628,7 @@
         // Der Verwaltungsbereich braucht das Netz und wird zu Hause bedient.
         // Ohne Verbindung führt der Verweis ins Leere, also weg damit.
         if (zustand.plan) {
-            html += '<button class="verweis" data-gehe="plan">Mein Plan</button>';
+            html += '<button class="verweis" data-gehe="plan">Einstellungen</button>';
         }
 
         if (anzahl > 0) {
@@ -1123,7 +1123,7 @@
     /**
      * Die Ausführung auf der offenen Kachel, eingeklappt.
      *
-     * Dieselbe Auskunft steht unter "Mein Plan", aber gebraucht wird sie
+     * Dieselbe Auskunft steht in den Einstellungen, aber gebraucht wird sie
      * hier: vor dem Gerät, kurz bevor man den Satz macht. Verwaltung liest
      * man zu Hause, "wie ging das nochmal" fragt man im Studio.
      *
@@ -1497,12 +1497,12 @@
             + '</section>';
     }
 
-    /* ---------- Ansicht: Mein Plan ---------- */
+    /* ---------- Ansicht: Einstellungen (intern "plan") ---------- */
 
     function zeichnePlan() {
         const tage = zustand.plan.days || {};
         let html = '<div class="titelzeile">'
-            + '<h1 class="titel">Mein Plan</h1>'
+            + '<h1 class="titel">Einstellungen</h1>'
             + '<button class="kopfknopf" data-gehe="start">Fertig</button>'
             + '</div>';
 
@@ -1750,7 +1750,7 @@
     }
 
     /**
-     * Körpergewicht eintragen, unter "Mein Plan".
+     * Körpergewicht eintragen, in den Einstellungen.
      *
      * Mit Datum und als Liste, nicht als eine aktuelle Zahl: Der
      * Fortschritts-Index rechnet an der Unterstützungsmaschine
@@ -2220,7 +2220,7 @@
             return;
         }
 
-        /* --- Mein Plan --- */
+        /* --- Einstellungen --- */
 
         if (d.bearbeite) {
             zustand.uebungHer = zustand.ansicht === 'einheit' ? 'einheit' : 'plan';

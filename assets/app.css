@@ -203,15 +203,26 @@ body {
     text-transform: uppercase;
 }
 
+/*
+ * Die Höhe kommt aus der Polsterung, nicht aus min-height, und
+ * line-height steht auf normal.
+ *
+ * iOS Safari zentriert den Text in einem Eingabefeld nicht, wenn die Höhe
+ * über min-height entsteht und line-height auf 1 steht: Er klebt dann am
+ * oberen Rand, und ein Datumsfeld bringt zusätzlich seine eigene Höhe mit,
+ * sodass zwei Felder nebeneinander verschieden hoch werden. Mit Polsterung
+ * ergibt sich die Höhe aus dem Inhalt, und die Mitte stimmt überall.
+ */
 .feld {
     width: 100%;
-    min-height: var(--ziel);
-    padding: 0 16px;
+    padding: 17px 16px;
     border: 1px solid var(--linie);
     border-radius: 12px;
     background: var(--raum-hoch);
     color: var(--schrift);
-    font: 20px/1 var(--mono);
+    font-family: var(--mono);
+    font-size: 20px;
+    line-height: normal;
     letter-spacing: 0.1em;
 }
 
@@ -530,8 +541,10 @@ body {
 .editor .mini { margin-top: 16px; }
 .editor > .mini:first-child { margin-top: 0; }
 
+/* Kein font-Kurzschreiber: der setzte line-height wieder auf 1 zurück. */
 .feld--text {
-    font: 17px/1 var(--sans);
+    font-family: var(--sans);
+    font-size: 17px;
     letter-spacing: normal;
 }
 
@@ -750,14 +763,15 @@ body {
 .gewicht .knopf { margin-top: 16px; }
 
 /*
- * Datumsfeld. Safari zeichnet den Inhalt sonst mittig und die
- * Kalenderschaltfläche daneben; linksbündig steht der Wert dort, wo in
- * jedem anderen Feld auch etwas steht. min-height statt fester Höhe,
- * damit das native Bedienelement Platz behält.
+ * Das Datumsfeld soll aussehen wie das Feld daneben. iOS bringt dafür ein
+ * eigenes Bedienelement mit eigener Höhe mit; ohne appearance:none ist das
+ * Feld höher als sein Nachbar und der Wert sitzt woanders. Der Tipp öffnet
+ * die Datumsauswahl trotzdem, die hängt nicht an der Darstellung.
  */
 .feld[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
     display: block;
-    padding-block: 0;
     text-align: left;
 }
 
@@ -1588,7 +1602,6 @@ body.hat-pause .inhalt { padding-bottom: calc(env(safe-area-inset-bottom) + 290p
 }
 
 .feld--lang {
-    min-height: 0;
     padding: 14px 16px;
     line-height: 1.5;
     resize: vertical;

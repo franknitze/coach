@@ -47,8 +47,18 @@ module.exports = (port) => testlauf('Verwaltung', port, async (t) => {
     ok(true, 'zweimal getippt meldet ab');
 
     await t.anmelden();
+
+    // Der Bereich heißt in der Oberfläche "Einstellungen". Intern bleibt er
+    // "plan", weil daran api/settings.php und plan.json hängen; die beiden
+    // Namen dürfen auseinanderlaufen, aber nicht unbemerkt.
+    ok(await page.locator('[data-gehe="plan"]').innerText() === 'Einstellungen',
+       'der Verweis auf der Startseite heißt Einstellungen');
+
     await page.click('[data-gehe="plan"]');
     await page.waitForSelector('.zeile');
+    ok(await page.locator('.titel').innerText() === 'Einstellungen',
+       'und die Überschrift dort ebenso');
+
     const vorher = await page.locator('.zeile').count();
 
     // Anlegen

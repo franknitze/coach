@@ -70,7 +70,7 @@ function sichern(string $datei): void
  * HIER STEHEN BEWEGUNGEN, KEINE GERÄTE. Weder Gerätenummer noch Foto sind
  * gesetzt, und das ist Absicht: welche Bewegung an welchem Gerät
  * ausgeführt wird, entscheidet, wer das Studio kennt. Beides wird in der
- * App unter "Mein Plan" zugeordnet und landet dann in data/exercises.json,
+ * App unter "Einstellungen" zugeordnet und landet dann in data/exercises.json,
  * wo es jedes Deployment überlebt.
  *
  * Warum drei Tage: jede Muskelgruppe wird pro Durchgang zweimal getroffen,
