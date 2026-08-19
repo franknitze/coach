@@ -12,12 +12,12 @@ module.exports = (port) => testlauf('Coach', port, async (t) => {
     t.logs({
         '2026-08': [
             einheit('2026-08-05', 'oberkoerper', 0, {
-                bankdruecken: saetze(80, 10, 10, 10),
+                bankdruecken: saetze(80, 10, 10, 10, 10),
                 latzug: saetze(60, 9, 9, 8),
                 schulterdruecken: saetze(40, 9, 9, 8),
             }),
             einheit('2026-08-12', 'oberkoerper', 0, {
-                bankdruecken: saetze(80, 10, 10, 10),
+                bankdruecken: saetze(80, 10, 10, 10, 10),
                 latzug: saetze(60, 10, 9, 9),
                 schulterdruecken: saetze(45, 7, 6, 6),
             }),

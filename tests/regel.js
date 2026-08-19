@@ -35,6 +35,13 @@ module.exports = function regel() {
         ['nur letzter Satz schwach (Ermüdung)',  [s(85, 10, 9, 7)],                   'halten'],
         ['mitten im Bereich',                    [s(80, 10, 9, 9)],                   'halten'],
         ['dreimal sauber (mehr als nötig)',      [s(80, 12, 12, 12), s(80, 12, 12, 12), s(80, 13, 12, 12)], 'steigern'],
+
+        // Abgebrochene Einheiten. Zwei Sätze auf der Obergrenze sind kein
+        // Beleg dafür, dass vier gehen; wer früher aufhört, hat es nicht
+        // gezeigt. Sonst schiebt ein Abbruch das Gewicht hoch.
+        ['zweimal sauber, aber nur 2 von 3 Sätzen', [s(80, 12, 12), s(80, 12, 12)],  'halten'],
+        ['einmal voll, einmal abgebrochen',       [s(80, 12, 12), s(80, 12, 12, 12)], 'halten'],
+        ['zweimal mit einem Satz zu viel',        [s(80, 12, 12, 12, 12), s(80, 12, 12, 12, 12)], 'steigern'],
     ];
 
     let bestanden = 0;
@@ -50,7 +57,8 @@ module.exports = function regel() {
 
         const ausgabe = execFileSync('php', ['-r', `
             require "${WURZEL}/lib/coach.php";
-            $e = coach_empfehlung(['id' => 'test', 'rep_min' => 8, 'rep_max' => 12, 'weight_step' => 2.5]);
+            $e = coach_empfehlung(['id' => 'test', 'rep_min' => 8, 'rep_max' => 12,
+                                   'weight_step' => 2.5, 'target_sets' => 3]);
             echo $e['status'], "\\t", $e['text'];
         `], { env: Object.assign({}, process.env, { COACH_DATA: ordner }) }).toString();
 

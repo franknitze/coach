@@ -60,11 +60,21 @@ module.exports = (port) => testlauf('Verwaltung', port, async (t) => {
     await page.fill('#e-sets', '3');
     await page.fill('#e-min', '10');
     await page.fill('#e-max', '15');
+
+    // Die Schrittweiten stehen an zwei Stellen: die Auswahl hier und die
+    // Prüfung in lib/uebungen.php. Driften sie auseinander, bietet das
+    // Formular einen Wert an, den der Server ablehnt.
+    const stufen = await page.locator('#e-step option').allInnerTexts();
+    ok(stufen.join(' ') === '0,25 kg 0,5 kg 1 kg 1,25 kg 2,5 kg 5 kg',
+       'sechs Schrittweiten zur Auswahl: ' + stufen.join(' · '));
+    await page.selectOption('#e-step', '0.25');
+
     await page.click('.editor button[type="submit"]');
     await page.waitForFunction((n) => document.querySelectorAll('.zeile').length === n, vorher + 1);
     ok(true, 'Übung über das Formular angelegt');
 
     const zeile = await page.locator('.zeile', { hasText: 'Wadenheben' }).innerText();
+    ok(zeile.includes('0,25 kg'), 'der Server nimmt die kleinste Schrittweite an');
     ok(zeile.includes('21'), 'Gerätenummer steht als Plakette in der Liste');
     ok(zeile.includes('Beine'), 'Muskelgruppe lesbar statt als Schlüssel');
     ok(!(await page.locator('.zeile').first().innerText()).includes('ruecken'), 'nirgends ein roher Schlüssel');

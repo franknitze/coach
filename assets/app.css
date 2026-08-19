@@ -20,6 +20,17 @@
     --tag:         #f2b705;
     --vinyl:       #c8562b;
 
+    /* Die beiden Pausen-Farben. Sie sind keine dritten Akzente, sie treten
+       nur im Pausen-Panel auf und sagen dort "warte" und "los". Rot bleibt
+       dunkel, weil die Pause zwei Minuten dauert und ein leuchtender Block
+       morgens um sieben blendet. Grün ist hell, weil das Ende der Pause
+       einen quer durch den Raum erreichen soll. */
+    --ruhe:        #4e2a2c;
+    --ruhe-linie:  #6d3a3c;
+    --ruhe-mini:   #c49b98;
+    --los:         #b7d6b0;
+    --los-mini:    #46614a;
+
     --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
     --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
 
@@ -277,6 +288,11 @@ body {
     color: var(--schrift);
     font: 14px/1 var(--sans);
     cursor: pointer;
+}
+
+.kopfknopf:disabled {
+    opacity: 0.35;
+    cursor: default;
 }
 
 .titelzeile {
@@ -703,11 +719,208 @@ body {
     flex: 1;
 }
 
+/*
+ * Die Hauptaktion klebt am unteren Rand, solange darüber noch Seite ist.
+ * Mit dem Rückblick wird die Startseite länger als der Bildschirm, und ein
+ * Startknopf, den man erst herunterscrollen muss, ist keiner.
+ *
+ * sticky und nicht fixed: fixed bräuchte eine Ausgleichs-Polsterung am
+ * Inhalt, die man bei jeder Layoutänderung nachziehen muss. Und am
+ * Seitenende gibt sticky den Platz für "Abmelden" von selbst wieder frei.
+ */
 .fussleiste {
+    position: sticky;
+    bottom: 0;
     margin-top: auto;
     padding-top: 20px;
     padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+    background: var(--raum);
 }
+
+/* Körpergewicht eintragen: Datum und Kilo nebeneinander, der Knopf
+   darunter über die volle Breite. Auf 390 Punkten stünden drei Felder
+   nebeneinander zu eng für den Daumen. */
+.gewicht {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.gewicht .knopf { grid-column: 1 / -1; }
+.gewicht input[type="number"] { width: 110px; text-align: center; }
+
+.zeile--schmal { min-height: 44px; }
+
+/* ---------- Kalender ---------- */
+
+.kal__steuer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.kal__zahl {
+    font: 13px/1 var(--mono);
+    color: var(--schrift-leise);
+}
+
+.kal {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 20px;
+}
+
+.kal__kopf {
+    padding-bottom: 4px;
+    font: 600 11px/1 var(--mono);
+    letter-spacing: 0.08em;
+    color: var(--schrift-leise);
+    text-align: center;
+}
+
+/*
+ * Quadratische Felder über aspect-ratio: Sieben Spalten auf 390 Punkten
+ * ergeben rund 44 Pixel, und ein Raster, dessen Zeilen unterschiedlich hoch
+ * sind, liest sich nicht mehr als Monat.
+ */
+.kal__tag,
+.kal__leer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    aspect-ratio: 1;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--schrift-leise);
+    font: 14px/1 var(--mono);
+}
+
+/*
+ * Der trainierte Tag ist gefüllt, nicht nur umrandet. Beim Blick auf den
+ * Monat zählt das Muster aus Blöcken, und ein Rahmen verschwindet darin.
+ * Kein Gelb: das heißt in dieser App "hier tippen", und hier ist jeder
+ * Tag antippbar.
+ */
+.kal__tag.ist-training {
+    background: var(--raum-hoch);
+    color: var(--schrift);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.kal__tag.ist-training:active { opacity: 0.7; }
+
+.kal__art {
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: var(--schrift-leise);
+}
+
+/* Heute nur umrandet, damit es die gefüllten Tage nicht überstimmt. */
+.kal__tag.ist-heute {
+    box-shadow: inset 0 0 0 1px var(--schrift-leise);
+}
+
+/* ---------- Fortschrittskurve ---------- */
+
+.fortschritt-block { margin-bottom: 24px; }
+
+.fortschritt__stand {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 0 4px;
+    font: 14px/1.2 var(--mono);
+    color: var(--schrift-leise);
+}
+
+/* Die Punktzahl groß, das Wort klein — dieselbe Regel wie am Regler und
+   an der Vorgabe auf der Kachel. */
+.fortschritt__stand b {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--schrift);
+}
+
+.fortschritt__diff { font-size: 13px; }
+
+/* ---------- Rückblick: die letzten Einheiten ---------- */
+
+.rueckblick { margin-bottom: 26px; }
+
+.einheit {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    width: 100%;
+    min-height: var(--ziel);
+    padding: 11px 0;
+    border: 0;
+    border-bottom: 1px solid var(--linie);
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.einheit:active { opacity: 0.7; }
+
+/* Der letzte Eintrag ohne Strich: darunter folgt "Mein Plan" mit einem
+   eigenen, und zwei Linien mit einem Spalt dazwischen lesen sich wie ein
+   Fehler. Steht die Deckel-Zeile dahinter, ist sie das letzte Kind und der
+   Strich bleibt richtig. */
+.einheit:last-child { border-bottom: 0; }
+
+.einheit__wann {
+    font: 16px/1.3 var(--sans);
+    color: var(--schrift);
+}
+
+.einheit__umfang {
+    font: 13px/1.3 var(--mono);
+    color: var(--schrift-leise);
+}
+
+/* Kein eigener Akzent dafür. Unvollständig ist eine Auskunft und keine
+   Warnung; Orange hieße "Steigerung fällig" und wäre hier gelogen. */
+.einheit__offen {
+    color: var(--schrift-leise);
+    font-style: italic;
+}
+
+.rueckblick__rest {
+    margin: 12px 0 0;
+    color: var(--schrift-leise);
+    font: 13px/1.3 var(--mono);
+}
+
+/* Die Bilanzzeile über den Kacheln einer abgeschlossenen Einheit. */
+.einheit__bilanz {
+    margin: -14px 0 24px;
+    color: var(--schrift-leise);
+    font: 14px/1.4 var(--mono);
+}
+
+/* Die Sätze dieser Einheit auf der Kachel, dort wo im Studio "zuletzt"
+   steht. Volle Schriftfarbe: hier sind sie die Auskunft und nicht der
+   Nebensatz. */
+.kachel__werte {
+    font: 14px/1.5 var(--mono);
+    color: var(--schrift);
+}
+
+.kachel__text[disabled] { cursor: default; opacity: 0.7; }
 
 /* ---------- Fortschritt in der Einheit ----------
  *
@@ -757,6 +970,24 @@ body {
 
 .geschafft .knopf { margin-top: 18px; }
 
+/* Die zweite Ausfertigung unter der letzten Kachel. Die Kachel darüber
+   bringt 14px mit, zusammen mit diesen 12 steht der Abschluss genauso frei
+   wie der obere. */
+.geschafft--unten { margin: 12px 0 0; }
+
+/* Der Ausgang bei offener Einheit. Ohne Rahmen und ohne Gelb: Er soll
+   erreichbar sein, wenn man ihn braucht, und sonst nichts von einem wollen.
+   Mehr Luft nach oben als die Kacheln untereinander, damit er nicht als
+   zehnte Kachel gelesen wird. */
+.beenden { margin: 26px 0 0; }
+
+.beenden__stand {
+    margin: 0 0 12px;
+    color: var(--schrift-leise);
+    font: 14px/1 var(--mono);
+    text-align: center;
+}
+
 /* ---------- Studio: Übungskacheln ---------- */
 
 .kachel {
@@ -780,9 +1011,12 @@ body {
 
 /* Kein Knopf, sondern eine Reihe aus zwei Knöpfen: Foto vergrößern und
    Übung aufklappen sind zwei verschiedene Absichten. */
+/* Foto und Name beginnen auf derselben Höhe. Mittig gesetzt rutschte das
+   Foto in die Mitte einer hohen Textspalte und der Name stand allein
+   darüber; oben angeschlagen liest sich die Kachel von einer Kante aus. */
 .kachel__kopf {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 14px;
     width: 100%;
     padding: 14px;
@@ -885,6 +1119,27 @@ body {
     color: var(--schrift-leise);
 }
 
+/* Die Vorgabe ist das, was man vor dem Gerät sucht: wie viele Sätze, wie
+   viele Wiederholungen. Groß gesetzt sind nur die Zahlen, die Wörter
+   bleiben ihre Einheit. So sticht die Auskunft ins Auge, ohne dass die
+   Zeile zur zweiten Überschrift wird. */
+.kachel__ziel { margin-top: 2px; }
+
+.kachel__zahl {
+    font-size: 23px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--schrift);
+}
+
+/* Der Bezug hinter der gemachten Zahl im Rückblick: "2/4". Klein und leise,
+   weil die 2 die Auskunft ist und die 4 nur der Maßstab. */
+.kachel__von {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--schrift-leise);
+}
+
 /* Die Coach-Ansage. Orange heißt in dieser App "Steigerung fällig", und
    genau dieser eine Fall wird hervorgehoben. Alles andere bleibt leise. */
 .kachel__coach {
@@ -908,14 +1163,17 @@ body {
 
 .punkte {
     display: flex;
-    gap: 5px;
-    margin-top: 4px;
+    gap: 7px;
+    margin-top: 6px;
 }
 
+/* Der leere Punkt trägt dieselbe Auskunft wie der volle: er sagt, wie viel
+   noch kommt. Mit haarfeinem Rand in Linienfarbe war er auf Armlänge nicht
+   zu sehen, damit war die Reihe nur halb zu lesen. */
 .punkt {
-    width: 9px;
-    height: 9px;
-    border: 1px solid var(--linie);
+    width: 15px;
+    height: 15px;
+    border: 2px solid var(--schrift-leise);
     border-radius: 50%;
 }
 
@@ -992,9 +1250,21 @@ body {
 
 .regler__knopf:active { background: var(--linie); }
 
+/* Die Zahl ist die Hauptsache und der größte Text der Kachel: sie wird im
+   Halbdunkel, mit Armlänge Abstand und schwerem Atem abgelesen. Die
+   Einheit steht daneben auf derselben Grundlinie, klein und leise — dass
+   es Kilogramm sind, muss niemand nachlesen. */
 .regler__wert {
-    font: 600 25px/1 var(--mono);
+    font: 17px/1 var(--mono);
     text-align: center;
+    color: var(--schrift-leise);
+}
+
+.regler__zahl {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--schrift);
 }
 
 .regler__schritt {
@@ -1009,6 +1279,13 @@ body {
 
 /* ---------- Pausen-Timer ---------- */
 
+/*
+ * Das Pausen-Panel nimmt das untere Drittel ein. Als schmaler Balken war
+ * die Restzeit zwischen zwei Sätzen kaum abzulesen: man sitzt auf der Bank,
+ * das Handy liegt daneben, und geguckt wird im Vorbeigehen. Deshalb eine
+ * Zahl, die man aus zwei Metern liest, und eine Fläche, deren Farbe schon
+ * vor dem Lesen sagt, woran man ist.
+ */
 .pause {
     position: fixed;
     left: 0;
@@ -1016,51 +1293,65 @@ body {
     bottom: 0;
     z-index: 10;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     gap: 14px;
     width: 100%;
     max-width: var(--breite);
     margin-inline: auto;
-    padding: 14px var(--rand) calc(env(safe-area-inset-bottom) + 14px);
-    background: var(--raum-hoch);
-    border-top: 1px solid var(--linie);
+    padding: 24px var(--rand) calc(env(safe-area-inset-bottom) + 22px);
+    background: var(--ruhe);
+    border-top: 1px solid var(--ruhe-linie);
 }
 
-/* Solange der Balken steht, braucht der Inhalt darunter Platz, sonst liegt
-   die unterste Kachel während der Pause unter dem Balken. */
-body.hat-pause .inhalt { padding-bottom: 120px; }
+/* Solange das Panel steht, braucht der Inhalt darunter Platz, sonst liegt
+   die unterste Kachel während der Pause darunter. Der Wert deckt die Höhe
+   des Panels ab, nicht knapp, sondern mit Luft: die Beschriftung trägt bei
+   Supersets den Namen der nächsten Übung und darf umbrechen. */
+body.hat-pause .inhalt { padding-bottom: calc(env(safe-area-inset-bottom) + 290px); }
 
 .pause__mini {
-    font: 600 11px/1 var(--mono);
+    font: 600 12px/1.4 var(--mono);
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--schrift-leise);
+    color: var(--ruhe-mini);
 }
 
+/* Tabellenziffern: ohne sie springt die Zahl bei jedem Tick in der Breite,
+   und ein zappelnder Timer zieht das Auge auf die Bewegung statt auf den
+   Wert. */
 .pause__zeit {
-    flex: 1;
-    font: 600 24px/1 var(--mono);
+    font: 600 min(24vw, 92px)/1 var(--mono);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    letter-spacing: -0.02em;
+    color: var(--schrift);
 }
 
 .pause__weg {
-    min-height: 44px;
+    min-height: var(--ziel);
     padding: 0 16px;
-    border: 1px solid var(--linie);
-    border-radius: 10px;
+    border: 1px solid var(--ruhe-linie);
+    border-radius: 12px;
     background: transparent;
     color: var(--schrift);
-    font: 14px/1 var(--sans);
+    font: 16px/1 var(--sans);
     cursor: pointer;
 }
 
-/* Pause vorbei: invertiert statt in einer dritten Farbe, damit Gelb
-   weiter "hier tippen" und Orange weiter "Steigerung fällig" heißt. */
+/*
+ * Pause vorbei: helles Grün mit dunklem Text. Die Farbe sagt "los", die
+ * Helligkeit macht den Wechsel über den ganzen Raum sichtbar — darauf kam
+ * es bei der invertierten Fassung vorher schon an, nur ohne Aussage.
+ * Gelb und Orange bleiben unangetastet, sie heißen weiter "hier tippen"
+ * und "Steigerung fällig".
+ */
 .pause.ist-um {
-    background: var(--schrift);
-    border-top-color: var(--schrift);
+    background: var(--los);
+    border-top-color: var(--los);
 }
 
-.pause.ist-um .pause__mini { color: #5b6069; }
+.pause.ist-um .pause__mini { color: var(--los-mini); }
 .pause.ist-um .pause__zeit { color: var(--raum); }
 
 .pause.ist-um .pause__weg {

@@ -10,11 +10,11 @@ Die Phasen 0 bis 5 aus §10 sind gebaut und laufen live auf dem Server. Der Trai
 
 | Steht | Fehlt |
 |---|---|
-| `lib/`: `storage`, `config`, `auth`, `uebungen`, `logs`, `coach` | **der n8n-Workflow**, der `export.php` abholt (siehe unten). `data/` auf dem Server hat damit **keine Sicherung**. |
-| `api/`: `login`, `logout`, `exercises`, `settings`, `plan`, `session`, `history`, `coach`, `export`, `setup`, `fotos`, `foto-upload`, `foto-loeschen` | Phase 6 (KI-Coach, Dashboard-Widgets), ausdrücklich optional |
-| `index.php`, `assets/`: Start, Studio, Mein Plan, Übungsdetail mit Verlauf, Coach-Ansage | |
+| `lib/`: `storage`, `config`, `auth`, `uebungen`, `logs`, `coach`, `gewicht`, `fortschritt` | **der n8n-Workflow**, der `export.php` abholt (siehe unten). `data/` auf dem Server hat damit **keine Sicherung**. |
+| `api/`: `login`, `logout`, `exercises`, `settings`, `plan`, `session`, `history`, `coach`, `einheiten`, `gewicht`, `export`, `setup`, `fotos`, `foto-upload`, `foto-loeschen` | Phase 6 (KI-Coach), ausdrücklich optional |
+| `index.php`, `assets/`: Start mit Rückblick und Fortschrittskurve, Studio, Mein Plan, Übungsdetail mit Verlauf, abgeschlossene Einheit, Kalender, Coach-Ansage | |
 | `manifest.json`, `service-worker.js`, `assets/icons/`, Offline-Puffer | |
-| `.htaccess`, `bin/` (init-config, plan-anlegen, fotos, deploy, icons), `tests/` (244 Prüfungen) | |
+| `.htaccess`, `bin/` (init-config, plan-anlegen, fotos, deploy, icons), `tests/` (314 Prüfungen) | |
 
 Der flüchtige Arbeitsstand steht in `STATE.md`. Die Datei ist **nicht versioniert** (siehe `.gitignore`): Sie handelt nur von dieser einen Installation und liegt ausschließlich auf Franks Rechner. Wer das Repo frisch klont, hat sie nicht, und das ist Absicht.
 
@@ -59,15 +59,56 @@ Diese Punkte stehen verteilt in der Spezifikation und ergeben zusammen die Archi
 
 Sie steht in `lib/` und nicht im Endpunkt, weil sie zwei Zugänge hat: `api/coach.php` gibt sie einzeln aus (so sieht §3 den Endpunkt vor), `api/plan.php` hängt sie an jede Kachel, damit der Studio-Bildschirm mit einem Request auskommt. Wer die Regel ändert, ändert sie an dieser einen Stelle.
 
-Drei Festlegungen, die die Spezifikation offen lässt:
+Vier Festlegungen, die die Spezifikation offen lässt:
 
 - **`COACH_EINHEITEN = 2`.** §7 nennt „N = 2..3". Zwei ist der zügigere Wert; wer vorsichtiger steigern will, setzt die Konstante auf 3. Eine einzelne saubere Einheit reicht bewusst nicht, sonst schiebt ein guter Tag das Gewicht hoch, das am nächsten Termin wieder einbricht.
 - **„Eingebrochen" heißt: auch der beste Satz liegt unter `rep_min`.** Der letzte Satz fällt bei hartem Training regelmäßig ab, das ist Ermüdung und kein zu schweres Gewicht. Würde jeder einzelne schwache Satz die Warnung auslösen, stünde sie ständig da und niemand läse sie mehr.
+- **Eine Einheit zählt nur mit ihrer Zielsatzzahl als sauber.** `coach_einheit_sauber()` prüft nicht nur, ob alle erfassten Sätze auf dem Arbeitsgewicht bis `rep_max` durchgingen, sondern auch, ob es überhaupt genug waren. Ohne das schöbe ausgerechnet ein Abbruch das Gewicht hoch: zwei Sätze auf der Obergrenze sind kein Beleg dafür, dass vier gehen. Fehlt `target_sets` (0), greift die Bedingung nicht, dann lässt sich nicht beurteilen, was vollständig gewesen wäre. Zwei Aufrufstellen, nicht eine — auch die Ansage „Noch eine saubere Einheit, dann geht es hoch" muss dieselbe Zählung benutzen, sonst verspricht die Kachel eine Steigerung, die dann ausbleibt.
 - **Der Coach-Vorschlag befüllt die Eingabe nicht.** Vorbefüllt wird weiter der letzte Wert (§5.2: gleiche Leistung nur bestätigen). Die App sagt, was fällig wäre; das Plus drückt Frank selbst. Sonst bestätigt er im Halbschlaf eine Steigerung, die er nicht geschafft hat.
 
-**`weight_step` gibt es zweimal:** global in `config.json` als Default (5), pro Übung in `exercises.json` als Überschreibung. Erlaubt sind 1,25, 2,5 und 5. Jede Stelle, die Gewicht verändert, muss den Wert der Übung nehmen und auf den globalen zurückfallen.
+**`weight_step` gibt es zweimal:** global in `config.json` als Default (5), pro Übung in `exercises.json` als Überschreibung. Erlaubt sind 0,25, 0,5, 1, 1,25, 2,5 und 5. Jede Stelle, die Gewicht verändert, muss den Wert der Übung nehmen und auf den globalen zurückfallen.
+
+SPEC.md §4 nennt nur die oberen drei. Die kleinen Stufen sind auf Franks Wunsch dazugekommen: an Kurzhanteln und an Maschinen mit Zusatzscheibe geht es feiner, und wo eine ganze Stufe zu viel wäre, bliebe die Progressionsregel sonst dauerhaft stehen. Die Liste steht an zwei Stellen und muss zusammenpassen: `WEIGHT_STEPS` in `lib/uebungen.php` prüft, die Auswahl in `assets/app.js` bietet an. Neue Werte müssen im Binärformat exakt sein, sonst scheitert der strikte Vergleich in `uebung_pruefen()`.
 
 **Ein Request pro Bildschirm.** `plan.php` liefert den Tag, die Übungen und die letzten Werte zusammen aus, sonst müsste der Studio-Bildschirm pro Kachel nachladen.
+
+**Der Rückblick ist ein eigener Endpunkt und liefert die Sätze gleich mit.** `api/einheiten.php` gibt die letzten zehn Einheiten samt aller Sätze aus, gedeckelt in `EINHEITEN_DECKEL`. Zwei Entscheidungen darin:
+
+Nicht an `plan.php` angehängt, obwohl der die Startseite ohnehin füllt: `plan.php` bedient auch das Studio, und dort wäre der Rückblick totes Gewicht auf genau dem Bildschirm mit der schlechtesten Verbindung. Umgekehrt nicht in Liste und Nachladen je Einheit getrennt: zehn Einheiten sind wenige Kilobyte, dafür öffnet sich die Detailansicht ohne Netz und ohne Wartezeit.
+
+Name, Foto, Stationsnummer und Vorgabe reisen je Übung mit, statt sie im Browser gegen `exercises.json` zu verbinden. Eine seit damals gelöschte Übung stünde sonst ohne Namen da, und ihre Sätze wären niemandem mehr zuzuordnen.
+
+**„Vollständig" wird gegen den heutigen Plan gerechnet.** Eine Einheit speichert nicht, was damals verlangt war. Ändert sich eine Zielsatzzahl, wechseln alte Einheiten die Markierung. Das ist der Preis dafür, die Vorgabe nicht in jede Session zu duplizieren; die Sätze selbst liegen fest. Geprüft wird je Übung, nicht über die Summe: acht Sätze Bankdrücken und keiner Latzug ergäben dieselbe Zahl wie vier und vier, wären aber eine halbe Einheit.
+
+**Der Fortschritts-Index ist ein Mittelwert von Verhältnissen, keine Summe.** `lib/fortschritt.php` gibt je Einheit eine Punktzahl aus. Je Übung wird verglichen, was in dieser Einheit geschafft wurde, mit der **ersten** Einheit dieser Übung; der Tageswert ist der Mittelwert dieser Verhältnisse mal 100.
+
+Der Grund für den Mittelwert: Aufsummierte Gewichte machen die Kurve zu einer Anzeige der Tagesart. Ein Oberkörpertag mit neun Übungen stünde immer über einem Unterkörpertag mit acht, und die Linie sägte zwischen beiden hin und her, ohne etwas über Fortschritt zu sagen. Ein Mittelwert hängt nicht davon ab, über wie viele Werte er geht.
+
+Der Vergleichswert je Satz ist Epley (`Gewicht × (1 + Wdh/30)`), der beste Satz der Einheit zählt. Nur das Gewicht zu nehmen wäre falsch: Doppelte Progression klettert erst die Wiederholungen hoch, die Kurve bliebe wochenlang flach, während tatsächlich etwas passiert. Das Ergebnis ist eine Rechengröße für den Vergleich, keine Behauptung über ein echtes Einer-Maximum.
+
+**Die Zahl der Sätze geht bewusst nicht ein.** Sonst wäre eine abgebrochene Einheit ein Rückschritt, obwohl vielleicht schwerer trainiert wurde, und ein zusätzlicher lockerer Satz zöge den Wert nach unten. Der Index misst, wie schwer, nicht wie viel; wie viel steht im Rückblick.
+
+Eine neu aufgenommene Übung startet bei 100 und dellt den Tagesmittelwert einmalig. Das ist der Preis dafür, dass jeder Punkt der Kurve für sich nachrechenbar ist. Die Alternative wäre ein verketteter Index (Vergleich nur mit der vorigen Einheit, nur über gemeinsame Übungen); der hat keine Delle, dafür hängt jeder Punkt an allen vorherigen und ein Ausreißer verschiebt die Kurve dauerhaft. Auf Franks Wunsch die einfache Variante.
+
+**Das Körpergewicht wird mit Datum gespeichert** (`data/gewicht.json`, `lib/gewicht.php`), nicht als eine aktuelle Zahl. An der Unterstützungsmaschine ist die bewegte Last „Körpergewicht minus Hilfe"; mit nur einem aktuellen Wert würde jeder Gang auf die Waage die gesamte Vergangenheit umrechnen, und fünf Kilo weniger auf der Waage erschienen in alten Einheiten als Rückschritt. Eintragen ist freiwillig: ohne Wert bleiben Klimmzug und Dips aus dem Index, alles andere rechnet weiter.
+
+Das Eingabefeld ist `type="text"` mit `inputmode="decimal"`, nicht `type="number"`. Auf der deutschen Tastatur ist die Dezimaltaste ein Komma, und ein Zahlenfeld weist das als ungültig zurück — das Feld bliebe beim Absenden leer. Komma und Punkt sind beide erlaubt.
+
+**Geprüft wird mit einem Muster, nicht mit `(float)`.** `gewicht_zahl()` verlangt `/^\d{1,3}(\.\d{1,2})?$/`, nachdem das Komma ersetzt ist. PHPs Umwandlung ist nachsichtig: `(float) "84,5kg"` ergibt 84,5 und `(float) "84,5,3"` ebenfalls, beides ohne einen Mucks — ein Vertipper käme als plausible Zahl in der Datei an und wäre später nicht mehr als solcher zu erkennen. Die Plausibilitätsgrenzen 30 bis 300 kg kommen zusätzlich, sie fangen den Faktor-Zehn-Fehler.
+
+**Der Verwaltungsbereich zeigt `zustand.meldung` an.** Ohne das scheiterte eine abgelehnte Eingabe stumm: das Formular zeichnete sich leer neu und nichts sagte, warum. Wer dort einen Endpunkt anbindet, der etwas ablehnen kann, braucht diese Zeile.
+
+**Der Kalender beantwortet eine andere Frage als der Rückblick.** Die Liste sagt „was habe ich gemacht", das Monatsraster sagt „wie regelmäßig war ich" — und dafür ist die Lücke so wichtig wie der Eintrag. Deshalb ein Raster über alle Tage und nicht nur über die trainierten. Die Woche beginnt am Montag, weil der Plan in Mo/Mi/Fr denkt.
+
+Er läuft über denselben Endpunkt, mit `?monat=YYYY-MM` statt der Zehnerliste. Ein Parameter und kein zweiter Endpunkt: dieselbe Sache in derselben Form, nur anders ausgewählt, und die ganze Anreicherung je Übung wäre sonst zweimal da. Der Fortschritts-Index bleibt beim Monatsabruf weg, er gehört zur Startseite.
+
+Geblättert wird nur zwischen dem ältesten Monat mit Daten und dem laufenden; darüber hinaus sind die Knöpfe gesperrt. Ein Knopf, der ins Leere führt, ist schlimmer als keiner, weil man ihn zweimal drückt.
+
+**„Zurück" merkt sich die Herkunft, an zwei Stellen.** `zustand.einheitHer` führt aus einer Einheit dorthin zurück, wo sie aufgeschlagen wurde (Startseite oder Kalendermonat), `zustand.uebungHer` aus dem Übungsverlauf entsprechend (Mein Plan oder Einheit). Ohne das landet man nach zwei Tippern in einer Ansicht, die man nie besucht hat.
+
+**Studio und Rückblick teilen sich den Kachelkopf.** `zeichneKachelKopf()` zeichnet Foto, Name, Vorgabe und Punktreihe für beide. Beim Zurückblicken ist „welches Gerät war das" dieselbe Frage wie im Studio, und eine zweite Darstellung dafür wäre eine zweite Bildsprache für denselben Gegenstand. Bewusst als eigene Funktion und nicht als Modus-Schalter quer durch `zeichneKachel()`: die hat schon genug Verzweigungen.
+
+**Der Trainingstag wird festgehalten, nicht aus dem geladenen Tag abgeleitet.** `zustand.tagWahl` ist ein eigenes Feld, `null` heißt „dem Vorschlag des Servers folgen". Betreten des Studios hält den Tag fest, „Einheit beenden" gibt ihn frei. Der Grund für beide Richtungen: `naechster_tag()` rückt ab dem **ersten** bestätigten Satz weiter, weil die laufende Einheit dann die letzte in den Logs ist. Ohne Festhalten spränge die Ansicht mitten in der Einheit weg; ohne Freigeben bot die Startseite nach dem Ende weiter die abgeschlossene Einheit an, und „Weiter trainieren" führte in eine Liste, in der alles abgehakt war. Der geladene Tag (`zustand.studio.day.key`) darf diese Rolle nicht mitübernehmen, genau daran ist es einmal gescheitert.
 
 Ausbaustufen (KI-Coach über eine Sprachmodell-API, Dashboard-Widgets) sind in §7 und §10 bewusst als andockbar beschrieben. Sie sind kein Teil des MVP und rechtfertigen keine zusätzliche Abstraktion vorab; die Logs sind als sauberes JSON schon API-tauglich.
 
@@ -150,7 +191,7 @@ Noch nicht angelegt. Was er braucht (SPEC.md §9):
 
 ```bash
 node tests/lauf.js            # alle, dauert etwa eine Minute
-node tests/lauf.js coach      # einzeln: regel, verwaltung, studio, verlauf, coach
+node tests/lauf.js coach      # einzeln, Namen siehe tests/lauf.js
 ```
 
 Kein Test-Framework, wie in SPEC.md §2 vorgesehen. `tests/lauf.js` ist ein Skript, das die Läufe nacheinander startet und mit Exit-Code 1 endet, wenn etwas scheitert. Playwright steuert nur den Browser und läuft gegen das installierte Chrome, damit kein Browser nachgeladen wird. Fehlt Playwright, sagt die Fehlermeldung, was zu tun ist.
@@ -161,7 +202,7 @@ Kein Test-Framework, wie in SPEC.md §2 vorgesehen. `tests/lauf.js` ist ein Skri
 - Antwortet auf dem Port schon etwas, bricht der Lauf ab statt weiterzumachen. Ein übriggebliebener Server aus einem abgestürzten Lauf hat ein anderes Datenverzeichnis, und der Lauf liefe stillschweigend gegen die falschen Daten. Genau das ist einmal passiert und hat einen halben Debug-Durchgang gekostet.
 - Die Läufe sind unabhängig von der Reihenfolge; jeder setzt seinen Ausgangszustand über `t.logs()` selbst.
 
-Was jeder Lauf abdeckt: `regel` prüft `coach_empfehlung()` direkt in PHP über alle Zweige aus §7, ohne Browser. `verwaltung` deckt Anmeldung und Übungsbibliothek ab, `studio` den Trainingsablauf samt Rotation und Pausen-Timer, `verlauf` die Kurven, `coach` die Ansage auf der Kachel, `pwa` Manifest, Service Worker und Export, `offline` eine ganze Einheit ohne Netz samt Übertragung danach.
+Was jeder Lauf abdeckt: `regel` prüft `coach_empfehlung()` direkt in PHP über alle Zweige aus §7, ohne Browser. `verwaltung` deckt Anmeldung und Übungsbibliothek ab, `studio` den Trainingsablauf samt Rotation und Pausen-Timer, `verlauf` die Kurven, `coach` die Ansage auf der Kachel, `fortschritt` den Index ohne Browser, `einheiten` den Rückblick samt Detailansicht, Kurve, Kalender und Körpergewicht, `pwa` Manifest, Service Worker und Export, `offline` eine ganze Einheit ohne Netz samt Übertragung danach.
 
 Der Lauf `offline` ist der wichtigste, weil er den Alltagsfall abbildet: Verbindung weg, drei Sätze eintippen, neu laden, Verbindung zurück. Er prüft am Ende gegen `export.php`, dass auf dem Server genau das steht, was getippt wurde, unter dem richtigen Datum und ohne Verdopplung.
 
@@ -193,6 +234,7 @@ Eingerichtet und im Betrieb. **`bin/deploy.sh` ist der einzige Weg**, von Hand z
 - Zielpfade sind **relativ** zum chroot-Home, ein absoluter Pfad läuft ins Leere. SSH ist chrooted, PHP nicht.
 - `data/` liegt **im** Web-Root und ist per `.htaccess` gesperrt (Vorgabe von Frank, abweichend von SPEC §8). Der 403 wird bei jedem Deploy geprüft, ebenso der 404 auf `lib/` und `bin/`.
 - `bin/` liegt auf dem Server, weil `plan-anlegen.php` und `init-config.php` dort über die Kommandozeile laufen. Aus dem Browser ist davon nichts erreichbar.
+- **Werkzeug-Ordner mit Punkt am Anfang sind ausgeschlossen** (`.claude/`, `.vscode/`, `.idea/`). Sie sind zwar gitignored, aber rsync liest das Arbeitsverzeichnis und nicht Git. `.htaccess` sperrt nur `data/`, `lib/` und `bin/`; ein hochgeladenes `.claude/settings.local.json` wäre schlicht abrufbar gewesen. Aufgefallen im Probelauf, hochgegangen ist nichts.
 
 Das erprobte Vorgehen für denselben Host steht auch in `../lithium-rechner/CLAUDE.md`.
 
@@ -236,6 +278,10 @@ Die Richtung ist aus Franks Studio abgeleitet, nicht aus einer Fitness-App-Schab
 - **Monospace für alle Zahlen und Kürzel, Sans für Fließtext.** Ein Trainingslog ist eine Zahlentabelle. Keine Webfonts, die PWA muss offline laufen.
 - **Hauptaktionen sitzen unten am Rand**, nicht mittig. Bedienung mit dem Daumen heißt Daumenzone. Touch-Ziele ab 56px, `env(safe-area-inset-*)` beachten.
 - **Signature ist die Geräteplakette** (`.plakette`): das gelbe Nummernschild, das im Studio an den Geräten klebt. Sie trägt die echte Stationsnummer, in der Liste klein, auf der Übungskachel groß als Ersatz für ein fehlendes Foto. Nie mit erfundenen Nummern dekorieren.
+
+**Die beiden Pausenfarben sind keine dritten Akzente.** `--ruhe` (dunkles Rot) und `--los` (helles Blassgrün) treten ausschließlich im Pausen-Panel auf und sagen dort „warte" und „los". Sie sind ungleich hell, und das ist Absicht: Die Pause dauert zwei Minuten, ein leuchtender Block über ein Drittel des Bildschirms blendet morgens um sieben. Das Ende der Pause soll einen dagegen quer durch den Raum erreichen. Nebenbei trägt die Helligkeit den Unterschied auch dann, wenn die Farbe es nicht tut. Gelb und Orange bleiben unangetastet.
+
+**Der Ausgang aus einer Einheit steht immer unter der letzten Kachel**, fertig oder nicht. Der letzte Satz wird ganz unten bestätigt, und dort steht man dann; eine Meldung neun Kacheln weiter oben sieht man nicht. Bei offener Einheit tritt er zurück (kein Rahmen, kein Gelb), weil bis dahin auf „Satz bestätigen" getippt wird. Eine Einheit wird nicht immer fertig, und dann muss sie sich trotzdem beenden lassen, ohne dass man erst alles abhakt.
 
 **Diagramme** (Phase 3, `chart()` in `app.js`):
 

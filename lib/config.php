@@ -49,6 +49,7 @@ define('LOGS_DIR', DATA_DIR . '/logs');
 define('CONFIG_FILE',    DATA_DIR . '/config.json');
 define('EXERCISES_FILE', DATA_DIR . '/exercises.json');
 define('PLAN_FILE',      DATA_DIR . '/plan.json');
+define('GEWICHT_FILE',   DATA_DIR . '/gewicht.json');
 
 /** Globale Einstellungen aus config.json, mit den Vorgaben aus SPEC.md §4. */
 function config(): array

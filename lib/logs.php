@@ -107,6 +107,43 @@ function logs_letzte_session(): ?array
 }
 
 /**
+ * Die jüngsten $anzahl Sessions für den Rückblick auf der Startseite.
+ *
+ * Bewusst mit Deckel: zehn Einträge sind das, was man beim Zurückblicken
+ * überblickt, und die Antwort trägt die Sätze gleich mit. Ohne Deckel läse
+ * jeder Aufruf der Startseite die gesamte Historie ein.
+ */
+function logs_letzte_sessions(int $anzahl): array
+{
+    $gefunden = [];
+
+    logs_rueckwaerts(function (array $session) use ($anzahl, &$gefunden): bool {
+        $gefunden[] = $session;
+        return count($gefunden) >= $anzahl;
+    });
+
+    return $gefunden;
+}
+
+/**
+ * Wie viele Sessions es insgesamt gibt.
+ *
+ * Für die Auskunft "10 von 23" unter der Liste. Zählen heißt hier alle
+ * Monatsdateien lesen; das ist der eine Fall, in dem das nötig ist, und er
+ * betrifft eine Zahl und keine Schleife über Sätze.
+ */
+function logs_anzahl_sessions(): int
+{
+    $summe = 0;
+
+    foreach (logs_monate() as $monat) {
+        $summe += count(logs_monat($monat));
+    }
+
+    return $summe;
+}
+
+/**
  * Die zuletzt geleisteten Sätze einer Übung, samt Datum.
  *
  * Das ist die Grundlage der Vorbefüllung: gleiche Leistung bedeutet im

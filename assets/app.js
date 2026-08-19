@@ -112,6 +112,27 @@
         return WOCHENTAGE[d.getDay()] + ', ' + d.getDate() + '. ' + MONATE[d.getMonth()];
     }
 
+    /** Der Monat eines Datums als "2026-08". */
+    function monatVon(d) {
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    }
+
+    /** $schritte Monate weiter oder zurück, als "2026-08". */
+    function monatVerschieben(monat, schritte) {
+        const teile = monat.split('-');
+        return monatVon(new Date(Number(teile[0]), Number(teile[1]) - 1 + schritte, 1));
+    }
+
+    /** Beginn einer Einheit: der Zeitpunkt ihres ersten Satzes, "07:05". */
+    function uhrzeit(iso) {
+        const d = new Date(iso);
+        if (isNaN(d)) {
+            return '';
+        }
+        return String(d.getHours()).padStart(2, '0') + ':'
+             + String(d.getMinutes()).padStart(2, '0');
+    }
+
     /** Kurzform für die Kachel, damit die Zeile nicht umbricht: "11.8." */
     function datumKurz(iso) {
         const d = new Date(iso);
@@ -227,6 +248,7 @@
         plan: null,
         uebungen: {},
         studio: null,          // Antwort von api/plan.php
+        tagWahl: null,         // festgehaltener Trainingstag, null = Vorschlag folgen
         ansicht: 'start',
         offen: null,           // aufgeklappte Übung im Studio
         entwurf: {},           // laufende Eingabe je Übung
@@ -235,6 +257,12 @@
         fotos: null,           // Dateinamen aus api/fotos.php
         bildLoeschfrage: null, // Foto, das gerade zum Löschen angefragt ist
         anleitung: null,       // Übung, deren Ausführung im Studio aufgeklappt ist
+        gewicht: null,         // Antwort von api/gewicht.php, Körpergewicht mit Datum
+        einheiten: null,       // Antwort von api/einheiten.php, der Rückblick
+        kalender: null,        // Antwort von api/einheiten.php?monat=…
+        einheitKey: null,      // aufgeschlagene Einheit im Rückblick
+        einheitHer: 'start',   // wohin "Zurück" aus einer Einheit führt
+        uebungHer: 'plan',     // wohin "Zurück" aus dem Übungsverlauf führt
         verlauf: null,         // Antwort von api/history.php
         punktIndex: null,      // gewählte Einheit im Diagramm, null = letzte
         ausPuffer: false,      // Studio-Ansicht kommt aus dem lokalen Stand
@@ -585,6 +613,12 @@
         });
         html += '</div></div>';
 
+        html += zeichneRueckblick();
+
+        if (zustand.einheiten && (zustand.einheiten.sessions || []).length > 0) {
+            html += '<button class="verweis" data-gehe="kalender">Kalender</button>';
+        }
+
         // Der Verwaltungsbereich braucht das Netz und wird zu Hause bedient.
         // Ohne Verbindung führt der Verweis ins Leere, also weg damit.
         if (zustand.plan) {
@@ -598,6 +632,246 @@
         }
 
         return html + '</div>';
+    }
+
+    /**
+     * Der Rückblick auf der Startseite: die letzten Einheiten als Liste.
+     *
+     * Zwei Zeilen je Eintrag statt einer. "Mi, 19. Aug · Oberkörper ·
+     * 9 Übungen · 30 Sätze" bricht auf 390 Punkten ohnehin um, dann lieber
+     * kontrolliert: oben, wann und was, darunter der Umfang.
+     */
+    function zeichneRueckblick() {
+        const r = zustand.einheiten;
+        if (!r || !r.sessions || r.sessions.length === 0) {
+            return '';
+        }
+
+        let html = zeichneFortschritt()
+                 + '<section class="rueckblick">'
+                 + '<span class="mini">Letzte Einheiten</span>';
+
+        r.sessions.forEach(function (e) {
+            html += '<button class="einheit" data-einheit="' + esc(e.key) + '">'
+                 + '<span class="einheit__wann">' + esc(datum(e.date)) + ' · '
+                 + esc(e.label)
+                 + (e.vollstaendig ? ''
+                     : ' · <span class="einheit__offen">unvollständig</span>')
+                 + '</span>'
+                 + '<span class="einheit__umfang">' + e.exercises.length
+                 + (e.exercises.length === 1 ? ' Übung · ' : ' Übungen · ')
+                 + (e.vollstaendig || !e.set_target
+                     ? e.set_count + (e.set_count === 1 ? ' Satz' : ' Sätze')
+                     : e.set_count + ' von ' + e.set_target + ' Sätzen')
+                 + '</span></button>';
+        });
+
+        // Ehrlich sagen, dass die Liste einen Deckel hat. Eine abgeschnittene
+        // Liste ohne Hinweis liest sich wie "mehr war da nicht".
+        if (r.total > r.sessions.length) {
+            html += '<p class="rueckblick__rest">' + r.sessions.length + ' von '
+                 + r.total + ' Einheiten</p>';
+        }
+
+        return html + '</section>';
+    }
+
+    /**
+     * Die Fortschrittskurve über alle Einheiten.
+     *
+     * Ein Index, keine Summe: je Übung das Verhältnis zur eigenen ersten
+     * Einheit, gemittelt über die Übungen des Tages. Deshalb liegen Tage
+     * mit fünf und mit zwanzig Übungen auf derselben Skala und die Kurve
+     * springt nicht zwischen den Tagesarten. Gerechnet wird auf dem
+     * Server, hier wird nur gezeichnet.
+     */
+    function zeichneFortschritt() {
+        const punkte = (zustand.einheiten && zustand.einheiten.fortschritt) || [];
+        if (punkte.length === 0) {
+            return '';
+        }
+
+        const jetzt = punkte[punkte.length - 1];
+
+        // Aus einem Punkt keine Linie machen: sie behauptete einen Verlauf,
+        // den es nicht gibt. Dieselbe Regel wie beim Übungsverlauf.
+        if (punkte.length === 1) {
+            return '<section class="fortschritt-block">'
+                 + '<span class="mini">Fortschritt</span>'
+                 + '<p class="fortschritt__stand"><b>' + esc(zahl(jetzt.wert))
+                 + '</b> Punkte</p>'
+                 + '<p class="hinweis">Der Startwert. Ab der zweiten Einheit '
+                 + 'entsteht hier eine Kurve.</p>'
+                 + '</section>';
+        }
+
+        const erste = punkte[0];
+        const diff = Math.round((jetzt.wert - erste.wert) * 10) / 10;
+
+        return '<section class="fortschritt-block">'
+             + '<span class="mini">Fortschritt</span>'
+             + '<p class="fortschritt__stand"><b>' + esc(zahl(jetzt.wert))
+             + '</b> Punkte<span class="fortschritt__diff">'
+             + (diff >= 0 ? '+' : '−') + esc(zahl(Math.abs(diff)))
+             + ' seit dem Start</span></p>'
+             + chart(punkte, 'wert', 'Fortschritt', punkte.length - 1)
+             + '</section>';
+    }
+
+    /**
+     * Der Kalender: ein Monatsraster mit den Trainingstagen.
+     *
+     * Er beantwortet eine andere Frage als der Rückblick. Die Liste sagt
+     * "was habe ich gemacht", das Raster sagt "wie regelmäßig war ich" —
+     * und dafür ist die Lücke genauso wichtig wie der Eintrag. Deshalb ein
+     * Raster mit allen Tagen und nicht nur den trainierten.
+     *
+     * Woche beginnt am Montag, nicht am Sonntag: Der Trainingsplan denkt in
+     * Mo/Mi/Fr, und mit dem Sonntag vorn läge das Wochenende auseinander.
+     */
+    function zeichneKalender() {
+        const k = zustand.kalender;
+        if (!k) {
+            return '<p class="tag__leer">Wird geladen.</p>';
+        }
+
+        const teile  = k.monat.split('-');
+        const jahr   = Number(teile[0]);
+        const monat  = Number(teile[1]);
+        const erster = new Date(jahr, monat - 1, 1);
+        const tage   = new Date(jahr, monat, 0).getDate();
+
+        // getDay() zählt ab Sonntag, das Raster ab Montag.
+        const versatz = (erster.getDay() + 6) % 7;
+
+        const proTag = {};
+        (k.sessions || []).forEach(function (e) {
+            proTag[e.date.slice(0, 10)] = e;
+        });
+
+        const heute = new Date().toISOString().slice(0, 10);
+
+        /*
+         * Blättern nur dort, wo es etwas zu sehen gibt: vom ältesten Monat
+         * mit Daten bis zum laufenden. Ein Knopf, der ins Leere führt, ist
+         * schlimmer als keiner, weil man ihn im Studio zweimal drückt.
+         */
+        const monate = (k.monate || []).slice().sort();
+        const aeltester = monate.length ? monate[0] : k.monat;
+        const juengster = monatVon(new Date());
+        const zurueck = k.monat > aeltester ? monatVerschieben(k.monat, -1) : '';
+        const vor     = k.monat < juengster ? monatVerschieben(k.monat, 1) : '';
+
+        let html = '<div class="titelzeile">'
+            + '<h1 class="titel">' + esc(MONATE[monat - 1]) + ' ' + jahr + '</h1>'
+            + '<button class="kopfknopf" data-gehe="start">Zurück</button>'
+            + '</div>'
+            + '<div class="kal__steuer">'
+            + '<button class="kopfknopf" data-monat="' + esc(zurueck) + '"'
+            + (zurueck ? '' : ' disabled') + ' aria-label="Monat zurück">←</button>'
+            + '<span class="kal__zahl">' + (k.sessions || []).length
+            + ((k.sessions || []).length === 1 ? ' Einheit' : ' Einheiten') + '</span>'
+            + '<button class="kopfknopf" data-monat="' + esc(vor) + '"'
+            + (vor ? '' : ' disabled') + ' aria-label="Monat vor">→</button>'
+            + '</div>'
+            + '<div class="kal">';
+
+        ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].forEach(function (w) {
+            html += '<span class="kal__kopf">' + w + '</span>';
+        });
+
+        for (let i = 0; i < versatz; i++) {
+            html += '<span class="kal__leer"></span>';
+        }
+
+        for (let t = 1; t <= tage; t++) {
+            const iso = jahr + '-' + String(monat).padStart(2, '0') + '-'
+                      + String(t).padStart(2, '0');
+            const e = proTag[iso];
+            const istHeute = iso === heute ? ' ist-heute' : '';
+
+            if (!e) {
+                html += '<span class="kal__tag' + istHeute + '">' + t + '</span>';
+                continue;
+            }
+
+            // Zwei Buchstaben statt einem: "O" und "U" sind auf Armlänge
+            // schwer zu unterscheiden, "Ob" und "Un" nicht.
+            html += '<button class="kal__tag ist-training' + istHeute
+                 + '" data-einheit="' + esc(e.key) + '">'
+                 + t + '<span class="kal__art">' + esc(e.label.slice(0, 2)) + '</span>'
+                 + '</button>';
+        }
+
+        html += '</div>';
+
+        if ((k.sessions || []).length === 0) {
+            html += '<p class="tag__leer">In diesem Monat kein Training.</p>';
+        }
+
+        return html;
+    }
+
+    /**
+     * Eine abgeschlossene Einheit, in derselben Darstellung wie das Studio.
+     *
+     * Dieselben Kacheln mit Foto und Geräteplakette: Beim Zurückblicken ist
+     * "welches Gerät war das" dieselbe Frage wie im Studio, und eine zweite
+     * Darstellung für denselben Gegenstand wäre eine zweite Bildsprache.
+     *
+     * Unterschiede zum Studio: die Punkte zeigen DIESE Einheit statt heute,
+     * statt "zuletzt ..." stehen die Sätze dieser Einheit, und es gibt keine
+     * Coach-Ansage. Die sagt, was als Nächstes fällig wäre — an einer
+     * abgeschlossenen Einheit ist das eine Aussage über die Zukunft am
+     * falschen Ort.
+     */
+    function zeichneEinheit() {
+        const e = einheitFinden(zustand.einheitKey);
+
+        if (!e) {
+            return '<p class="tag__leer">Diese Einheit ist gerade nicht geladen.</p>'
+                 + '<div class="werkzeuge"><button class="knopf knopf--leise" '
+                 + 'data-gehe="start">Zur Übersicht</button></div>';
+        }
+
+        const saetze = e.exercises.reduce(function (n, u) { return n + u.sets.length; }, 0);
+
+        let html = '<div class="titelzeile">'
+            + '<div><span class="mini">' + esc(datum(e.date)) + ' · '
+            + esc(uhrzeit(e.date)) + '</span>'
+            + '<h1 class="titel">' + esc(e.label) + '</h1></div>'
+            + '<button class="kopfknopf" data-gehe="' + esc(zustand.einheitHer)
+            + '">Zurück</button>'
+            + '</div>'
+            + '<p class="einheit__bilanz">' + e.exercises.length
+            + (e.exercises.length === 1 ? ' Übung · ' : ' Übungen · ')
+            + (e.vollstaendig || !e.set_target
+                ? saetze + (saetze === 1 ? ' Satz' : ' Sätze')
+                : saetze + ' von ' + e.set_target + ' Sätzen')
+            + ' · ' + (e.vollstaendig
+                ? 'vollständig'
+                : '<span class="einheit__offen">unvollständig</span>')
+            + '</p>';
+
+        e.exercises.forEach(function (u) {
+            const werte = u.sets.map(function (satz) {
+                return zahl(satz.weight) + '×' + satz.reps;
+            }).join(' · ');
+
+            html += '<section class="kachel">'
+                + zeichneKachelKopf(u, {
+                    voll: u.sets.length,
+                    rueckweg: true,
+                    knopf: u.geloescht ? 'disabled' : 'data-bearbeite="' + esc(u.id) + '"',
+                    zeilen: '<span class="kachel__werte">' + esc(werte) + '</span>'
+                        + (u.geloescht
+                            ? '<span class="kachel__grund">Übung gibt es nicht mehr</span>'
+                            : ''),
+                })
+                + '</section>';
+        });
+
+        return html;
     }
 
     /* ---------- Ansicht: Studio ---------- */
@@ -648,20 +922,59 @@
             html += '<p class="fehler">' + esc(zustand.meldung) + '</p>';
         }
 
-        if (fertigeUebungen === s.exercises.length) {
-            html += '<section class="geschafft">'
-                + '<p class="geschafft__titel">' + zielSaetze + ' Sätze, alle durch.</p>'
-                + '<p class="leer__text">Beim nächsten Mal ist '
-                + esc(naechsterTagName()) + ' dran.</p>'
-                + '<button class="knopf" data-gehe="start">Einheit beenden</button>'
-                + '</section>';
+        const alleDurch = fertigeUebungen === s.exercises.length;
+
+        // Die Erfolgsmeldung nur, wenn es etwas zu melden gibt.
+        if (alleDurch) {
+            html += zeichneGeschafft(zielSaetze, '');
         }
 
         s.exercises.forEach(function (u) {
             html += zeichneKachel(u);
         });
 
+        /*
+         * Der Abschluss steht unter der letzten Kachel IMMER, fertig oder
+         * nicht. Zwei Gründe.
+         *
+         * Erstens wird der letzte Satz ganz unten in der Liste bestätigt,
+         * und genau dort steht man dann: die Meldung oben bekommt man nicht
+         * zu sehen, ohne über neun Kacheln zurück zu scrollen, um einen
+         * Knopf zu suchen, von dem man nicht weiß, dass es ihn gibt.
+         *
+         * Zweitens wird eine Einheit nicht immer fertig. Früher weg,
+         * Gerät besetzt, keine Kraft mehr — dann muss sich die Einheit
+         * trotzdem beenden lassen, ohne dass man erst alles abhaken muss.
+         *
+         * Unfertig tritt der Knopf zurück: kein Rahmen, kein Gelb. Gelb
+         * heißt in dieser App "hier tippen", und getippt wird bis dahin
+         * auf "Satz bestätigen".
+         */
+        html += alleDurch
+            ? zeichneGeschafft(zielSaetze, ' geschafft--unten')
+            : zeichneBeenden(fertigSaetze, zielSaetze);
+
         return html;
+    }
+
+    function zeichneGeschafft(zielSaetze, zusatz) {
+        return '<section class="geschafft' + zusatz + '">'
+            + '<p class="geschafft__titel">' + zielSaetze + ' Sätze, alle durch.</p>'
+            + '<p class="leer__text">Beim nächsten Mal ist '
+            + esc(naechsterTagName()) + ' dran.</p>'
+            + '<button class="knopf" data-gehe="start" data-abschluss="1">'
+            + 'Einheit beenden</button>'
+            + '</section>';
+    }
+
+    /** Der Ausgang bei noch offener Einheit, mit dem Stand als Auskunft. */
+    function zeichneBeenden(fertigSaetze, zielSaetze) {
+        return '<section class="beenden">'
+            + '<p class="beenden__stand">' + fertigSaetze + ' von ' + zielSaetze
+            + ' Sätzen</p>'
+            + '<button class="knopf knopf--leise" data-gehe="start" data-abschluss="1">'
+            + 'Einheit beenden</button>'
+            + '</section>';
     }
 
     /** Welcher Tag nach dieser Einheit kommt, für die Abschlussmeldung. */
@@ -685,20 +998,6 @@
          * Ohne Foto bleibt die Geräteplakette Teil der Aufklappfläche, dort
          * gäbe es ja nichts zu vergrößern.
          */
-        const bild = u.photo
-            ? '<button class="kachel__foto" data-foto="' + esc(u.photo)
-              + '" data-name="' + esc(u.name) + '" data-nummer="' + esc(u.station || '')
-              + '" aria-label="Foto von ' + esc(u.name) + ' vergrößern">'
-              + '<img class="kachel__bild" src="assets/img/exercises/' + esc(u.photo)
-              + '" alt="" loading="lazy"></button>'
-            : '<span class="kachel__platzhalter">'
-              + (u.station ? esc(u.station) : '?') + '</span>';
-
-        let punkte = '';
-        for (let i = 0; i < ziel; i++) {
-            punkte += '<span class="punkt' + (i < heute.length ? ' ist-voll' : '') + '"></span>';
-        }
-
         // Die Ansage steht laut SPEC.md §5.2 auf der Kachel. Hervorgehoben
         // wird nur die fällige Steigerung, denn genau das bedeutet das
         // Orange in dieser App. Die übrigen Hinweise bleiben zurückhaltend,
@@ -721,29 +1020,97 @@
 
         const fertig = heute.length >= ziel;
 
-        // Zwei getrennte Ziele nebeneinander: das Foto vergrößert, der Text
-        // klappt auf. Verschachtelte Knöpfe wären ungültiges HTML, deshalb
-        // ist der Kopf ein div und nicht selbst ein Knopf.
         let html = '<section class="kachel' + (offen ? ' ist-offen' : '')
             + (fertig ? ' ist-fertig' : '') + '" data-uebung="' + esc(u.id) + '">'
-            + '<div class="kachel__kopf">'
-            + bild
-            + '<button class="kachel__text" data-oeffne="' + esc(u.id) + '">'
-            + '<span class="kachel__name">' + esc(u.name) + '</span>'
-            + '<span class="kachel__ziel">' + ziel + ' Sätze · '
-            + u.rep_min + '–' + u.rep_max + ' Wdh</span>'
-            + (letztesErgebnis(u)
-                ? '<span class="kachel__zuletzt">' + esc(letztesErgebnis(u)) + '</span>'
-                : '')
-            + ansage
-            + '<span class="punkte">' + punkte + '</span>'
-            + '</button></div>';
+            + zeichneKachelKopf(u, {
+                voll: heute.length,
+                knopf: 'data-oeffne="' + esc(u.id) + '"',
+                zeilen: (letztesErgebnis(u)
+                    ? '<span class="kachel__zuletzt">' + esc(letztesErgebnis(u)) + '</span>'
+                    : '') + ansage,
+            });
 
         if (offen) {
             html += zeichneAnleitung(u) + zeichneSaetze(u);
         }
 
         return html + '</section>';
+    }
+
+    /**
+     * Der Kopf einer Übungskachel: Foto, Name, Vorgabe, Punktreihe.
+     *
+     * Von zwei Ansichten benutzt, dem Studio und dem Rückblick auf eine
+     * abgeschlossene Einheit. Beide zeigen dieselbe Sache, und im Studio wie
+     * beim Zurückblicken hängt "welches Gerät war das" am Foto und an der
+     * Geräteplakette. Eine zweite Darstellung dafür wäre eine zweite
+     * Bildsprache für denselben Gegenstand.
+     *
+     * Herausgezogen statt zeichneKachel() mit einem Modus-Schalter zu
+     * durchziehen: die Funktion hat schon genug Verzweigungen, und ein
+     * zweiter Modus quer durch alle hindurch wäre nachher nicht mehr
+     * auseinanderzuhalten.
+     *
+     * $opts.voll     wie viele Punkte gefüllt sind
+     * $opts.knopf    data-Attribut der Textfläche (wohin ein Tipp führt)
+     * $opts.zeilen   zusätzliche Zeilen unter der Vorgabe, fertiges HTML
+     * $opts.rueckweg true im Rückblick: dann zählt die Zeile, was gemacht
+     *                wurde, nicht was vorgesehen war
+     */
+    function zeichneKachelKopf(u, opts) {
+        const ziel = u.target_sets;
+
+        /*
+         * Im Studio steht die Zielsatzzahl da, denn das ist die Vorgabe:
+         * was man noch schuldet. Im Rückblick wäre dieselbe Zahl eine
+         * Behauptung über etwas, das nicht stattgefunden hat — dort zählt,
+         * was gemacht wurde, und die Vorgabe steht als Bezug dahinter.
+         * Erreicht oder übertroffen braucht es den Bezug nicht mehr,
+         * "4/4" wäre nur Rauschen.
+         */
+        const knapp = opts.rueckweg && opts.voll < ziel;
+        const anzahl = opts.rueckweg
+            ? '<b class="kachel__zahl">' + opts.voll + '</b>'
+              + (knapp ? '<span class="kachel__von">/' + ziel + '</span>' : '')
+            : '<b class="kachel__zahl">' + ziel + '</b>';
+
+        /*
+         * Das Foto ist ein eigenes Ziel und liegt NICHT im Aufklapp-Knopf.
+         * Ein Tipp darauf zeigt das Gerät groß; im Studio sucht man damit
+         * die Maschine, und dafür ist ein 76-Pixel-Bild zu klein.
+         *
+         * Ohne Foto bleibt die Geräteplakette Teil der Aufklappfläche, dort
+         * gäbe es ja nichts zu vergrößern.
+         */
+        const bild = u.photo
+            ? '<button class="kachel__foto" data-foto="' + esc(u.photo)
+              + '" data-name="' + esc(u.name) + '" data-nummer="' + esc(u.station || '')
+              + '" aria-label="Foto von ' + esc(u.name) + ' vergrößern">'
+              + '<img class="kachel__bild" src="assets/img/exercises/' + esc(u.photo)
+              + '" alt="" loading="lazy"></button>'
+            : '<span class="kachel__platzhalter">'
+              + (u.station ? esc(u.station) : '?') + '</span>';
+
+        // Höchstens so viele Punkte wie Ziel, mindestens so viele wie
+        // Sätze: ein zusätzlich gemachter Satz soll nicht unsichtbar sein.
+        let punkte = '';
+        for (let i = 0; i < Math.max(ziel, opts.voll); i++) {
+            punkte += '<span class="punkt' + (i < opts.voll ? ' ist-voll' : '') + '"></span>';
+        }
+
+        // Zwei getrennte Ziele nebeneinander: das Foto vergrößert, der Text
+        // führt weiter. Verschachtelte Knöpfe wären ungültiges HTML, deshalb
+        // ist der Kopf ein div und nicht selbst ein Knopf.
+        return '<div class="kachel__kopf">'
+            + bild
+            + '<button class="kachel__text" ' + opts.knopf + '>'
+            + '<span class="kachel__name">' + esc(u.name) + '</span>'
+            + '<span class="kachel__ziel">'
+            + anzahl + ' Sätze · '
+            + '<b class="kachel__zahl">' + u.rep_min + '–' + u.rep_max + '</b> Wdh</span>'
+            + opts.zeilen
+            + '<span class="punkte">' + punkte + '</span>'
+            + '</button></div>';
     }
 
     /**
@@ -853,11 +1220,11 @@
         html += hilfeHinweis + partnerHinweis
             + '<div class="satz satz--dran">'
             + '<span class="satz__mini">Satz ' + nummer + '</span>'
-            + regler(u.id, 'weight', zahl(e.weight) + ' kg',
+            + regler(u.id, 'weight', zahl(e.weight), 'kg',
                 u.assisted
                     ? '± ' + zahl(u.weight_step) + ' kg Hilfe · weniger ist schwerer'
                     : '± ' + zahl(u.weight_step) + ' kg')
-            + regler(u.id, 'reps', e.reps + ' Wdh', '')
+            + regler(u.id, 'reps', e.reps, 'Wdh', '')
             + '<button class="knopf satz__ok" data-bestaetige="' + esc(u.id) + '">'
             + 'Satz bestätigen</button>'
             + '</div>';
@@ -867,14 +1234,20 @@
 
     /*
      * $schritt wird nur beim Gewicht beschriftet, weil die Schrittweite dort
-     * je Übung verschieden ist (1,25 / 2,5 / 5 kg). Bei Wiederholungen ist
+     * je Übung verschieden ist (0,25 bis 5 kg). Bei Wiederholungen ist
      * eine 1 selbstverständlich und wäre eine Zahl ohne Aussage.
+     *
+     * Zahl und Einheit stehen getrennt, damit die Zahl groß und die Einheit
+     * klein gesetzt werden kann: Abgelesen wird die 45, das "kg" weiß man.
+     * Das Leerzeichen zwischen beiden ist echter Text und kein CSS-Abstand,
+     * damit der Wert als "45 kg" auslesbar bleibt.
      */
-    function regler(id, feld, anzeige, schritt) {
+    function regler(id, feld, wert, einheit, schritt) {
         return '<div class="regler">'
             + '<button class="regler__knopf" data-aendere="' + esc(id) + ':' + feld
             + ':-1" aria-label="weniger">−</button>'
-            + '<span class="regler__wert">' + esc(anzeige) + '</span>'
+            + '<span class="regler__wert"><span class="regler__zahl">' + esc(wert)
+            + '</span> <span class="regler__einheit">' + esc(einheit) + '</span></span>'
             + '<button class="regler__knopf" data-aendere="' + esc(id) + ':' + feld
             + ':1" aria-label="mehr">+</button>'
             + (schritt ? '<span class="regler__schritt">' + esc(schritt) + '</span>' : '')
@@ -999,7 +1372,8 @@
 
         let html = '<div class="titelzeile">'
             + '<h1 class="titel">' + esc(neu ? 'Neue Übung' : u.name) + '</h1>'
-            + '<button class="kopfknopf" data-gehe="plan">Zurück</button>'
+            + '<button class="kopfknopf" data-gehe="' + esc(zustand.uebungHer)
+            + '">Zurück</button>'
             + '</div>';
 
         // Der Verlauf steht in einem eigenen Behälter, damit er sich
@@ -1125,6 +1499,12 @@
             + '<button class="kopfknopf" data-gehe="start">Fertig</button>'
             + '</div>';
 
+        // Ohne das scheiterte eine abgelehnte Eingabe stumm: das Formular
+        // zeichnete sich leer neu und nichts sagte, warum.
+        if (zustand.meldung) {
+            html += '<p class="fehler" role="alert">' + esc(zustand.meldung) + '</p>';
+        }
+
         // Kein Plan, keine Tage: dann gibt es hier nichts zu bedienen, und
         // das muss dastehen. Ein leerer Bildschirm mit Überschriften lässt
         // einen ratlos zurück, weil man nach einem Knopf sucht, den es
@@ -1164,7 +1544,7 @@
                  + 'Übung zufügen</button></section>';
         });
 
-        return html + zeichneSchwerpunkte();
+        return html + zeichneGewicht() + zeichneSchwerpunkte();
     }
 
     function zeichneZeile(u) {
@@ -1247,7 +1627,7 @@
 
             + '<label class="mini" for="e-step">Schrittweite</label>'
             + '<select class="feld feld--text" id="e-step" name="weight_step">';
-        [1.25, 2.5, 5].forEach(function (s) {
+        [0.25, 0.5, 1, 1.25, 2.5, 5].forEach(function (s) {
             const gewaehlt = parseFloat(wert('weight_step', 5)) === s;
             html += '<option value="' + s + '"' + (gewaehlt ? ' selected' : '') + '>'
                  + zahl(s) + ' kg</option>';
@@ -1362,6 +1742,56 @@
         alt.replaceWith(huelle.querySelector('#bildwahl'));
     }
 
+    /**
+     * Körpergewicht eintragen, unter "Mein Plan".
+     *
+     * Mit Datum und als Liste, nicht als eine aktuelle Zahl: Der
+     * Fortschritts-Index rechnet an der Unterstützungsmaschine
+     * "Körpergewicht minus Hilfe", und mit nur einem Wert würde jeder Gang
+     * auf die Waage rückwirkend alle alten Einheiten umrechnen. Details in
+     * lib/gewicht.php.
+     *
+     * Freiwillig: ohne Eintrag bleiben Klimmzug und Dips aus dem Index,
+     * alles andere rechnet weiter.
+     */
+    function zeichneGewicht() {
+        const liste = (zustand.gewicht && zustand.gewicht.gewicht) || [];
+        const heute = new Date().toISOString().slice(0, 10);
+
+        let html = '<section class="tag">'
+            + '<div class="tag__kopf"><span class="tag__name">Körpergewicht</span></div>'
+            + '<p class="tag__leer">Nur nötig für Klimmzug und Dips: dort ist die '
+            + 'bewegte Last dein Gewicht minus der Hilfe. Jeder Eintrag gilt ab '
+            + 'seinem Datum.</p>'
+            + '<form class="gewicht" id="gewicht-form">'
+            + '<input class="feld" type="date" name="date" value="' + esc(heute) + '" '
+            + 'aria-label="Datum">'
+            /*
+             * type="text" und nicht type="number": Auf der deutschen
+             * Tastatur ist die Dezimaltaste ein Komma, und ein
+             * Zahlenfeld weist das als ungültig zurück — das Feld bliebe
+             * beim Absenden einfach leer. Die App schreibt Zahlen
+             * ohnehin überall mit Komma, also nimmt sie hier auch eins
+             * entgegen. Die Prüfung macht der Server.
+             */
+            + '<input class="feld" type="text" name="kg" inputmode="decimal" '
+            + 'placeholder="kg" aria-label="Körpergewicht in Kilogramm">'
+            + '<button class="knopf knopf--leise" type="submit">Eintragen</button>'
+            + '</form>';
+
+        // Jüngste zuerst: der letzte Gang auf die Waage ist der, den man
+        // sucht, wenn man hier hereinschaut.
+        liste.slice().reverse().forEach(function (e) {
+            html += '<div class="zeile zeile--schmal">'
+                + '<span class="zeile__name">' + esc(datum(e.date)) + '</span>'
+                + '<span class="zeile__daten">' + esc(zahl(e.kg)) + ' kg</span>'
+                + '<button class="satz__korr" data-gewichtweg="' + esc(e.date)
+                + '">löschen</button></div>';
+        });
+
+        return html + '</section>';
+    }
+
     function zeichneSchwerpunkte() {
         const p = zustand.plan.muscle_priorities || {};
 
@@ -1399,6 +1829,10 @@
             app.innerHTML = zeichnePlan();
         } else if (zustand.ansicht === 'uebung') {
             app.innerHTML = zeichneUebung();
+        } else if (zustand.ansicht === 'kalender') {
+            app.innerHTML = zeichneKalender();
+        } else if (zustand.ansicht === 'einheit') {
+            app.innerHTML = zeichneEinheit();
         } else if (zustand.ansicht === 'studio') {
             app.innerHTML = zeichneStudio();
         } else {
@@ -1414,6 +1848,58 @@
         } catch (err) {
             zustand.meldung = err.message;
         }
+    }
+
+    /** Holt einen Monat für den Kalender. */
+    async function kalenderLaden(monat) {
+        try {
+            zustand.kalender = await api('api/einheiten.php?monat='
+                + encodeURIComponent(monat));
+        } catch (err) {
+            zustand.meldung = err.message;
+        }
+    }
+
+    /**
+     * Eine Einheit anhand ihres Schlüssels finden.
+     *
+     * Sie kann aus dem Rückblick der Startseite kommen oder aus einem
+     * Kalendermonat. Beide Wege führen in dieselbe Detailansicht, also
+     * sucht sie in beiden Beständen statt zu wissen, woher man kam.
+     */
+    function einheitFinden(key) {
+        const quellen = [
+            (zustand.einheiten && zustand.einheiten.sessions) || [],
+            (zustand.kalender && zustand.kalender.sessions) || [],
+        ];
+
+        for (const liste of quellen) {
+            const treffer = liste.find(function (x) { return x.key === key; });
+            if (treffer) {
+                return treffer;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Holt den Rückblick nach.
+     *
+     * Im Hintergrund und ohne await: die Startseite soll sofort stehen, der
+     * Rückblick ist eine Zugabe. Ohne Netz fehlt er ganz — zurückgeblickt
+     * wird zu Hause, und ein Puffer dafür wäre Aufwand für einen Fall, den
+     * es nicht gibt.
+     */
+    function einheitenHolen() {
+        api('api/einheiten.php')
+            .then(function (antwort) {
+                zustand.einheiten = antwort;
+                if (zustand.ansicht === 'start') {
+                    zeichnen();
+                }
+            })
+            .catch(function () { zustand.einheiten = null; });
     }
 
     /**
@@ -1448,9 +1934,11 @@
     /* ---------- Ereignisse ---------- */
 
     app.addEventListener('click', async function (e) {
-        const ziel = e.target.closest('[data-gehe], [data-tag], [data-oeffne], [data-foto], [data-bild], [data-bildweg], '
+        const ziel = e.target.closest('[data-gehe], [data-tag], [data-monat], [data-einheit], [data-oeffne], '
+            + '[data-foto], [data-bild], [data-bildweg], '
             + '[data-bestaetige], [data-korrigiere], [data-extra], [data-bearbeite], '
             + '[data-neu], [data-abbrechen], [data-frage], [data-loesche], [data-prio], '
+            + '[data-gewichtweg], '
             + '[data-anleitung]');
         if (!ziel) {
             return;
@@ -1467,19 +1955,69 @@
             if (d.gehe !== 'studio') {
                 pauseBeenden();
             }
+            /*
+             * "Einheit beenden" gibt den Tag wieder frei. Ohne das bot die
+             * Startseite weiter die gerade abgeschlossene Einheit an, und
+             * "Weiter trainieren" führte zurück in eine Liste, in der alles
+             * abgehakt war und nur wieder "Einheit beenden" stand.
+             */
+            if (d.abschluss) {
+                zustand.tagWahl = null;
+            }
+
             if (d.gehe === 'start' || d.gehe === 'studio') {
                 try {
-                    await studioLaden(zustand.studio && zustand.studio.day.key);
+                    await studioLaden(zustand.tagWahl);
+
+                    /*
+                     * Wer das Studio betritt, hält den Tag fest. Der Server
+                     * schlägt ab dem ersten bestätigten Satz schon den
+                     * nächsten Tag vor, weil die laufende Einheit dann die
+                     * letzte in den Logs ist. Ohne das Festhalten spränge
+                     * die Ansicht mitten in der Einheit weg.
+                     */
+                    if (d.gehe === 'studio' && zustand.studio) {
+                        zustand.tagWahl = zustand.studio.day.key;
+                    }
                 } catch (err) {
                     zustand.meldung = err.message;
                 }
             }
+
+            // Nach einer Einheit steht ein Eintrag mehr im Rückblick.
+            if (d.gehe === 'start') {
+                einheitenHolen();
+            }
+
+            // Beim ersten Betreten den laufenden Monat. Kommt man aus einer
+            // Einheit zurück, bleibt der Monat stehen, den man angesehen hat.
+            if (d.gehe === 'kalender' && !zustand.kalender) {
+                await kalenderLaden(monatVon(new Date()));
+            }
+
+            return zeichnen();
+        }
+
+        if (d.monat) {
+            await kalenderLaden(d.monat);
+            window.scrollTo(0, 0);
+            return zeichnen();
+        }
+
+        if (d.einheit) {
+            // Von wo aus aufgeschlagen? Dorthin führt "Zurück" wieder.
+            zustand.einheitHer = zustand.ansicht === 'kalender' ? 'kalender' : 'start';
+            zustand.einheitKey = d.einheit;
+            zustand.ansicht = 'einheit';
+            zustand.meldung = '';
+            window.scrollTo(0, 0);
             return zeichnen();
         }
 
         if (d.tag) {
             try {
                 await studioLaden(d.tag);
+                zustand.tagWahl = d.tag;   // erst nach dem Laden, sonst hielte ein Fehlschlag fest
             } catch (err) {
                 zustand.meldung = err.message;
             }
@@ -1666,6 +2204,7 @@
         /* --- Mein Plan --- */
 
         if (d.bearbeite) {
+            zustand.uebungHer = zustand.ansicht === 'einheit' ? 'einheit' : 'plan';
             zustand.ansicht = 'uebung';
             zustand.uebungId = d.bearbeite;
             zustand.loeschfrage = null;
@@ -1711,6 +2250,17 @@
                 zustand.ansicht = 'plan';
                 zustand.uebungId = null;
                 zustand.loeschfrage = null;
+            } catch (err) {
+                zustand.meldung = err.message;
+            }
+            return zeichnen();
+        }
+
+        if (d.gewichtweg) {
+            try {
+                zustand.gewicht = await api('api/gewicht.php',
+                    { daten: { date: d.gewichtweg, weg: true } });
+                einheitenHolen();   // die Kurve rechnet sich damit anders
             } catch (err) {
                 zustand.meldung = err.message;
             }
@@ -1806,6 +2356,24 @@
     });
 
     app.addEventListener('submit', async function (e) {
+        const gform = e.target.closest('#gewicht-form');
+        if (gform) {
+            e.preventDefault();
+            const daten = {};
+            new FormData(gform).forEach(function (wert, schluessel) {
+                daten[schluessel] = wert;
+            });
+
+            try {
+                zustand.gewicht = await api('api/gewicht.php', { daten: daten });
+                zustand.meldung = '';
+                einheitenHolen();   // die Kurve rechnet sich damit anders
+            } catch (err) {
+                zustand.meldung = err.message;
+            }
+            return zeichnen();
+        }
+
         const form = e.target.closest('.editor');
         if (!form) {
             return;
@@ -1934,7 +2502,10 @@
      */
     app.addEventListener('pointerdown', function (e) {
         const svg = e.target.closest('.chart');
-        if (!svg || !zustand.verlauf) {
+        // Nur in der Verlaufsansicht. Die Fortschrittskurve auf der
+        // Startseite trägt dieselbe Klasse, hätte hier aber ganz andere
+        // Punkte — ohne diese Bedingung liefe der Tipp in fremde Daten.
+        if (!svg || zustand.ansicht !== 'uebung' || !zustand.verlauf) {
             return;
         }
 
@@ -1977,6 +2548,10 @@
 
             // Die Fotoliste im Hintergrund holen, sie wird erst im
             // Verwaltungsbereich gebraucht und soll den Start nicht bremsen.
+            api('api/gewicht.php')
+                .then(function (a) { zustand.gewicht = a; })
+                .catch(function () { zustand.gewicht = null; });
+
             api('api/fotos.php')
                 .then(function (a) { zustand.fotos = a.photos || []; })
                 .catch(function () { zustand.fotos = []; });
@@ -1987,6 +2562,7 @@
                 } catch (err) {
                     zustand.meldung = err.message;
                 }
+                einheitenHolen();
             }
 
             zeichnen();

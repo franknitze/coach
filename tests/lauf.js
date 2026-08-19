@@ -12,6 +12,7 @@
 const laeufe = {
     fotos:      { port: null, modul: './fotos' },
     regel:      { port: null, modul: './regel' },
+    fortschritt:{ port: null, modul: './fortschritt' },
     update:     { port: null, modul: './update' },
     verwaltung: { port: 8791, modul: './verwaltung' },
     studio:     { port: 8792, modul: './studio' },
@@ -23,6 +24,7 @@ const laeufe = {
     bilder:     { port: 8789, modul: './bilder' },
     pwa:        { port: 8795, modul: './pwa' },
     offline:    { port: 8796, modul: './offline' },
+    einheiten:  { port: 8797, modul: './einheiten' },
 };
 
 (async function () {

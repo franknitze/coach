@@ -98,6 +98,7 @@ rsync -az --delete $TROCKEN -e "$SSH" \
     --exclude 'tests/' --exclude 'images/' --exclude 'fotos/' --exclude '.git/' \
     --exclude '.DS_Store' --exclude 'bin/icons.js' --exclude 'bin/deploy.sh' \
     --exclude 'bin/ziel.conf*' \
+    --exclude '.claude/' --exclude '.vscode/' --exclude '.idea/' \
     --exclude '*.md' --exclude '.gitignore' \
     --itemize-changes \
     ./ "$ZIEL" | sed 's/^/  /'

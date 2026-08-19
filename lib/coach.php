@@ -64,6 +64,7 @@ function coach_empfehlung(array $uebung): array
     $repMin = (int) ($uebung['rep_min'] ?? 8);
     $repMax = (int) ($uebung['rep_max'] ?? 12);
     $schritt = (float) ($uebung['weight_step'] ?? config()['default_weight_step']);
+    $zielSaetze = (int) ($uebung['target_sets'] ?? 0);
 
     /*
      * An einer Unterstützungsmaschine läuft alles andersherum: das
@@ -101,7 +102,7 @@ function coach_empfehlung(array $uebung): array
     // Verlangt werden volle COACH_EINHEITEN. Eine einzelne saubere Einheit
     // reicht nicht, sonst schiebt ein guter Tag das Gewicht hoch, das am
     // nächsten Termin wieder einbricht.
-    if (coach_sauber($einheiten, $aktGewicht, $repMax)) {
+    if (coach_sauber($einheiten, $aktGewicht, $repMax, $zielSaetze)) {
         $ziel = $unterstuetzt
             ? max(0.0, $aktGewicht - $schritt)
             : $aktGewicht + $schritt;
@@ -175,7 +176,7 @@ function coach_empfehlung(array $uebung): array
     // letzte Einheit an der Obergrenze war. "Eine Wiederholung mehr" wäre
     // falsch, sobald rep_max schon erreicht ist: dann fehlt keine
     // Wiederholung mehr, sondern eine zweite saubere Einheit.
-    $letzteSauber = coach_einheit_sauber($letzte, $aktGewicht, $repMax);
+    $letzteSauber = coach_einheit_sauber($letzte, $aktGewicht, $repMax, $zielSaetze);
 
     // Ohne Hilfe gibt es nichts mehr zu halten, dort steht nur noch das
     // eigene Gewicht auf der Stange. "0 kg halten" wäre eine leere Ansage.
@@ -225,14 +226,14 @@ function coach_empfehlung(array $uebung): array
  * gewollt: wer zwischendurch leichter geworden ist, hat die Stufe nicht
  * sauber abgeschlossen.
  */
-function coach_sauber(array $einheiten, float $aktGewicht, int $repMax): bool
+function coach_sauber(array $einheiten, float $aktGewicht, int $repMax, int $zielSaetze): bool
 {
     if (count($einheiten) < COACH_EINHEITEN) {
         return false;
     }
 
     foreach ($einheiten as $einheit) {
-        if (!coach_einheit_sauber($einheit, $aktGewicht, $repMax)) {
+        if (!coach_einheit_sauber($einheit, $aktGewicht, $repMax, $zielSaetze)) {
             return false;
         }
     }
@@ -240,10 +241,26 @@ function coach_sauber(array $einheiten, float $aktGewicht, int $repMax): bool
     return true;
 }
 
-/** Eine einzelne Einheit: alle Sätze beim Gewicht und bis rep_max durch. */
-function coach_einheit_sauber(array $einheit, float $aktGewicht, int $repMax): bool
+/**
+ * Eine einzelne Einheit: die Zielsatzzahl erreicht, alle Sätze beim Gewicht
+ * und bis rep_max durch.
+ *
+ * Die Zielsatzzahl gehört dazu, weil eine Einheit auch abgebrochen werden
+ * kann: früher weg vom Training, Gerät besetzt, keine Kraft mehr. Zwei
+ * Sätze auf der Obergrenze sind kein Beleg dafür, dass vier gehen. Ohne
+ * diese Bedingung würde ausgerechnet ein Abbruch das Gewicht hochschieben.
+ *
+ * Mehr Sätze als verlangt sind unschädlich, geprüft wird die Untergrenze.
+ * Fehlt die Angabe (0), greift die Bedingung nicht: dann lässt sich nicht
+ * beurteilen, was vollständig gewesen wäre.
+ */
+function coach_einheit_sauber(array $einheit, float $aktGewicht, int $repMax, int $zielSaetze): bool
 {
     if (empty($einheit['sets'])) {
+        return false;
+    }
+
+    if (count($einheit['sets']) < $zielSaetze) {
         return false;
     }
 

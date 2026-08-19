@@ -47,6 +47,18 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
     ok(fortschritt.includes('0 von 3') && /0\/\d+ Sätze/.test(fortschritt),
        'oben steht, wo man in der Einheit ist: "' + fortschritt.replace(/\s+/g, ' ') + '"');
 
+    /*
+     * Der Ausgang steht auch in der offenen Einheit unter der letzten
+     * Kachel. Eine Einheit wird nicht immer fertig, und dann muss man sie
+     * trotzdem beenden können, ohne erst alles abzuhaken.
+     */
+    ok(await page.locator('.beenden').count() === 1,
+       'unter der letzten Kachel steht der Ausgang, auch bei offener Einheit');
+    ok(await page.locator('.beenden__stand').innerText() === '0 von 11 Sätzen',
+       'mit dem Stand als Auskunft: "' + await page.locator('.beenden__stand').innerText() + '"');
+    ok(await page.locator('.beenden .knopf--leise').count() === 1,
+       'und zurückhaltend gesetzt, das Gelb gehört "Satz bestätigen"');
+
     const bank = page.locator('.kachel', { hasText: 'Bankdrücken' });
     ok((await bank.innerText()).includes('zuletzt 80 kg × 10'), 'Kachel zeigt das letzte Ergebnis');
     ok(await bank.locator('.punkt').count() === 4, '4 Punkte für 4 Zielsätze');
@@ -186,4 +198,45 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
     await page.waitForSelector('.kachel.ist-offen .satz--dran');
     ok(await page.locator('.kachel .ausfuehrung').count() === 0,
        'die nächste Übung beginnt wieder zugeklappt');
+    /* ---------- Nach dem Abschluss geht die Rotation weiter ----------
+     *
+     * Der Fall aus dem Studio: Einheit fertig, "Einheit beenden" gedrückt,
+     * und die Startseite bot weiter denselben, längst erledigten Tag an.
+     * "Weiter trainieren" führte zurück in die fertige Einheit, wo nur
+     * wieder "Einheit beenden" stand. Ein Kreis ohne Ausgang.
+     */
+
+    const heute = new Date().toISOString().slice(0, 10);
+    t.logs({
+        [heute.slice(0, 7)]: [
+            einheit(heute, 'oberkoerper', 0, {
+                bankdruecken: saetze(80, 10, 10, 10, 10),
+                latzug: saetze(60, 12, 12, 12, 12),
+                schulterdruecken: saetze(30, 10, 10, 10),
+            }),
+        ],
+    });
+
+    await page.reload();
+    await page.waitForSelector('.heute__tag');
+    ok(await page.locator('.heute__tag').innerText() === 'Unterkörper',
+       'nach der heutigen Einheit schlägt der Server den nächsten Tag vor');
+
+    // Von Hand zurück auf den erledigten Tag, so wie man es nach dem
+    // letzten Satz vor sich hat.
+    await page.locator('.tagknopf', { hasText: 'Oberkörper' }).click();
+    await page.waitForFunction(() => document.querySelector('.heute__tag').innerText === 'Oberkörper');
+    await page.click('[data-gehe="studio"]');
+    await page.waitForSelector('.geschafft');
+    ok(await page.locator('.geschafft').count() === 2,
+       'die fertige Einheit bietet den Abschluss oben und unten an');
+    ok(await page.locator('.beenden').count() === 0,
+       'der leise Ausgang weicht dabei der Erfolgsmeldung');
+
+    await page.locator('.geschafft [data-gehe="start"]').first().click();
+    await page.waitForSelector('.heute__tag');
+    ok(await page.locator('.heute__tag').innerText() === 'Unterkörper',
+       '"Einheit beenden" gibt den festgehaltenen Tag frei, der nächste ist dran');
+    ok((await page.locator('.fussleiste .knopf').innerText()) === 'Los geht\'s',
+       'und der Knopf lädt zur neuen Einheit statt zum Weitermachen');
 });

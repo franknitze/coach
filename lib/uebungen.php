@@ -12,8 +12,18 @@ require_once __DIR__ . '/config.php';
  * Progressionsregel aus §7 stillschweigend unbrauchbar machen.
  */
 
-/** Schrittweiten, die es real an Geräten und Hanteln gibt (SPEC.md §4). */
-const WEIGHT_STEPS = [1.25, 2.5, 5.0];
+/**
+ * Schrittweiten, die es real an Geräten und Hanteln gibt.
+ *
+ * SPEC.md §4 nennt nur 1,25, 2,5 und 5. Die drei kleinen Werte darunter
+ * sind auf Franks Wunsch dazugekommen: an Kurzhanteln und an Maschinen mit
+ * Zusatzscheibe geht es feiner, und wo eine ganze Stufe zu viel ist,
+ * würde die Progressionsregel sonst dauerhaft stehenbleiben.
+ *
+ * Alle sechs Werte sind im Binärformat exakt darstellbar, deshalb hält der
+ * strikte Vergleich in uebung_pruefen() stand.
+ */
+const WEIGHT_STEPS = [0.25, 0.5, 1.0, 1.25, 2.5, 5.0];
 
 /** Aus einem Namen eine ID machen: "Bankdrücken" wird zu "bankdruecken". */
 function slug(string $name): string
@@ -70,7 +80,9 @@ function uebung_pruefen(array $roh, array $plan): array
 
     $step = (float) ($roh['weight_step'] ?? config()['default_weight_step']);
     if (!in_array($step, WEIGHT_STEPS, true)) {
-        throw new InvalidArgumentException('Erlaubte Schrittweiten sind 1,25, 2,5 und 5 kg.');
+        throw new InvalidArgumentException(
+            'Erlaubte Schrittweiten sind 0,25, 0,5, 1, 1,25, 2,5 und 5 kg.'
+        );
     }
 
     return [
