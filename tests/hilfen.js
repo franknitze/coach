@@ -20,13 +20,19 @@ const WURZEL = path.resolve(__dirname, '..');
 const PASSWORT = 'test-nur-fuer-den-testlauf';
 
 /**
- * Playwright liegt je nach Rechner im npx-Cache oder in node_modules.
- * Deshalb suchen statt einen Pfad festzuschreiben.
+ * Playwright liegt je nach Rechner im npx-Cache oder in node_modules, und
+ * dort oft in mehreren Versionen nebeneinander.
+ *
+ * Neueste zuerst, und das ist keine Kosmetik: Jede Playwright-Version
+ * erwartet eine bestimmte Browser-Fassung im Cache. Wer einfach die erste
+ * nimmt, die er findet, erwischt womöglich eine, für die nie ein Browser
+ * heruntergeladen wurde — und bekommt "Executable doesn't exist" für einen
+ * Browser, der sehr wohl da ist.
  */
-function playwright() {
-    const kandidaten = [];
+function playwrightModule() {
+    const pfade = [];
     try {
-        kandidaten.push(require.resolve('playwright'));
+        pfade.push(path.dirname(require.resolve('playwright/package.json')));
     } catch (e) { /* nicht lokal installiert, weitersuchen */ }
 
     const cache = path.join(os.homedir(), '.npm', '_npx');
@@ -34,21 +40,64 @@ function playwright() {
         for (const ordner of fs.readdirSync(cache)) {
             const p = path.join(cache, ordner, 'node_modules', 'playwright');
             if (fs.existsSync(p)) {
-                kandidaten.push(p);
+                pfade.push(p);
             }
         }
     }
 
-    for (const p of kandidaten) {
+    const gefunden = [];
+    for (const p of pfade) {
         try {
-            return require(p);
+            gefunden.push({
+                pfad: p,
+                version: require(path.join(p, 'package.json')).version,
+                pw: require(p),
+            });
         } catch (e) { /* nächster Kandidat */ }
     }
 
-    throw new Error(
-        'Playwright nicht gefunden. Einmal "npx playwright@1.62 --version" ausführen, '
-        + 'das legt es im npx-Cache ab.'
-    );
+    if (gefunden.length === 0) {
+        throw new Error(
+            'Playwright nicht gefunden. Einmal "npx playwright@1.62 --version" ausführen, '
+            + 'das legt es im npx-Cache ab.'
+        );
+    }
+
+    gefunden.sort(function (a, b) {
+        return b.version.localeCompare(a.version, undefined, { numeric: true });
+    });
+    return gefunden;
+}
+
+/**
+ * Startet den Browser für den Testlauf.
+ *
+ * Voreinstellung ist das installierte Chrome, damit kein Browser
+ * nachgeladen werden muss. COACH_BROWSER=webkit läuft stattdessen gegen
+ * WebKit — dieselbe Engine wie Safari, und damit die einzige Möglichkeit
+ * auf diesem Rechner, Darstellungsunterschiede zu sehen, die die App auf
+ * dem iPhone betreffen. Chrome und WebKit gehen bei Formularelementen am
+ * weitesten auseinander, und genau dort ist mehrfach etwas durchgerutscht.
+ */
+async function browserStarten() {
+    const module = playwrightModule();
+
+    if ((process.env.COACH_BROWSER || 'chrome') !== 'webkit') {
+        return module[0].pw.chromium.launch({ channel: 'chrome' });
+    }
+
+    let letzter = null;
+    for (const k of module) {
+        try {
+            return await k.pw.webkit.launch();
+        } catch (e) {
+            letzter = e;
+        }
+    }
+
+    throw new Error('WebKit lässt sich nicht starten. Einmal "npx playwright@'
+        + module[0].version + ' install webkit" ausführen. Zuletzt: '
+        + String(letzter && letzter.message).split('\n')[0]);
 }
 
 /** Legt data/ für den Testlauf an: Passwort, leerer Plan, drei Übungen. */
@@ -133,6 +182,22 @@ async function testlauf(name, port, lauf) {
     const ordner = fs.mkdtempSync(path.join(os.tmpdir(), 'coach-test-'));
     datenAnlegen(ordner);
 
+    /*
+     * Die Gerätefotos sind der eine Ort, den COACH_DATA nicht umleitet:
+     * api/foto-upload.php schreibt auf einen festen Pfad neben dem Code,
+     * weil der Browser die Bilder von dort per URL lädt. Ein Testlauf legt
+     * also echte Dateien im Projekt ab. Der Bilder-Lauf räumt sie selbst
+     * wieder weg — aber nur, wenn er bis zum Ende kommt. Bricht er vorher
+     * ab, bleibt eine 500-KB-Datei liegen, und beim nächsten Deploy steht
+     * sie zum Hochladen an.
+     *
+     * Deshalb hier ein Netz, das nicht davon abhängt, dass ein Lauf sauber
+     * endet: was während des Laufs dazukam und wie eine hochgeladene Datei
+     * heißt, fliegt hinterher raus.
+     */
+    const fotoOrdner = path.join(WURZEL, 'assets', 'img', 'exercises');
+    const fotosVorher = fs.existsSync(fotoOrdner) ? fs.readdirSync(fotoOrdner) : [];
+
     // Dieselben Upload-Grenzen wie auf dem Server, sonst scheitert der
     // Bilder-Test an der 2-MB-Vorgabe des eingebauten PHP-Servers.
     const server = spawn('php', [
@@ -149,8 +214,7 @@ async function testlauf(name, port, lauf) {
     process.on('exit', aufraeumen);
     process.on('SIGINT', () => { aufraeumen(); process.exit(130); });
 
-    const { chromium } = playwright();
-    const browser = await chromium.launch({ channel: 'chrome' });
+    const browser = await browserStarten();
     const page = await browser.newPage({
         viewport: { width: 390, height: 844 },
         deviceScaleFactor: 2,
@@ -246,6 +310,14 @@ async function testlauf(name, port, lauf) {
         server.kill();
         process.off('exit', aufraeumen);
         fs.rmSync(ordner, { recursive: true, force: true });
+
+        const uebrig = (fs.existsSync(fotoOrdner) ? fs.readdirSync(fotoOrdner) : [])
+            .filter((f) => !fotosVorher.includes(f) && /^foto-\d{8}-\d{6}-/.test(f));
+
+        for (const f of uebrig) {
+            fs.unlinkSync(path.join(fotoOrdner, f));
+            console.log('  ---  liegengebliebenes Testfoto entfernt: ' + f);
+        }
     }
 
     if (fehlerAusDemBrowser.length) {

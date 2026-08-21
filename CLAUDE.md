@@ -14,7 +14,7 @@ Die Phasen 0 bis 5 aus §10 sind gebaut und laufen live auf dem Server. Der Trai
 | `api/`: `login`, `logout`, `exercises`, `settings`, `plan`, `session`, `history`, `coach`, `einheiten`, `gewicht`, `export`, `setup`, `fotos`, `foto-upload`, `foto-loeschen` | Phase 6 (KI-Coach), ausdrücklich optional |
 | `index.php`, `assets/`: Start mit Rückblick und Fortschrittskurve, Studio, Einstellungen, Übungsdetail mit Verlauf, abgeschlossene Einheit, Kalender, Coach-Ansage | |
 | `manifest.json`, `service-worker.js`, `assets/icons/`, Offline-Puffer | |
-| `.htaccess`, `bin/` (init-config, plan-anlegen, fotos, deploy, icons), `tests/` (323 Prüfungen) | |
+| `.htaccess`, `bin/` (init-config, plan-anlegen, fotos, deploy, icons), `tests/` (330 Prüfungen) | |
 
 Der flüchtige Arbeitsstand steht in `STATE.md`. Die Datei ist **nicht versioniert** (siehe `.gitignore`): Sie handelt nur von dieser einen Installation und liegt ausschließlich auf Franks Rechner. Wer das Repo frisch klont, hat sie nicht, und das ist Absicht.
 
@@ -293,7 +293,28 @@ Die Richtung ist aus Franks Studio abgeleitet, nicht aus einer Fitness-App-Schab
 
 **Eingabefelder brauchen Polsterung, nicht `min-height`.** `.feld` holte seine Höhe aus `min-height` bei `line-height: 1`. Chrome zentriert den Text darin trotzdem, **iOS Safari nicht** — dort klebt er am oberen Rand. Ein Datumsfeld bringt auf iOS zusätzlich sein eigenes Bedienelement mit eigener Höhe mit, deshalb waren zwei Felder nebeneinander ungleich hoch und die Kalenderschaltfläche lag außerhalb des Kastens, sodass sich das Datum nicht ändern ließ. Höhe also über `padding`, `line-height: normal`, und `appearance: none` am Datumsfeld. Achtung beim `font`-Kurzschreiber: `font: 17px/1 …` setzt `line-height` still wieder auf 1.
 
-**Screenshots aus diesem Projekt sind Chrome, nicht iOS Safari.** Die App läuft ausschließlich auf Franks iPhone, geprüft wird hier aber mit Playwright gegen das installierte Chrome. Bei Formularelementen — Datumsfeldern zuallererst — gehen die beiden am weitesten auseinander, und genau dort ist zweimal etwas durchgerutscht, das im Chrome-Bild einwandfrei aussah. Ein iOS-Simulator wäre der Ausweg, dafür fehlt auf diesem Mac das volle Xcode (`sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`, braucht Franks Passwort). Bis dahin gilt: **Darstellungsänderungen an Formularen gelten erst als geprüft, wenn Frank sie auf dem Gerät gesehen hat.**
+**Formulare gegen WebKit prüfen, nicht nur gegen Chrome.** Die App läuft ausschließlich auf Franks iPhone, die Testläufe aber gegen das installierte Chrome. Bei Formularelementen — Datumsfeldern zuallererst — gehen Blink und WebKit am weitesten auseinander, und genau dort ist mehrfach etwas durchgerutscht, das im Chrome-Bild einwandfrei aussah.
+
+```bash
+COACH_BROWSER=webkit node tests/lauf.js verwaltung einheiten studio
+```
+
+Das ist dieselbe Engine wie Safari (WebKit 26.5 gegen Safari 26.5 auf diesem Mac), nur nicht die iOS-Fassung. Voreinstellung bleibt Chrome, damit kein Browser nachgeladen werden muss.
+
+**Drei Läufe gehen unter WebKit nicht:** `pwa` und `offline` (Playwrights WebKit bricht bei `page.reload()` im Offline-Zustand mit einem internen Fehler ab und bedient den Cache-Notnagel nicht) sowie `bilder` (Abbruch beim Klick, vermutlich der Datei-Upload; nicht weiter eingegrenzt). Alles davon sind Grenzen des Werkzeugs, keine Befunde über die App. Die übrigen zwölf Läufe sind unter beiden Engines grün:
+
+```bash
+COACH_BROWSER=webkit node tests/lauf.js fotos regel fortschritt update verwaltung \
+    studio verlauf coach paare hilfe einrichtung einheiten
+```
+
+**Offline wird in Tests doppelt abgesichert.** `setOffline()` allein genügt nicht: Anfragen durch den Service Worker gehen je nach Playwright-Fassung trotzdem durch, und wird die Seite nach dem Neuladen aus dem Cache bedient, meldet `navigator.onLine` weiter `true` — woran die Statusleiste hängt. `tests/pwa.js` und `tests/offline.js` sperren deshalb zusätzlich die API per `page.route(...).abort()`, und `pwa` überschreibt `navigator.onLine` per `addInitScript`, damit schon der erste `statusZeichnen()`-Aufruf beim Hochfahren die Wahrheit sieht. Auf dem iPhone setzt Safari die Eigenschaft korrekt; das ist reine Werkzeug-Nachhilfe.
+
+**Testläufe legen echte Dateien in `assets/img/exercises/` ab.** `api/foto-upload.php` schreibt auf einen festen Pfad neben dem Code, den `COACH_DATA` nicht umleitet — der Browser lädt die Bilder ja per URL von dort. Der `bilder`-Lauf räumt selbst wieder auf, aber nur wenn er bis zum Ende kommt; nach einem Abbruch blieb eine 500-KB-Datei liegen und stand beim nächsten Deploy zum Hochladen an (abgefangen von der 400-KB-Grenze). `tests/hilfen.js` entfernt deshalb nach jedem Lauf, was neu dazukam und wie eine hochgeladene Datei heißt.
+
+`tests/hilfen.js` sortiert die Playwright-Fassungen aus dem npx-Cache nach Version **absteigend**. Dort liegen sieben nebeneinander (1.52 bis 1.62), und jede erwartet eine bestimmte Browser-Fassung. Wer einfach die erste nimmt, die er findet, bekommt „Executable doesn't exist" für einen Browser, der sehr wohl da ist.
+
+Ein iOS-Simulator bliebe der Goldstandard, dafür fehlt auf diesem Mac das volle Xcode (App Store, rund 15 GB, dazu die Simulator-Laufzeit als eigener Download; danach `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`, braucht Franks Passwort). Solange er fehlt gilt: **Was WebKit nicht abdeckt — der native Datumswähler, Tastaturverhalten, Scrollen — gilt erst als geprüft, wenn Frank es auf dem Gerät gesehen hat.**
 
 **Der Verwaltungsbereich heißt in der Oberfläche „Einstellungen", intern `plan`.** `data-gehe="plan"`, `zustand.ansicht === 'plan'`, `zeichnePlan()` — daran hängen `api/settings.php` und `plan.json`. Die beiden Namen dürfen auseinanderlaufen, aber nicht unbemerkt: zwei Tests in `tests/verwaltung.js` halten die sichtbare Beschriftung fest. SPEC.md §5.3 nennt beide Namen nebeneinander, die Beschriftung ist also keine Abweichung.
 

@@ -25,6 +25,19 @@ module.exports = (port) => testlauf('Offline-Puffer', port, async (t) => {
     /* ---------- Netz weg ---------- */
 
     t.konsoleErlauben(/ERR_INTERNET_DISCONNECTED|ERR_NETWORK_CHANGED|ERR_FAILED/);
+
+    /*
+     * Zwei Sperren statt einer. setOffline() setzt navigator.onLine auf
+     * false, erfasst aber je nach Playwright-Fassung keine Anfragen, die
+     * durch den Service Worker laufen — und genau so sendet der Puffer.
+     * Dann kam gelegentlich doch ein Satz beim Server an, und der Lauf
+     * scheiterte an der Prüfung, dass dort noch nichts stehen darf.
+     *
+     * Die Route-Sperre schließt den Weg unabhängig davon. Sie gilt nur für
+     * die API: die Seite selbst soll weiter aus dem Cache kommen, das ist
+     * ja der Punkt der Übung.
+     */
+    await page.route('**/api/**', function (route) { return route.abort(); });
     await page.context().setOffline(true);
 
     const bank = page.locator('.kachel', { hasText: 'Bankdrücken' });
@@ -85,6 +98,7 @@ module.exports = (port) => testlauf('Offline-Puffer', port, async (t) => {
 
     /* ---------- Netz zurück ---------- */
 
+    await page.unroute('**/api/**');
     await page.context().setOffline(false);
     await page.evaluate(() => dispatchEvent(new Event('online')));
 

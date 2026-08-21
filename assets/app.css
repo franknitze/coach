@@ -589,6 +589,24 @@ body {
 .paar { grid-template-columns: 1fr 1fr; }
 .drei { grid-template-columns: repeat(3, 1fr); }
 
+/*
+ * Felder nebeneinander werden gleich hoch, egal was drinsteht.
+ *
+ * Ein Datumsfeld bringt in WebKit ein eigenes Bedienelement mit eigener
+ * Höhe mit und wurde dadurch 4px höher als das Textfeld daneben — in
+ * Chrome nicht zu sehen, in Safari schon. Statt auf eine Pixelzahl zu
+ * raten, die beim nächsten Systemupdate wieder falsch ist: die Spalte
+ * streckt sich, das Feld füllt sie aus. Das höhere gibt die Höhe vor.
+ */
+.paar > div,
+.drei > div {
+    display: flex;
+    flex-direction: column;
+}
+
+.paar > div > .feld,
+.drei > div > .feld { flex: 1; }
+
 .paar .mini, .drei .mini { margin-top: 16px; }
 
 .hinweis {

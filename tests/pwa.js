@@ -95,8 +95,29 @@ module.exports = (port) => testlauf('PWA und Export', port, async (t) => {
 
     /* ---------- Ohne Netz ---------- */
 
-    t.konsoleErlauben(/ERR_INTERNET_DISCONNECTED/);   // gleich absichtlich
+    // Gleich absichtlich. ERR_FAILED kommt von der Route-Sperre unten,
+    // ERR_INTERNET_DISCONNECTED vom abgeschalteten Netz.
+    t.konsoleErlauben(/ERR_INTERNET_DISCONNECTED|ERR_FAILED/);
 
+    /*
+     * Drei Sperren, und jede deckt etwas anderes ab.
+     *
+     * setOffline() allein genügt hier nicht: Wird die Seite nach dem
+     * Neuladen vom Service Worker aus dem Cache bedient, meldet
+     * navigator.onLine in Playwright 1.62 weiter true — und die
+     * Statusleiste hängt genau daran. Das ist eine Grenze des Werkzeugs,
+     * kein Befund über die App; auf dem iPhone setzt Safari die
+     * Eigenschaft korrekt.
+     *
+     * addInitScript wirkt vor jedem Skript der Seite, also auch vor dem
+     * ersten statusZeichnen() beim Hochfahren. Die Route-Sperre sorgt
+     * zusätzlich dafür, dass API-Aufrufe wirklich scheitern, statt nur so
+     * auszusehen.
+     */
+    await page.context().addInitScript(() => {
+        Object.defineProperty(navigator, 'onLine', { get: () => false });
+    });
+    await page.route('**/api/**', function (route) { return route.abort(); });
     await page.context().setOffline(true);
     await page.reload();
     ok(await page.locator('.wortmarke').count() === 1,
@@ -112,6 +133,7 @@ module.exports = (port) => testlauf('PWA und Export', port, async (t) => {
     ok(!/Failed to fetch/i.test(await page.locator('body').innerText()),
        'nirgends englischer Browsertext auf dem Bildschirm');
 
+    await page.unroute('**/api/**');
     await page.context().setOffline(false);
 
     /* ---------- Export ---------- */

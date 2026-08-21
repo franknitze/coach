@@ -222,6 +222,20 @@ module.exports = (port) => testlauf('Rückblick', port, async (t) => {
        === new Date().toISOString().slice(0, 10),
        'in der Zukunft war noch niemand auf der Waage');
 
+    /*
+     * Gleich hoch, egal was drinsteht. Ein Datumsfeld bringt in WebKit ein
+     * eigenes Bedienelement mit eigener Höhe mit und war dadurch 4px höher
+     * als das Feld daneben — in Chrome nicht zu sehen, in Safari schon.
+     * Diese Prüfung ist deshalb nur mit COACH_BROWSER=webkit aussagekräftig.
+     */
+    const hoehen = await page.evaluate(() => [
+        document.querySelector('#g-datum').getBoundingClientRect().height,
+        document.querySelector('#g-kg').getBoundingClientRect().height,
+    ]);
+    ok(Math.abs(hoehen[0] - hoehen[1]) < 1,
+       'Datum und Gewicht stehen gleich hoch: '
+       + hoehen.map(Math.round).join(' und ') + 'px');
+
     await page.fill('#gewicht-form input[name="date"]', '2026-08-04');
     await page.fill('#gewicht-form input[name="kg"]', '84,5');
     await page.click('#gewicht-form button[type="submit"]');
