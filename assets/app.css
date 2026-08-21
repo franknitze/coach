@@ -20,19 +20,42 @@
     --tag:         #f2b705;
     --vinyl:       #c8562b;
 
-    /* Die beiden Pausen-Farben. Sie sind keine dritten Akzente, sie treten
-       nur im Pausen-Panel auf und sagen dort "warte" und "los". Rot bleibt
-       dunkel, weil die Pause zwei Minuten dauert und ein leuchtender Block
-       morgens um sieben blendet. Grün ist hell, weil das Ende der Pause
-       einen quer durch den Raum erreichen soll. */
+    /* Die Pausen-Farbe. Kein dritter Akzent, sie tritt nur im Pausen-Panel
+       auf und sagt dort "warte". Bewusst dunkel: die Pause dauert zwei
+       Minuten, ein leuchtender Block über ein Drittel des Bildschirms
+       blendet morgens um sieben. Ein Gegenstück für "los" braucht es
+       nicht — bei null ist das Panel weg. */
     --ruhe:        #4e2a2c;
     --ruhe-linie:  #6d3a3c;
     --ruhe-mini:   #c49b98;
-    --los:         #b7d6b0;
-    --los-mini:    #46614a;
 
     --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
     --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+
+    /*
+     * Schriftskala. Vorher standen 21 verschiedene Größen im Stylesheet,
+     * elf davon innerhalb von zehn Pixeln — jede in dem Moment erfunden,
+     * in dem sie gebraucht wurde. Deshalb konnte eine Abschnitts-
+     * überschrift auf 12px landen, während der Fließtext daneben auf 17px
+     * stand: Es gab nichts, woran sich das hätte brechen können.
+     *
+     * Neun Stufen, Verhältnis rund 1,2. Neue Größen werden nicht erfunden,
+     * sondern aus dieser Liste gewählt. Wer eine Zwischengröße braucht,
+     * braucht sie in aller Regel nicht.
+     *
+     * Eine bewusste Ausnahme: die Zahl im Pausen-Panel. Sie ist keine
+     * Schrift im Fließtext, sondern eine Anzeige, die man aus zwei Metern
+     * lesen soll, und skaliert deshalb mit der Bildschirmbreite.
+     */
+    --s-marke:  11px;   /* Versalien-Marken, Kleinstangaben */
+    --s-klein:  13px;   /* Nebenzeilen, Datenzeilen */
+    --s-neben:  15px;   /* Sekundärtext, leise Knöpfe */
+    --s-text:   17px;   /* Fließtext */
+    --s-betont: 20px;   /* Knöpfe, Eingabefelder, Abschnittsüberschriften */
+    --s-zahl:   24px;   /* hervorgehobene Zahl auf der Übungskachel */
+    --s-titel:  30px;   /* Seitenüberschrift */
+    --s-gross:  36px;   /* die Zahl am Regler */
+    --s-riesig: 44px;   /* der Trainingstag auf der Startseite */
 
     --rand: 20px;
     --ziel: 56px;
@@ -65,7 +88,7 @@ body {
     min-height: 100svh;
     background: var(--raum);
     color: var(--schrift);
-    font: 17px/1.5 var(--sans);
+    font: var(--s-text)/1.5 var(--sans);
     -webkit-font-smoothing: antialiased;
     /* Kein Gummiband-Scrollen und kein Doppeltipp-Zoom im Studio. */
     overscroll-behavior-y: none;
@@ -81,12 +104,12 @@ body {
     border-radius: 4px;
     background: var(--tag);
     color: #1b1e24;
-    font: 600 14px/1.2 var(--mono);
+    font: 600 var(--s-neben)/1.2 var(--mono);
     letter-spacing: 0.04em;
 }
 
 .wortmarke {
-    font: 600 14px/1 var(--mono);
+    font: 600 var(--s-neben)/1 var(--mono);
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--schrift);
@@ -120,7 +143,7 @@ body {
     border: 0;
     background: transparent;
     color: var(--schrift-leise);
-    font: 14px/1 var(--sans);
+    font: var(--s-neben)/1 var(--sans);
     cursor: pointer;
 }
 
@@ -139,7 +162,7 @@ body {
     border-radius: 12px;
     background: var(--tag);
     color: #1b1e24;
-    font: 600 19px/1 var(--sans);
+    font: 600 var(--s-betont)/1 var(--sans);
     cursor: pointer;
 }
 
@@ -151,7 +174,7 @@ body {
     background: transparent;
     border: 1px solid var(--linie);
     color: var(--schrift);
-    font-size: 17px;
+    font-size: var(--s-text);
 }
 
 :where(a, button, input):focus-visible {
@@ -182,7 +205,7 @@ body {
 
 .tor__titel {
     margin: 0 0 6px;
-    font-size: 30px;
+    font-size: var(--s-titel);
     font-weight: 600;
     letter-spacing: -0.01em;
 }
@@ -190,7 +213,7 @@ body {
 .tor__hinweis {
     margin: 0 0 28px;
     color: var(--schrift-leise);
-    font: 14px/1.5 var(--mono);
+    font: var(--s-neben)/1.5 var(--mono);
 }
 
 /* Kleine Versalien-Beschriftung, dieselbe Sprache wie die Geräteschilder. */
@@ -198,7 +221,7 @@ body {
     display: block;
     margin-bottom: 8px;
     color: var(--schrift-leise);
-    font: 600 12px/1 var(--mono);
+    font: 600 var(--s-klein)/1 var(--mono);
     letter-spacing: 0.16em;
     text-transform: uppercase;
 }
@@ -221,7 +244,7 @@ body {
     background: var(--raum-hoch);
     color: var(--schrift);
     font-family: var(--mono);
-    font-size: 20px;
+    font-size: var(--s-betont);
     line-height: normal;
     letter-spacing: 0.1em;
 }
@@ -235,7 +258,7 @@ body {
     min-height: 22px;
     margin: 12px 0 0;
     color: var(--vinyl);
-    font: 15px/1.4 var(--sans);
+    font: var(--s-neben)/1.4 var(--sans);
 }
 
 .tor__fuss {
@@ -260,7 +283,7 @@ body {
 
 .leer__titel {
     margin: 0 0 10px;
-    font-size: 21px;
+    font-size: var(--s-betont);
     font-weight: 600;
 }
 
@@ -275,7 +298,7 @@ body {
     padding: 0;
     list-style: none;
     color: var(--schrift-leise);
-    font: 14px/1.9 var(--mono);
+    font: var(--s-neben)/1.9 var(--mono);
 }
 
 .schritte li::before {
@@ -297,7 +320,7 @@ body {
     border-radius: 9px;
     background: transparent;
     color: var(--schrift);
-    font: 14px/1 var(--sans);
+    font: var(--s-neben)/1 var(--sans);
     cursor: pointer;
 }
 
@@ -316,39 +339,49 @@ body {
 
 .titel {
     margin: 0;
-    font-size: 27px;
+    font-size: var(--s-titel);
     font-weight: 600;
     letter-spacing: -0.01em;
 }
 
 .tag { margin-bottom: 34px; }
 
-/* Getippte Abschnittsmarke, wie auf einem Planblatt im Spind. */
+/*
+ * Getippte Abschnittsmarke, wie auf einem Planblatt im Spind.
+ *
+ * Sie war lange 12px und damit die kleinste Schrift auf der Seite —
+ * kleiner als jede Zeile darunter und um ein Vielfaches kleiner als die
+ * Knöpfe. Eine Überschrift, die man erst suchen muss, ordnet nichts.
+ * Jetzt 19px, dafür weniger gesperrt: eine Sperrung, die bei 12px
+ * auflockert, reißt bei 19px die Wörter auseinander.
+ */
 .tag__kopf {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 10px;
-    padding-bottom: 9px;
+    padding-bottom: 11px;
     border-bottom: 1px solid var(--linie);
 }
 
 .tag__name {
-    font: 600 12px/1 var(--mono);
-    letter-spacing: 0.16em;
+    font: 600 var(--s-betont)/1.2 var(--mono);
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--schrift);
 }
 
 .tag__zahl {
-    font: 12px/1 var(--mono);
+    font: var(--s-klein)/1 var(--mono);
     color: var(--schrift-leise);
 }
+
+.tag__kopf + * { margin-top: 14px; }
 
 .tag__leer {
     margin: 14px 0 0;
     color: var(--schrift-leise);
-    font-size: 15px;
+    font-size: var(--s-neben);
     line-height: 1.5;
 }
 
@@ -397,12 +430,12 @@ body {
 .zeile__text:active { opacity: 0.7; }
 
 .zeile__name {
-    font-size: 18px;
+    font-size: var(--s-text);
     font-weight: 600;
 }
 
 .zeile__daten {
-    font: 13px/1.3 var(--mono);
+    font: var(--s-klein)/1.3 var(--mono);
     color: var(--schrift-leise);
 }
 
@@ -422,7 +455,7 @@ body {
     border-radius: 12px;
     background: transparent;
     color: var(--schrift-leise);
-    font: 15px/1 var(--sans);
+    font: var(--s-neben)/1 var(--sans);
     cursor: pointer;
 }
 
@@ -450,14 +483,14 @@ body {
 }
 
 .verlauf__datum {
-    font: 600 12px/1 var(--mono);
+    font: 600 var(--s-klein)/1 var(--mono);
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--schrift-leise);
 }
 
 .verlauf__werte {
-    font: 17px/1.4 var(--mono);
+    font: var(--s-text)/1.4 var(--mono);
     color: var(--schrift);
 }
 
@@ -472,7 +505,7 @@ body {
 .chart__kopf .mini { margin-bottom: 0; }
 
 .chart__einheit {
-    font: 11px/1 var(--mono);
+    font: var(--s-marke)/1 var(--mono);
     color: var(--schrift-leise);
 }
 
@@ -491,7 +524,7 @@ body {
 .chart__fuss {
     margin: 4px 0 0;
     color: var(--schrift-leise);
-    font: 12px/1.45 var(--sans);
+    font: var(--s-klein)/1.45 var(--sans);
 }
 
 .ch-linie {
@@ -525,7 +558,7 @@ body {
 .ch-achse {
     fill: var(--schrift-leise);
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: var(--s-marke);
 }
 
 /* ---------- Editor ---------- */
@@ -544,7 +577,7 @@ body {
 /* Kein font-Kurzschreiber: der setzte line-height wieder auf 1 zurück. */
 .feld--text {
     font-family: var(--sans);
-    font-size: 17px;
+    font-size: var(--s-text);
     letter-spacing: normal;
 }
 
@@ -561,7 +594,7 @@ body {
 .hinweis {
     margin: 7px 0 0;
     color: var(--schrift-leise);
-    font: 12px/1.4 var(--mono);
+    font: var(--s-klein)/1.4 var(--mono);
 }
 
 .werkzeuge {
@@ -584,7 +617,7 @@ body {
     border-radius: 12px;
     background: transparent;
     color: var(--schrift-leise);
-    font: 15px/1 var(--sans);
+    font: var(--s-neben)/1 var(--sans);
     cursor: pointer;
 }
 
@@ -610,7 +643,7 @@ body {
 }
 
 .prio__name {
-    font: 15px/1 var(--mono);
+    font: var(--s-neben)/1 var(--mono);
     color: var(--schrift);
 }
 
@@ -628,7 +661,7 @@ body {
     border-radius: 7px;
     background: transparent;
     color: var(--schrift-leise);
-    font: 13px/1 var(--sans);
+    font: var(--s-klein)/1 var(--sans);
     cursor: pointer;
 }
 
@@ -654,7 +687,7 @@ body {
     background: var(--raum-hoch);
     border-top: 1px solid var(--linie);
     border-bottom: 1px solid var(--linie);
-    font: 13px/1.45 var(--mono);
+    font: var(--s-klein)/1.45 var(--mono);
     color: var(--schrift-leise);
 }
 
@@ -681,7 +714,7 @@ body {
 
 .heute__tag {
     margin: 10px 0 8px;
-    font-size: 42px;
+    font-size: var(--s-riesig);
     font-weight: 600;
     letter-spacing: -0.02em;
     line-height: 1.05;
@@ -690,7 +723,7 @@ body {
 .heute__zeile {
     margin: 0;
     color: var(--schrift-leise);
-    font: 14px/1.5 var(--mono);
+    font: var(--s-neben)/1.5 var(--mono);
 }
 
 .tagwahl__reihe {
@@ -707,7 +740,7 @@ body {
     border-radius: 12px;
     background: transparent;
     color: var(--schrift);
-    font: 16px/1 var(--sans);
+    font: var(--s-text)/1 var(--sans);
     cursor: pointer;
 }
 
@@ -726,7 +759,7 @@ body {
     border-top: 1px solid var(--linie);
     background: transparent;
     color: var(--schrift-leise);
-    font: 15px/1 var(--sans);
+    font: var(--s-neben)/1 var(--sans);
     text-align: left;
     cursor: pointer;
 }
@@ -786,7 +819,7 @@ body {
 .knopf--zufuegen {
     min-height: var(--ziel);
     margin-top: 14px;
-    font-size: 17px;
+    font-size: var(--s-text);
 }
 
 /* ---------- Kalender ---------- */
@@ -800,7 +833,7 @@ body {
 }
 
 .kal__zahl {
-    font: 13px/1 var(--mono);
+    font: var(--s-klein)/1 var(--mono);
     color: var(--schrift-leise);
 }
 
@@ -813,7 +846,7 @@ body {
 
 .kal__kopf {
     padding-bottom: 4px;
-    font: 600 11px/1 var(--mono);
+    font: 600 var(--s-marke)/1 var(--mono);
     letter-spacing: 0.08em;
     color: var(--schrift-leise);
     text-align: center;
@@ -836,7 +869,7 @@ body {
     border-radius: 9px;
     background: transparent;
     color: var(--schrift-leise);
-    font: 14px/1 var(--mono);
+    font: var(--s-neben)/1 var(--mono);
 }
 
 /*
@@ -855,7 +888,7 @@ body {
 .kal__tag.ist-training:active { opacity: 0.7; }
 
 .kal__art {
-    font-size: 9px;
+    font-size: var(--s-marke);
     font-weight: 400;
     letter-spacing: 0.04em;
     color: var(--schrift-leise);
@@ -876,14 +909,14 @@ body {
     align-items: baseline;
     gap: 8px;
     margin: 14px 0 6px;
-    font: 14px/1.2 var(--mono);
+    font: var(--s-neben)/1.2 var(--mono);
     color: var(--schrift-leise);
 }
 
 /* Die Punktzahl groß, das Wort klein — dieselbe Regel wie am Regler und
    an der Vorgabe auf der Kachel. */
 .fortschritt__stand b {
-    font-size: 28px;
+    font-size: var(--s-titel);
     font-weight: 700;
     letter-spacing: -0.02em;
     color: var(--schrift);
@@ -918,12 +951,12 @@ body {
 .einheit:last-child { border-bottom: 0; }
 
 .einheit__wann {
-    font: 16px/1.3 var(--sans);
+    font: var(--s-text)/1.3 var(--sans);
     color: var(--schrift);
 }
 
 .einheit__umfang {
-    font: 13px/1.3 var(--mono);
+    font: var(--s-klein)/1.3 var(--mono);
     color: var(--schrift-leise);
 }
 
@@ -938,14 +971,14 @@ body {
 .einheit__bilanz {
     margin: -14px 0 24px;
     color: var(--schrift-leise);
-    font: 14px/1.4 var(--mono);
+    font: var(--s-neben)/1.4 var(--mono);
 }
 
 /* Die Sätze dieser Einheit auf der Kachel, dort wo im Studio "zuletzt"
    steht. Volle Schriftfarbe: hier sind sie die Auskunft und nicht der
    Nebensatz. */
 .kachel__werte {
-    font: 14px/1.5 var(--mono);
+    font: var(--s-neben)/1.5 var(--mono);
     color: var(--schrift);
 }
 
@@ -966,7 +999,7 @@ body {
 
 .fortschritt__zahl {
     flex: 0 0 auto;
-    font: 12px/1 var(--mono);
+    font: var(--s-klein)/1 var(--mono);
     color: var(--schrift-leise);
     white-space: nowrap;
 }
@@ -994,7 +1027,7 @@ body {
 
 .geschafft__titel {
     margin: 0 0 8px;
-    font: 600 20px/1.3 var(--sans);
+    font: 600 var(--s-betont)/1.3 var(--sans);
 }
 
 .geschafft .knopf { margin-top: 18px; }
@@ -1013,7 +1046,7 @@ body {
 .beenden__stand {
     margin: 0 0 12px;
     color: var(--schrift-leise);
-    font: 14px/1 var(--mono);
+    font: var(--s-neben)/1 var(--mono);
     text-align: center;
 }
 
@@ -1105,11 +1138,11 @@ body {
 }
 
 .lupe__name {
-    font: 17px/1.3 var(--sans);
+    font: var(--s-text)/1.3 var(--sans);
     color: var(--schrift);
 }
 
-.lupe .plakette { font-size: 17px; padding: 5px 12px; }
+.lupe .plakette { font-size: var(--s-text); padding: 5px 12px; }
 
 .kachel__bild,
 .kachel__platzhalter {
@@ -1127,7 +1160,7 @@ body {
     place-items: center;
     background: var(--tag);
     color: #1b1e24;
-    font: 700 26px/1 var(--mono);
+    font: 700 var(--s-zahl)/1 var(--mono);
 }
 
 .kachel__text {
@@ -1138,13 +1171,13 @@ body {
 }
 
 .kachel__name {
-    font-size: 19px;
+    font-size: var(--s-betont);
     font-weight: 600;
 }
 
 .kachel__ziel,
 .kachel__zuletzt {
-    font: 13px/1.35 var(--mono);
+    font: var(--s-klein)/1.35 var(--mono);
     color: var(--schrift-leise);
 }
 
@@ -1155,7 +1188,7 @@ body {
 .kachel__ziel { margin-top: 2px; }
 
 .kachel__zahl {
-    font-size: 23px;
+    font-size: var(--s-zahl);
     font-weight: 700;
     letter-spacing: -0.01em;
     color: var(--schrift);
@@ -1164,7 +1197,7 @@ body {
 /* Der Bezug hinter der gemachten Zahl im Rückblick: "2/4". Klein und leise,
    weil die 2 die Auskunft ist und die 4 nur der Maßstab. */
 .kachel__von {
-    font-size: 15px;
+    font-size: var(--s-neben);
     font-weight: 600;
     color: var(--schrift-leise);
 }
@@ -1173,20 +1206,20 @@ body {
    genau dieser eine Fall wird hervorgehoben. Alles andere bleibt leise. */
 .kachel__coach {
     margin-top: 2px;
-    font: 13px/1.35 var(--mono);
+    font: var(--s-klein)/1.35 var(--mono);
     color: var(--schrift-leise);
 }
 
 .kachel__coach.ist-faellig {
     color: var(--vinyl);
     font-weight: 600;
-    font-size: 15px;
+    font-size: var(--s-neben);
 }
 
 /* Die Begründung unter der Handlung: erklärt, warum, drängt sich aber
    nicht vor. Im Studio wird nur die erste Zeile gelesen. */
 .kachel__grund {
-    font: 12px/1.35 var(--mono);
+    font: var(--s-klein)/1.35 var(--mono);
     color: var(--schrift-leise);
 }
 
@@ -1228,7 +1261,7 @@ body {
 
 .satz__mini {
     flex: 0 0 auto;
-    font: 600 11px/1 var(--mono);
+    font: 600 var(--s-marke)/1 var(--mono);
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--schrift-leise);
@@ -1236,7 +1269,7 @@ body {
 
 .satz__wert {
     flex: 1;
-    font: 16px/1 var(--mono);
+    font: var(--s-text)/1 var(--mono);
 }
 
 .satz__korr {
@@ -1245,7 +1278,7 @@ body {
     border: 0;
     background: transparent;
     color: var(--schrift-leise);
-    font: 13px/1 var(--sans);
+    font: var(--s-klein)/1 var(--sans);
     cursor: pointer;
 }
 
@@ -1255,7 +1288,7 @@ body {
 .satz__fertig {
     margin: 14px 0 0;
     color: var(--schrift-leise);
-    font: 14px/1.5 var(--mono);
+    font: var(--s-neben)/1.5 var(--mono);
 }
 
 /* Große Ziele, weil im Studio mit dem Daumen und nass getippt wird. */
@@ -1273,7 +1306,7 @@ body {
     border-radius: 12px;
     background: var(--raum-hoch);
     color: var(--schrift);
-    font: 300 28px/1 var(--sans);
+    font: 300 var(--s-titel)/1 var(--sans);
     cursor: pointer;
 }
 
@@ -1284,13 +1317,13 @@ body {
    Einheit steht daneben auf derselben Grundlinie, klein und leise — dass
    es Kilogramm sind, muss niemand nachlesen. */
 .regler__wert {
-    font: 17px/1 var(--mono);
+    font: var(--s-text)/1 var(--mono);
     text-align: center;
     color: var(--schrift-leise);
 }
 
 .regler__zahl {
-    font-size: 36px;
+    font-size: var(--s-gross);
     font-weight: 700;
     letter-spacing: -0.02em;
     color: var(--schrift);
@@ -1299,7 +1332,7 @@ body {
 .regler__schritt {
     grid-column: 1 / -1;
     margin-top: -4px;
-    font: 11px/1 var(--mono);
+    font: var(--s-marke)/1 var(--mono);
     color: var(--schrift-leise);
     text-align: center;
 }
@@ -1340,7 +1373,7 @@ body {
 body.hat-pause .inhalt { padding-bottom: calc(env(safe-area-inset-bottom) + 290px); }
 
 .pause__mini {
-    font: 600 12px/1.4 var(--mono);
+    font: 600 var(--s-klein)/1.4 var(--mono);
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--ruhe-mini);
@@ -1364,29 +1397,8 @@ body.hat-pause .inhalt { padding-bottom: calc(env(safe-area-inset-bottom) + 290p
     border-radius: 12px;
     background: transparent;
     color: var(--schrift);
-    font: 16px/1 var(--sans);
+    font: var(--s-text)/1 var(--sans);
     cursor: pointer;
-}
-
-/*
- * Pause vorbei: helles Grün mit dunklem Text. Die Farbe sagt "los", die
- * Helligkeit macht den Wechsel über den ganzen Raum sichtbar — darauf kam
- * es bei der invertierten Fassung vorher schon an, nur ohne Aussage.
- * Gelb und Orange bleiben unangetastet, sie heißen weiter "hier tippen"
- * und "Steigerung fällig".
- */
-.pause.ist-um {
-    background: var(--los);
-    border-top-color: var(--los);
-}
-
-.pause.ist-um .pause__mini { color: var(--los-mini); }
-.pause.ist-um .pause__zeit { color: var(--raum); }
-
-.pause.ist-um .pause__weg {
-    border-color: var(--raum);
-    color: var(--raum);
-    font-weight: 600;
 }
 
 @media (max-width: 360px) {
@@ -1443,7 +1455,7 @@ body.hat-pause .inhalt { padding-bottom: calc(env(safe-area-inset-bottom) + 290p
     place-items: center;
     aspect-ratio: 1;
     color: var(--schrift-leise);
-    font: 11px/1.2 var(--mono);
+    font: var(--s-marke)/1.2 var(--mono);
     text-align: center;
 }
 
@@ -1468,7 +1480,7 @@ body.hat-pause .inhalt { padding-bottom: calc(env(safe-area-inset-bottom) + 290p
     border-radius: 12px;
     background: transparent;
     color: var(--schrift);
-    font: 15px/1 var(--sans);
+    font: var(--s-neben)/1 var(--sans);
     text-align: center;
     cursor: pointer;
 }
@@ -1501,13 +1513,13 @@ body.hat-pause .inhalt { padding-bottom: calc(env(safe-area-inset-bottom) + 290p
     border-radius: 6px;
     background: rgba(12, 14, 18, 0.82);
     color: var(--schrift);
-    font: 600 13px/1 var(--sans);
+    font: 600 var(--s-klein)/1 var(--sans);
     cursor: pointer;
 }
 
 .bildwahl__weg.ist-scharf {
     background: var(--vinyl);
-    font: 600 10px/1 var(--sans);
+    font: 600 var(--s-marke)/1 var(--sans);
     color: #fff;
 }
 
@@ -1523,7 +1535,7 @@ body.hat-pause .inhalt { padding-bottom: calc(env(safe-area-inset-bottom) + 290p
 
 .ausfuehrung__text {
     margin: 0;
-    font-size: 16px;
+    font-size: var(--s-text);
     line-height: 1.55;
 }
 
@@ -1538,7 +1550,7 @@ body.hat-pause .inhalt { padding-bottom: calc(env(safe-area-inset-bottom) + 290p
 .ausfuehrung__begriff {
     flex: 1;
     min-width: 0;
-    font: 13px/1.3 var(--mono);
+    font: var(--s-klein)/1.3 var(--mono);
     color: var(--schrift-leise);
 }
 
@@ -1567,7 +1579,7 @@ body.hat-pause .inhalt { padding-bottom: calc(env(safe-area-inset-bottom) + 290p
     border-top: 1px solid var(--linie);
     background: transparent;
     color: var(--schrift-leise);
-    font: 15px/1 var(--sans);
+    font: var(--s-neben)/1 var(--sans);
     text-align: left;
     cursor: pointer;
 }
@@ -1612,7 +1624,7 @@ body.hat-pause .inhalt { padding-bottom: calc(env(safe-area-inset-bottom) + 290p
     margin: 0 0 16px;
     padding: 10px 12px;
     border-left: 3px solid var(--linie);
-    font: 13px/1.45 var(--mono);
+    font: var(--s-klein)/1.45 var(--mono);
     color: var(--schrift-leise);
 }
 

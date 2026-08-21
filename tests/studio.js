@@ -1,5 +1,8 @@
 /* Phase 2: Tagesvorschlag, Kacheln, Satz-Eingabe, Pausen-Timer. */
 
+const fs = require('fs');
+const path = require('path');
+
 const { testlauf, saetze, einheit } = require('./hilfen');
 
 module.exports = (port) => testlauf('Studio', port, async (t) => {
@@ -95,6 +98,22 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
 
     await bank.locator('[data-aendere$="reps:-1"]').click();
     ok(await bank.locator('.regler__wert').nth(1).innerText() === '11 Wdh', 'Minus senkt die Wiederholungen');
+
+    /*
+     * Der Text allein genügt als Prüfung nicht. Die Knöpfe schreiben den
+     * neuen Wert aus Geschwindigkeitsgründen direkt in die Anzeige, statt
+     * neu zu zeichnen; ein textContent auf .regler__wert ersetzt dabei die
+     * beiden Spans, die Zahl und Einheit verschieden groß setzen. Der Wert
+     * stimmte danach, aber die Zahl schrumpfte auf die kleine Schrift.
+     */
+    const gross = await bank.locator('.regler__zahl').first()
+        .evaluate((n) => getComputedStyle(n).fontSize);
+    const klein = await bank.locator('.regler__einheit').first()
+        .evaluate((n) => getComputedStyle(n).fontSize);
+    ok(await bank.locator('.regler__zahl').count() === 2
+       && parseFloat(gross) > parseFloat(klein) + 10,
+       'nach dem Tippen steht die Zahl weiter groß über der Einheit: '
+       + gross + ' gegen ' + klein);
 
     await bank.locator('[data-bestaetige]').click();
     await page.waitForSelector('.satz--fertig');
@@ -198,6 +217,68 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
     await page.waitForSelector('.kachel.ist-offen .satz--dran');
     ok(await page.locator('.kachel .ausfuehrung').count() === 0,
        'die nächste Übung beginnt wieder zugeklappt');
+
+    /* ---------- Bei null verschwindet die Pause von selbst ----------
+     *
+     * Dort stand einmal ein grüner Zustand mit "Weiter". Der sagte nur,
+     * was man ohnehin sieht, und kostete einen Tipp, bevor man wieder an
+     * den Reglern war. Zwei Sekunden statt zwei Minuten, sonst wartet der
+     * Testlauf mit.
+     */
+    const cfgDatei = path.join(t.datenordner, 'config.json');
+    const cfg = JSON.parse(fs.readFileSync(cfgDatei, 'utf8'));
+    cfg.rest_timer_seconds = 2;
+    cfg.rest_pair_seconds = 2;
+    fs.writeFileSync(cfgDatei, JSON.stringify(cfg, null, 2));
+
+    t.logs({});
+    await page.reload();
+    await page.waitForSelector('.heute__tag');
+    await t.studio('Oberkörper');
+    await page.waitForSelector('.satz--dran');
+
+    await page.locator('.kachel', { hasText: 'Bankdrücken' })
+        .locator('[data-bestaetige]').click();
+    await page.waitForSelector('#pause:not([hidden])');
+    ok(true, 'nach einem Satz mitten in der Einheit läuft die Pause');
+
+    await page.waitForSelector('#pause', { state: 'hidden', timeout: 8000 });
+    ok(true, 'bei null verschwindet sie von selbst, ohne zweiten Zustand');
+    ok(await page.locator('#pause-weg').innerText() === 'Überspringen',
+       'der Knopf wurde nie zu "Weiter" — es gibt keinen Zustand danach');
+    /* ---------- Nach dem letzten Satz keine Pause mehr ----------
+     *
+     * Eine Pause dient dem nächsten Satz. Nach dem letzten gibt es keinen,
+     * und zwei Minuten Countdown hieße, jemanden vor dem Ausgang warten zu
+     * lassen. Geprüft wird mit einem echten Tipp, nicht über die Logdatei:
+     * die Pause startet ja im Bestätigen-Handler.
+     */
+
+    const heuteIso = new Date().toISOString().slice(0, 10);
+    t.logs({
+        [heuteIso.slice(0, 7)]: [
+            einheit(heuteIso, 'oberkoerper', 0, {
+                bankdruecken: saetze(80, 10, 10, 10, 10),
+                latzug: saetze(60, 12, 12, 12, 12),
+                schulterdruecken: saetze(30, 10, 10),   // einer fehlt noch
+            }),
+        ],
+    });
+
+    await page.reload();
+    await page.waitForSelector('.heute__tag');
+    await t.studio('Oberkörper');
+    await page.waitForSelector('.satz--dran');
+
+    const schluss = page.locator('.kachel', { hasText: 'Schulterdrücken' });
+    ok(await schluss.locator('.satz--dran').count() === 1,
+       'die App öffnet die einzige Übung, der noch ein Satz fehlt');
+
+    await schluss.locator('[data-bestaetige]').click();
+    await page.waitForSelector('.geschafft');
+    ok(!(await page.locator('#pause').isVisible()),
+       'nach dem letzten Satz des Tages läuft keine Pause mehr');
+
     /* ---------- Nach dem Abschluss geht die Rotation weiter ----------
      *
      * Der Fall aus dem Studio: Einheit fertig, "Einheit beenden" gedrückt,

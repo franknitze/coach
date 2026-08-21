@@ -525,20 +525,23 @@
         const ende = Date.now() + sekunden * 1000;
         pauseBox.hidden = false;
         document.body.classList.add('hat-pause');
-        pauseBox.classList.remove('ist-um');
-        pauseWeg.textContent = 'Überspringen';
 
         function tick() {
             const rest = Math.max(0, Math.round((ende - Date.now()) / 1000));
             pauseZeit.textContent = Math.floor(rest / 60) + ':'
                 + String(rest % 60).padStart(2, '0');
 
+            /*
+             * Bei null verschwindet das Panel einfach, ohne einen zweiten
+             * Zustand mit "Weiter". Dass die Pause vorbei ist, sieht man
+             * daran, dass sie weg ist — eine Bestätigung dafür wäre eine
+             * Meldung ohne Auskunft und ein zusätzlicher Tipp, bevor man
+             * wieder an den Reglern ist. Das Rütteln bleibt: es erreicht
+             * einen auch dann, wenn man nicht aufs Handy schaut.
+             */
             if (rest === 0) {
-                clearInterval(pauseUhr);
-                pauseUhr = null;
-                pauseBox.classList.add('ist-um');
-                pauseWeg.textContent = 'Weiter';
                 try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) {}
+                pauseBeenden();
             }
         }
 
@@ -552,7 +555,6 @@
             pauseUhr = null;
         }
         pauseBox.hidden = true;
-        pauseBox.classList.remove('ist-um');
         document.body.classList.remove('hat-pause');
     }
 
@@ -2206,6 +2208,26 @@
                 }
             }
 
+            /*
+             * Eine Pause dient dem nächsten Satz. Ist die Einheit durch,
+             * gibt es keinen mehr — dann zwei Minuten herunterzuzählen
+             * hieße, jemanden vor dem Ausgang warten zu lassen. Läuft
+             * gerade noch eine Pause vom vorigen Satz, wird sie beendet.
+             *
+             * Geprüft wird der ganze Tag und nicht nur die eigene Übung:
+             * Der letzte Satz kann irgendwo mitten in der Liste liegen,
+             * wenn man sie nicht der Reihe nach abarbeitet.
+             */
+            const nochOffen = (zustand.studio.exercises || []).some(function (x) {
+                return ((x.today || []).length) < x.target_sets;
+            });
+
+            if (!nochOffen) {
+                pauseBeenden();
+                puffernSenden();
+                return;
+            }
+
             // Beim Wechsel die kürzere Pause: die volle bekommt der Muskel
             // trotzdem, verteilt über zwei Durchgänge.
             const naechste = zustand.offen ? uebungImStudio(zustand.offen) : null;
@@ -2461,14 +2483,25 @@
         }
         zustand.entwurf[u.id] = e2;
 
-        const anzeige = knopf && knopf.isConnected
-            ? knopf.closest('.regler').querySelector('.regler__wert')
+        /*
+         * Nur die Zahl anfassen, nicht die ganze Anzeige.
+         *
+         * Hier stand `anzeige.textContent = …` auf `.regler__wert`, und das
+         * ersetzt den gesamten Inhalt — also auch die beiden Spans, die die
+         * Zahl groß und die Einheit klein setzen. Nach dem ersten Tipp auf
+         * Plus war der Wert reiner Text und schrumpfte auf die kleine
+         * Schrift des Elternelements.
+         *
+         * Die Einheit bleibt unberührt: aus kg wird beim Zählen kein Wdh.
+         */
+        const zahlEl = knopf && knopf.isConnected
+            ? knopf.closest('.regler').querySelector('.regler__zahl')
             : null;
 
-        if (anzeige) {
-            anzeige.textContent = teile[1] === 'weight'
-                ? zahl(e2.weight) + ' kg'
-                : e2.reps + ' Wdh';
+        if (zahlEl) {
+            zahlEl.textContent = teile[1] === 'weight'
+                ? zahl(e2.weight)
+                : String(e2.reps);
             return true;
         }
 

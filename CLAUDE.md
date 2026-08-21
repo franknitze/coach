@@ -14,7 +14,7 @@ Die Phasen 0 bis 5 aus §10 sind gebaut und laufen live auf dem Server. Der Trai
 | `api/`: `login`, `logout`, `exercises`, `settings`, `plan`, `session`, `history`, `coach`, `einheiten`, `gewicht`, `export`, `setup`, `fotos`, `foto-upload`, `foto-loeschen` | Phase 6 (KI-Coach), ausdrücklich optional |
 | `index.php`, `assets/`: Start mit Rückblick und Fortschrittskurve, Studio, Einstellungen, Übungsdetail mit Verlauf, abgeschlossene Einheit, Kalender, Coach-Ansage | |
 | `manifest.json`, `service-worker.js`, `assets/icons/`, Offline-Puffer | |
-| `.htaccess`, `bin/` (init-config, plan-anlegen, fotos, deploy, icons), `tests/` (321 Prüfungen) | |
+| `.htaccess`, `bin/` (init-config, plan-anlegen, fotos, deploy, icons), `tests/` (323 Prüfungen) | |
 
 Der flüchtige Arbeitsstand steht in `STATE.md`. Die Datei ist **nicht versioniert** (siehe `.gitignore`): Sie handelt nur von dieser einen Installation und liegt ausschließlich auf Franks Rechner. Wer das Repo frisch klont, hat sie nicht, und das ist Absicht.
 
@@ -281,9 +281,21 @@ Die Richtung ist aus Franks Studio abgeleitet, nicht aus einer Fitness-App-Schab
 - **Hauptaktionen sitzen unten am Rand**, nicht mittig. Bedienung mit dem Daumen heißt Daumenzone. Touch-Ziele ab 56px, `env(safe-area-inset-*)` beachten.
 - **Signature ist die Geräteplakette** (`.plakette`): das gelbe Nummernschild, das im Studio an den Geräten klebt. Sie trägt die echte Stationsnummer, in der Liste klein, auf der Übungskachel groß als Ersatz für ein fehlendes Foto. Nie mit erfundenen Nummern dekorieren.
 
-**Die beiden Pausenfarben sind keine dritten Akzente.** `--ruhe` (dunkles Rot) und `--los` (helles Blassgrün) treten ausschließlich im Pausen-Panel auf und sagen dort „warte" und „los". Sie sind ungleich hell, und das ist Absicht: Die Pause dauert zwei Minuten, ein leuchtender Block über ein Drittel des Bildschirms blendet morgens um sieben. Das Ende der Pause soll einen dagegen quer durch den Raum erreichen. Nebenbei trägt die Helligkeit den Unterschied auch dann, wenn die Farbe es nicht tut. Gelb und Orange bleiben unangetastet.
+**Die Pausenfarbe ist kein dritter Akzent.** `--ruhe` (dunkles Rot) tritt ausschließlich im Pausen-Panel auf und sagt dort „warte". Bewusst dunkel: die Pause dauert zwei Minuten, ein leuchtender Block über ein Drittel des Bildschirms blendet morgens um sieben. Gelb und Orange bleiben unangetastet.
+
+**Bei null verschwindet das Panel, es gibt keinen Zustand danach.** Dort stand einmal ein helles Grün mit „Weiter". Es sagte nur, was ohnehin zu sehen ist, und kostete einen Tipp, bevor man wieder an den Reglern war. Dass die Pause vorbei ist, erkennt man daran, dass sie weg ist. Das Rütteln bleibt, es erreicht einen auch dann, wenn man nicht aufs Handy schaut.
+
+**Nach dem letzten Satz einer Einheit startet keine Pause.** Sie dient dem nächsten Satz; gibt es keinen, hieße Herunterzählen, jemanden vor dem Ausgang warten zu lassen. Geprüft wird der ganze Tag und nicht nur die eigene Übung, denn der letzte Satz kann mitten in der Liste liegen, wenn man sie nicht der Reihe nach abarbeitet.
 
 **Der Ausgang aus einer Einheit steht immer unter der letzten Kachel**, fertig oder nicht. Der letzte Satz wird ganz unten bestätigt, und dort steht man dann; eine Meldung neun Kacheln weiter oben sieht man nicht. Bei offener Einheit tritt er zurück (kein Rahmen, kein Gelb), weil bis dahin auf „Satz bestätigen" getippt wird. Eine Einheit wird nicht immer fertig, und dann muss sie sich trotzdem beenden lassen, ohne dass man erst alles abhakt.
+
+**Schriftgrößen kommen aus der Skala in `:root`, sie werden nicht erfunden.** Neun Stufen (`--s-marke` 11 bis `--s-riesig` 44, Verhältnis rund 1,2). Vorher standen 21 verschiedene Größen im Stylesheet, elf davon innerhalb von zehn Pixeln — jede in dem Moment entstanden, in dem sie gebraucht wurde. Genau deshalb konnte eine Abschnittsüberschrift auf 12px landen, während der Fließtext daneben auf 17px stand: Es gab nichts, woran sich das hätte brechen können. Wer eine Zwischengröße zu brauchen glaubt, braucht sie in aller Regel nicht. Eine bewusste Ausnahme trägt die Zahl im Pausen-Panel (`min(24vw, 92px)`): Sie ist keine Schrift im Fließtext, sondern eine Anzeige, die man aus zwei Metern lesen soll.
+
+**Eingabefelder brauchen Polsterung, nicht `min-height`.** `.feld` holte seine Höhe aus `min-height` bei `line-height: 1`. Chrome zentriert den Text darin trotzdem, **iOS Safari nicht** — dort klebt er am oberen Rand. Ein Datumsfeld bringt auf iOS zusätzlich sein eigenes Bedienelement mit eigener Höhe mit, deshalb waren zwei Felder nebeneinander ungleich hoch und die Kalenderschaltfläche lag außerhalb des Kastens, sodass sich das Datum nicht ändern ließ. Höhe also über `padding`, `line-height: normal`, und `appearance: none` am Datumsfeld. Achtung beim `font`-Kurzschreiber: `font: 17px/1 …` setzt `line-height` still wieder auf 1.
+
+**Screenshots aus diesem Projekt sind Chrome, nicht iOS Safari.** Die App läuft ausschließlich auf Franks iPhone, geprüft wird hier aber mit Playwright gegen das installierte Chrome. Bei Formularelementen — Datumsfeldern zuallererst — gehen die beiden am weitesten auseinander, und genau dort ist zweimal etwas durchgerutscht, das im Chrome-Bild einwandfrei aussah. Ein iOS-Simulator wäre der Ausweg, dafür fehlt auf diesem Mac das volle Xcode (`sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`, braucht Franks Passwort). Bis dahin gilt: **Darstellungsänderungen an Formularen gelten erst als geprüft, wenn Frank sie auf dem Gerät gesehen hat.**
+
+**Der Verwaltungsbereich heißt in der Oberfläche „Einstellungen", intern `plan`.** `data-gehe="plan"`, `zustand.ansicht === 'plan'`, `zeichnePlan()` — daran hängen `api/settings.php` und `plan.json`. Die beiden Namen dürfen auseinanderlaufen, aber nicht unbemerkt: zwei Tests in `tests/verwaltung.js` halten die sichtbare Beschriftung fest. SPEC.md §5.3 nennt beide Namen nebeneinander, die Beschriftung ist also keine Abweichung.
 
 **Diagramme** (Phase 3, `chart()` in `app.js`):
 
