@@ -355,3 +355,102 @@ function training_heutige_session(string $tag): ?array
 {
     return training_session_am($tag, null);
 }
+
+/**
+ * Was der heutige Plan für einen Trainingstag verlangt: Übungs-ID => Zielsätze.
+ *
+ * Eine Einheit speichert nicht, was damals verlangt war. Gerechnet wird
+ * deshalb immer gegen den heutigen Stand; ändert sich eine Zielsatzzahl,
+ * ändert sich die Beurteilung alter Einheiten mit. Das ist der Preis dafür,
+ * die Vorgabe nicht in jede Session zu duplizieren.
+ */
+function training_soll(string $tag, array $uebungen): array
+{
+    $soll = [];
+
+    foreach ($uebungen as $uebung) {
+        if (($uebung['day'] ?? '') === $tag) {
+            $soll[(string) $uebung['id']] = (int) ($uebung['target_sets'] ?? 0);
+        }
+    }
+
+    return $soll;
+}
+
+/**
+ * Hat eine Einheit jede für ihren Tag vorgesehene Übung durchgezogen?
+ *
+ * Je Übung geprüft, nicht über die Summe: acht Sätze Bankdrücken und keiner
+ * Latzug ergäben dieselbe Zahl wie vier und vier, wären aber eine halbe
+ * Einheit.
+ *
+ * Die Regel steht hier und nicht im Endpunkt, weil zwei Stellen sie brauchen:
+ * api/einheiten.php für die Markierung in der Liste und training_offen() für
+ * die Frage, ob eine Einheit noch weitergeht.
+ */
+function training_vollstaendig(array $session, array $uebungen): bool
+{
+    $soll = training_soll((string) ($session['day'] ?? ''), $uebungen);
+
+    if ($soll === []) {
+        return false;
+    }
+
+    $gemacht = [];
+    foreach ((array) ($session['exercises'] ?? []) as $eintrag) {
+        $gemacht[(string) ($eintrag['exercise_id'] ?? '')]
+            = count((array) ($eintrag['sets'] ?? []));
+    }
+
+    foreach ($soll as $id => $ziel) {
+        if (($gemacht[$id] ?? 0) < $ziel) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Läuft diese Einheit noch, kann man sie also weitertrainieren?
+ *
+ * Zwei Bedingungen, und die erste ist die wichtigere: Sie muss von HEUTE
+ * sein. "Unvollständig" bleibt eine Einheit auch noch in drei Wochen — die
+ * lässt sich nicht fortsetzen, die ist Geschichte. Eine Einheit ist nur am
+ * selben Kalendertag offen; danach gilt sie als beendet, so als hätte man
+ * "Einheit beenden" gedrückt (Vorgabe von Frank, 22.08.2026).
+ */
+function training_offen(array $session, array $uebungen): bool
+{
+    $heute = (new DateTimeImmutable('now'))->format('Y-m-d');
+
+    if (!beginnt_mit((string) ($session['date'] ?? ''), $heute)) {
+        return false;
+    }
+
+    return !training_vollstaendig($session, $uebungen);
+}
+
+/**
+ * Alle offenen Einheiten von heute, die zuletzt angefangene zuerst.
+ *
+ * Braucht api/plan.php, um nach einem Neuladen wieder die Einheit
+ * anzubieten, in der man steckt, statt den nächsten Tag der Rotation.
+ */
+function training_offene_heute(array $uebungen): array
+{
+    $heute  = new DateTimeImmutable('now');
+    $offene = [];
+
+    foreach (training_monat($heute->format('Y-m')) as $session) {
+        if (training_offen($session, $uebungen)) {
+            $offene[] = $session;
+        }
+    }
+
+    // training_monat() liefert bereits neueste zuerst — nach Datum und, bei
+    // gleicher Sekunde, nach Position in der Datei. Nicht noch einmal drehen:
+    // dann stünde die ÄLTESTE offene Einheit vorn, und die Startseite böte
+    // nach dem Neuladen die an, die man zuerst liegengelassen hat.
+    return $offene;
+}

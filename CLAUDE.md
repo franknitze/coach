@@ -14,7 +14,7 @@ Die Phasen 0 bis 5 aus §10 sind gebaut und laufen live auf dem Server. Der Trai
 | `api/`: `login`, `logout`, `exercises`, `settings`, `plan`, `session`, `history`, `coach`, `einheiten`, `gewicht`, `export`, `setup`, `passwort`, `fotos`, `foto-upload`, `foto-loeschen` | Phase 6 (KI-Coach), ausdrücklich optional |
 | `index.php`, `assets/`: Start mit Rückblick und Fortschrittskurve, Studio, Einstellungen, Übungsdetail mit Verlauf, abgeschlossene Einheit, Kalender, Coach-Ansage | |
 | `manifest.json`, `service-worker.js`, `assets/icons/`, Offline-Puffer | |
-| `.htaccess`, `bin/` (init-config, plan-anlegen, fotos, deploy, icons), `tests/` (364 Prüfungen) | |
+| `.htaccess`, `bin/` (init-config, plan-anlegen, fotos, deploy, icons), `tests/` (377 Prüfungen) | |
 
 Der flüchtige Arbeitsstand steht in `STATE.md`. Die Datei ist **nicht versioniert** (siehe `.gitignore`): Sie handelt nur von dieser einen Installation und liegt ausschließlich auf Franks Rechner. Wer das Repo frisch klont, hat sie nicht, und das ist Absicht.
 
@@ -92,6 +92,16 @@ Nicht an `plan.php` angehängt, obwohl der die Startseite ohnehin füllt: `plan.
 
 Name, Foto, Stationsnummer und Vorgabe reisen je Übung mit, statt sie im Browser gegen `exercises.json` zu verbinden. Eine seit damals gelöschte Übung stünde sonst ohne Namen da, und ihre Sätze wären niemandem mehr zuzuordnen.
 
+**„Offen" ist enger als „unvollständig", und der Unterschied trägt die halbe Oberfläche.** Offen heißt: von **heute** und nicht durch — nur so eine Einheit lässt sich weitertrainieren. Unvollständig bleibt eine Einheit auch noch in drei Wochen; die ist Geschichte. Eine Einheit ist nur am selben Kalendertag offen, danach gilt sie als beendet, so als hätte man „Einheit beenden" gedrückt (Vorgabe von Frank, 22.08.2026).
+
+Daran hängen drei Dinge, und die Regel steht deshalb in `lib/training.php` (`training_offen()`, `training_vollstaendig()`, `training_soll()`) und nicht im Endpunkt: `api/einheiten.php` markiert damit die Liste, `api/plan.php` fragt damit nach dem Tagesvorschlag, und die Oberfläche entscheidet damit, ob ein Antippen in die Leseansicht führt oder ins Studio.
+
+**Eine offene Einheit sticht den Rotationsvorschlag.** Ohne das springt die Startseite nach einem Neuladen auf den nächsten Tag, obwohl man mitten in einem anderen steckt: `naechster_tag()` rückt schon ab dem ersten bestätigten Satz weiter. `zustand.tagWahl` hielt das im Browser fest — aber nur, solange die Seite nicht neu geladen wurde. Bei zwei offenen gewinnt die **zuletzt angefangene**.
+
+Falle dabei: `training_monat()` liefert bereits neueste zuerst. Ein zusätzliches `array_reverse` macht daraus die älteste, und dann bietet die Startseite die Einheit an, die man zuerst liegengelassen hat. Das ist genau einmal passiert und fiel nur im Screenshot auf, nicht im Test — der Test dazu steht jetzt in `tests/einheiten.js`.
+
+**Der Knopf unten verschwindet bei zwei offenen Einheiten.** Er geht immer in den Tag, der oben steht; bei einer offenen Einheit ist das eindeutig, bei zweien bediente er wortlos eine davon. Ein **frischer** Tag bleibt trotzdem startbar, sonst käme man bei zwei halben Einheiten aus der Startseite nicht mehr heraus.
+
 **„Vollständig" wird gegen den heutigen Plan gerechnet.** Eine Einheit speichert nicht, was damals verlangt war. Ändert sich eine Zielsatzzahl, wechseln alte Einheiten die Markierung. Das ist der Preis dafür, die Vorgabe nicht in jede Session zu duplizieren; die Sätze selbst liegen fest. Geprüft wird je Übung, nicht über die Summe: acht Sätze Bankdrücken und keiner Latzug ergäben dieselbe Zahl wie vier und vier, wären aber eine halbe Einheit.
 
 **Der Fortschritts-Index ist ein Mittelwert von Verhältnissen, keine Summe.** `lib/fortschritt.php` gibt je Einheit eine Punktzahl aus. Je Übung wird verglichen, was in dieser Einheit geschafft wurde, mit der **ersten** Einheit dieser Übung; der Tageswert ist der Mittelwert dieser Verhältnisse mal 100.
@@ -113,6 +123,8 @@ Das Eingabefeld ist `type="text"` mit `inputmode="decimal"`, nicht `type="number
 **`json_write()` legt `serialize_precision` selbst fest.** Auf der Kommandozeile steht sie auf -1, also auf der kürzesten verlustfrei rücklesbaren Form; im Webserver bei All-Inkl steht sie anders, und dort schrieb `json_encode` aus 96,8 die volle Binärentwicklung `96.7999999999999971578290569595992565155029296875`. Zurückgelesen ergibt das denselben Wert, kaputt ist also nichts — aber die Datei ist unlesbar, das n8n-Backup trägt es mit, und beim Vergleich zweier Stände sieht jede Kommazahl nach einem Unterschied aus. **Lokal fällt das nie auf**, weil dort die Kommandozeilen-Einstellung gilt; ein Test führt PHP deshalb ausdrücklich mit `serialize_precision=17` aus. Aufgefallen ist es erst am ersten Wert, der binär nicht exakt darstellbar war — die Trainingsgewichte sind alle Viertel und Halbe und damit exakt.
 
 **Der Verwaltungsbereich zeigt `zustand.meldung` an.** Ohne das scheiterte eine abgelehnte Eingabe stumm: das Formular zeichnete sich leer neu und nichts sagte, warum. Wer dort einen Endpunkt anbindet, der etwas ablehnen kann, braucht diese Zeile.
+
+**Im Kalender führt auch eine offene Einheit in die Leseansicht.** Eine Zelle kann nur eine Einheit halten; bei zwei Einheiten an einem Tag wäre wieder unklar, welche gemeint ist — genau die Mehrdeutigkeit, wegen der der Knopf auf der Startseite verschwindet. Fortgesetzt wird deshalb über die Liste der Startseite, wo jede offene Einheit eine eigene Zeile hat. Die Leseansicht einer offenen Einheit bietet den Ausgang ins Studio selbst an; dort ist eindeutig, um welche es geht.
 
 **Der Kalender beantwortet eine andere Frage als der Rückblick.** Die Liste sagt „was habe ich gemacht", das Monatsraster sagt „wie regelmäßig war ich" — und dafür ist die Lücke so wichtig wie der Eintrag. Deshalb ein Raster über alle Tage und nicht nur über die trainierten. Die Woche beginnt am Montag, weil der Plan in Mo/Mi/Fr denkt.
 
@@ -148,6 +160,8 @@ Der eingebaute PHP-Server liest **keine** `.htaccess`. Der Schutz von `data/` l�
 Er steht in **`TRAININGSPLAN.md`** (Begründung: Aufteilung, Reihenfolge, Volumen) und in **`lib/standardplan.php`** (die Zahlen, die nach `data/` geschrieben werden). Wer die Zahlen ändert, ändert die Begründung mit, sonst driften beide auseinander.
 
 **Er wird beim Einrichten automatisch angelegt**, von `api/setup.php` beim ersten Aufruf im Browser und von `bin/init-config.php` auf der Kommandozeile. Beide benutzen dieselbe Quelle; zwei Einrichtungswege dürfen nicht zwei verschiedene Zustände hinterlassen.
+
+Der Browser-Weg ist am 22.08.2026 auf einer zweiten Subdomain durchgespielt worden, aus einem frischen Klon heraus: Passwort setzen, danach standen drei Tage und 25 Übungen da, alle mit Bild. Damit ist auch `standardplan_bild()` unter Linux bestätigt — `glob()` auf `a1-*.jpg` ist dort abhängig von der Groß-/Kleinschreibung, auf macOS nicht.
 
 Vorher legte nur `init-config.php` ein Grundgerüst mit zwei Tagen an und `setup.php` gar nichts. Der Browser-Weg endete damit in einer Sackgasse: Ohne Trainingstag lässt sich keine Übung anlegen (`uebung_pruefen()` prüft den Tag gegen den Plan), und Tage anlegen kann die Oberfläche nicht — `api/settings.php` ändert nur Schwerpunkte und Rotation. Wer kein SSH hatte, kam da nicht mehr heraus.
 

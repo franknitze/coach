@@ -1033,6 +1033,44 @@ body {
     font-style: italic;
 }
 
+/* ---------- Eine Einheit, die noch läuft ----------
+ *
+ * Sie führt nicht in die Leseansicht, sondern zurück ins Studio. Ein
+ * anderes Ziel muss anders aussehen, sonst tippt man auf gut Glück.
+ *
+ * Gelb ist hier keine Dekoration, sondern genau seine Bedeutung in dieser
+ * App: "hier tippen". Der Balken links rückt die Zeile aus der Flucht der
+ * übrigen, damit sie beim Überfliegen auffällt, ohne dass die Liste
+ * unruhig wird.
+ *
+ * "Unvollständig" bleibt daneben bestehen und heißt weiter etwas anderes:
+ * eine Einheit von früher, die nie fertig wurde. Die ist Geschichte und
+ * bleibt leise und kursiv.
+ */
+.einheit--offen {
+    position: relative;
+    padding-left: 12px;
+    padding-right: 74px;
+    border-left: 3px solid var(--tag);
+}
+
+.einheit__marke {
+    color: var(--tag);
+    font-family: var(--mono);
+    font-size: var(--s-klein);
+}
+
+/* Sagt, was das Antippen tut. Rechts und senkrecht mittig, damit es zu
+   beiden Zeilen gehört und nicht zu einer von ihnen. */
+.einheit__weiter {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--tag);
+    font: 600 var(--s-neben)/1 var(--sans);
+}
+
 /* Die Bilanzzeile über den Kacheln einer abgeschlossenen Einheit. */
 .einheit__bilanz {
     margin: -14px 0 24px;

@@ -45,32 +45,13 @@ $plan      = (array) json_read(PLAN_FILE, []);
 $tage      = (array) ($plan['days'] ?? []);
 $uebungen  = (array) json_read(EXERCISES_FILE, []);
 
-/*
- * Was zu einem Trainingstag heute im Plan steht. Grundlage dafür, ob eine
- * Einheit vollständig war: die Einheit selbst speichert nicht, was damals
- * verlangt wurde, also wird gegen den heutigen Stand gerechnet. Ändert sich
- * eine Zielsatzzahl, ändert sich die Beurteilung alter Einheiten mit.
- */
-function einheiten_soll(string $tag, array $uebungen): array
-{
-    $soll = [];
-
-    foreach ($uebungen as $uebung) {
-        if (($uebung['day'] ?? '') === $tag) {
-            $soll[(string) $uebung['id']] = (int) ($uebung['target_sets'] ?? 0);
-        }
-    }
-
-    return $soll;
-}
-
 $ergebnis = [];
 
 $quelle = $monat === '' ? training_letzte_sessions($grenze) : training_monat($monat);
 
 foreach ($quelle as $session) {
     $tag  = (string) ($session['day'] ?? '');
-    $soll = einheiten_soll($tag, $uebungen);
+    $soll = training_soll($tag, $uebungen);
 
     $eintraege  = [];
     $saetze     = 0;
@@ -112,13 +93,16 @@ foreach ($quelle as $session) {
      * Sätze Bankdrücken und keiner Latzug ergäben dieselbe Zahl wie vier
      * und vier, wären aber eine halbe Einheit.
      */
-    $vollstaendig = $soll !== [];
-    foreach ($soll as $id => $ziel) {
-        if (($proUebung[$id] ?? 0) < $ziel) {
-            $vollstaendig = false;
-            break;
-        }
-    }
+    $vollstaendig = training_vollstaendig($session, $uebungen);
+
+    /*
+     * "Offen" ist enger als "unvollständig": nur eine Einheit von heute
+     * lässt sich weitertrainieren. Ein halber Trainingstag von vor drei
+     * Wochen bleibt für immer unvollständig, ist aber Geschichte. Die
+     * Oberfläche hängt daran, ob ein Antippen in die Einheit führt (lesen)
+     * oder ins Studio (weitermachen).
+     */
+    $offen = training_offen($session, $uebungen);
 
     $ergebnis[] = [
         // Datum und Tag zusammen: an einem Kalendertag kann es zwei
@@ -131,6 +115,7 @@ foreach ($quelle as $session) {
         'set_count'    => $saetze,
         'set_target'   => $sollSaetze,
         'vollstaendig' => $vollstaendig,
+        'offen'        => $offen,
         'exercises'    => $eintraege,
     ];
 }

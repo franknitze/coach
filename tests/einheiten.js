@@ -307,4 +307,120 @@ module.exports = (port) => testlauf('Rückblick', port, async (t) => {
     await page.waitForFunction(() =>
         document.querySelectorAll('.zeile--schmal').length === 1);
     ok(true, 'löschen entfernt einen Eintrag wieder');
+
+    /* ---------- Eine Einheit, die noch läuft ------------------------------
+     *
+     * Frank hat eine Einheit begonnen, oben auf "Pause" getippt und stand
+     * danach vor zwei Problemen:
+     *
+     * 1. Der Eintrag in der Liste führte in die Leseansicht — die zeigt nur,
+     *    was schon gemacht ist. Genau die Übungen, die noch fehlten, waren
+     *    dort nicht zu sehen.
+     * 2. Standen zwei unvollständige Einheiten in der Liste, bediente der
+     *    Knopf unten wortlos eine davon.
+     */
+
+    const heute = new Date();
+    const iso = (d) => d.toISOString().slice(0, 10);
+    const heuteIso = iso(heute);
+
+    // Eine angefangene Oberkörper-Einheit von heute: 1 von 4 Sätzen.
+    t.training({
+        [heuteIso.slice(0, 7)]: [
+            einheit(heuteIso, 'oberkoerper', 0, { bankdruecken: saetze(60, 8) }),
+        ],
+    });
+
+    await page.goto('http://127.0.0.1:' + port + '/');
+    await page.waitForSelector('.heute__tag');
+
+    ok(await page.locator('.einheit--offen').count() === 1,
+       'die angefangene Einheit ist in der Liste als offen markiert');
+    ok((await page.locator('.einheit--offen .einheit__marke').innerText()) === 'offen',
+       'sie trägt das Wort "offen", nicht "unvollständig"');
+    ok((await page.locator('.einheit--offen .einheit__weiter').innerText()) === 'Weiter',
+       'und sagt, was das Antippen tut');
+
+    /*
+     * Nach dem Neuladen steht sie wieder oben. Vorher sprang die Anzeige auf
+     * den nächsten Tag der Rotation: naechster_tag() rückt schon ab dem
+     * ersten bestätigten Satz weiter, und zustand.tagWahl hielt das nur
+     * fest, solange die Seite nicht neu geladen wurde.
+     */
+    ok((await page.locator('.heute__tag').innerText()) === 'Oberkörper',
+       'nach dem Neuladen steht die offene Einheit oben, nicht der nächste Tag');
+
+    // Bei genau einer offenen Einheit bleibt der Knopf: er ist eindeutig.
+    ok((await page.locator('.fussleiste .knopf').innerText()) === 'Weiter trainieren',
+       'bei einer offenen Einheit bleibt der Knopf unten stehen');
+
+    /* ---------- Antippen führt ins Studio, nicht in die Leseansicht ------- */
+
+    await page.locator('.einheit--offen').click();
+    await page.waitForSelector('.kachel');
+    ok(await page.locator('[data-gehe="start"]').count() > 0
+       && (await page.locator('.titel').innerText()) === 'Oberkörper',
+       'ein Tipp auf die offene Einheit führt ins Studio');
+
+    const kacheln = await page.locator('.kachel').count();
+    ok(kacheln === 3,
+       'und zeigt ALLE drei Übungen des Tages, nicht nur die eine gemachte: ' + kacheln);
+
+    /* ---------- Zwei offene Einheiten: der Knopf verschwindet ------------- */
+
+    t.training({
+        [heuteIso.slice(0, 7)]: [
+            einheit(heuteIso, 'oberkoerper', 0, { bankdruecken: saetze(60, 8) }),
+            einheit(heuteIso, 'unterkoerper', 1, { beinpresse: saetze(100, 10) }),
+        ],
+    });
+
+    await page.goto('http://127.0.0.1:' + port + '/');
+    await page.waitForSelector('.heute__tag');
+
+    ok(await page.locator('.einheit--offen').count() === 2,
+       'beide angefangenen Einheiten sind als offen markiert');
+
+    /*
+     * Bei zwei offenen gewinnt oben die ZULETZT angefangene — die, in der
+     * man gerade steckt. training_monat() liefert schon neueste zuerst; ein
+     * zusätzliches array_reverse hatte daraus die älteste gemacht, und das
+     * fiel nur im Screenshot auf.
+     */
+    ok((await page.locator('.heute__tag').innerText()) === 'Unterkörper',
+       'oben steht die zuletzt angefangene Einheit, nicht die erste');
+    ok(await page.locator('.fussleiste .knopf').count() === 0,
+       'der Knopf unten verschwindet — er könnte nicht sagen, welche er fortsetzt');
+
+    /*
+     * Ein frischer Tag bleibt trotzdem startbar. Ohne das käme man bei zwei
+     * halben Einheiten aus der Startseite nicht mehr heraus.
+     */
+    await page.locator('.tagknopf', { hasText: 'Unterkörper' }).click();
+    await page.waitForFunction(() => document.querySelector('.heute__tag').innerText
+        === 'Unterkörper');
+    ok(await page.locator('.fussleiste .knopf').count() === 0,
+       'auf dem zweiten offenen Tag bleibt der Knopf ebenfalls weg');
+
+    /* ---------- Eine alte unvollständige Einheit ist KEINE offene --------- */
+
+    const alt = new Date(heute.getTime() - 40 * 86400000);
+    t.training({
+        [iso(alt).slice(0, 7)]: [
+            einheit(iso(alt), 'oberkoerper', 0, { bankdruecken: saetze(60, 8) }),
+        ],
+    });
+
+    await page.goto('http://127.0.0.1:' + port + '/');
+    await page.waitForSelector('.heute__tag');
+
+    ok(await page.locator('.einheit--offen').count() === 0,
+       'eine unvollständige Einheit von vor 40 Tagen gilt nicht als offen');
+    ok((await page.locator('.einheit__offen').first().innerText()) === 'unvollständig',
+       'sie heißt weiter "unvollständig"');
+
+    await page.locator('.einheit').first().click();
+    await page.waitForSelector('.einheit__bilanz');
+    ok(await page.locator('[data-weiter]').count() === 0,
+       'und lässt sich nicht weitertrainieren — sie ist Geschichte');
 });

@@ -136,9 +136,15 @@ ist ausdrücklich vorgesehen und kein Umweg.
 **Ich habe eine Einheit angefangen, und mitten drin sprang die Anzeige auf
 den nächsten Tag um. Warum?**
 Das war ein Fehler und ist behoben. Sobald du das Studio betrittst, hält
-Coach den Tag fest, bis du „Einheit beenden" tippst. Vorher rückte die
-Rotation schon beim ersten bestätigten Satz weiter, weil die laufende Einheit
-damit die letzte in der Historie war.
+Coach den Tag fest, bis du „Einheit beenden" tippst — und findet ihn auch
+nach einem Neuladen wieder. Vorher rückte die Rotation schon beim ersten
+bestätigten Satz weiter, weil die laufende Einheit damit die letzte in der
+Historie war.
+
+**Ich habe eine Einheit pausiert. Warum steht sie noch oben als „Heute"?**
+Weil du mittendrin bist. Solange eine Einheit von heute offen ist, bietet
+Coach sie an und nicht den nächsten Tag der Rotation. Willst du trotzdem
+etwas anderes machen, tippe den gewünschten Tag darunter an.
 
 **Kann ich einen Trainingstag anlegen oder umbenennen?**
 Über die Oberfläche nicht. Die drei Tage des Standardplans entstehen bei der
@@ -438,17 +444,28 @@ Studio gar nichts.
 
 ### Verhalten
 
-Der Knopf **„Einheit beenden"** steht immer unter der letzten Kachel — ob du
-fertig bist oder nicht. Solange die Einheit läuft, tritt er zurück: kein
-Rahmen, kein Gelb.
+Aus einer laufenden Einheit führen zwei Wege heraus:
+
+- **„Pause"** oben rechts — du kommst zur Startseite zurück, die Einheit
+  bleibt offen und du kannst später weitermachen.
+- **„Einheit beenden"** unter der letzten Kachel — die Einheit ist fertig,
+  ob durchgezogen oder nicht.
 
 Danach findest du die Einheit auf der Startseite unter den letzten zehn
-Einheiten, mit Datum, Trainingstag und Umfang. Antippen öffnet sie: oben eine
-Zusammenfassung, darunter **dieselben Kacheln wie im Studio**, nur
+Einheiten, mit Datum, Trainingstag und Umfang.
+
+**Eine Einheit von heute, die noch nicht durch ist, ist „offen".** Sie steht
+in der Liste mit einem gelben Balken, dem Wort „offen" und einem „Weiter"
+daneben. Antippen bringt dich zurück ins Studio, mitsamt den Übungen, die
+noch fehlen.
+
+Jede andere Einheit ist reine Vergangenheit. Antippen öffnet sie zum Lesen:
+oben eine Zusammenfassung, darunter **dieselben Kacheln wie im Studio**, nur
 ausgefüllt.
 
 Eine Einheit ist als **vollständig** markiert, wenn jede Übung ihre
-Zielsatzzahl erreicht hat.
+Zielsatzzahl erreicht hat. Ist sie das nicht und stammt sie nicht von heute,
+heißt sie „unvollständig".
 
 ### Begründung
 
@@ -467,6 +484,17 @@ alles abhakt.
 das" dieselbe Frage wie im Studio. Eine zweite Darstellung dafür wäre eine
 zweite Bildsprache für denselben Gegenstand.
 
+**„Offen" gilt nur am selben Tag.** Danach zählt eine Einheit als beendet, so
+als hättest du „Einheit beenden" gedrückt. Eine Trainingseinheit erstreckt
+sich nicht über mehrere Tage, und ein halber Trainingstag von vor drei Wochen
+lässt sich nicht sinnvoll fortsetzen.
+
+**Der Knopf unten verschwindet, wenn zwei Einheiten offen sind.** Er geht
+immer in den Tag, der oben auf der Startseite steht. Bei einer offenen
+Einheit ist das eindeutig; bei zweien bediente er wortlos eine von beiden.
+Dann entscheidest du über die Liste. Einen **frischen** Tag kannst du
+weiterhin über den Knopf starten.
+
 **„Vollständig" wird je Übung geprüft, nicht über die Gesamtzahl.** Acht Sätze
 Bankdrücken und keiner Latzug ergäben dieselbe Summe wie vier und vier, wären
 aber eine halbe Einheit.
@@ -484,6 +512,28 @@ Weil „vollständig" gegen den **heutigen** Plan gerechnet wird. Hast du bei
 einer Übung die Zielsatzzahl erhöht, erfüllen alte Einheiten sie
 rückwirkend nicht mehr. Die Sätze selbst bleiben unverändert; nur die
 Markierung wechselt.
+
+**Ich habe pausiert und will weitermachen — wie?**
+Tippe in „Letzte Einheiten" auf den Eintrag mit dem gelben Balken. Du landest
+direkt im Studio, mit allen Übungen des Tages. Steht nur eine Einheit offen,
+tut es auch der Knopf „Weiter trainieren" unten.
+
+**Ich habe auf eine unvollständige Einheit getippt und sehe nur die Übungen,
+die ich schon gemacht habe.**
+Dann ist diese Einheit nicht von heute, sondern Vergangenheit — die Ansicht
+ist zum Nachlesen. Fortsetzen lassen sich nur Einheiten von heute, und die
+tragen den gelben Balken.
+
+**Ich habe zwei Einheiten an einem Tag angefangen. Ist das erlaubt?**
+Ja. Beide stehen als offen in der Liste und lassen sich einzeln fortsetzen.
+Der Knopf unten verschwindet dann, weil er nicht sagen könnte, welche er
+meint.
+
+**Im Kalender führt ein Tipp auf die heutige Einheit nur zum Lesen.**
+Stimmt. Eine Kalenderzelle kann nur eine Einheit zeigen, und an einem Tag
+können zwei liegen — dann wäre wieder unklar, welche gemeint ist. Die
+Leseansicht bietet dir aber „Weiter trainieren" an, wenn die Einheit noch
+läuft.
 
 **Warum sehe ich nur zehn Einheiten?**
 Die Startseite zeigt die letzten zehn. Ältere findest du über den Kalender.
@@ -918,4 +968,8 @@ boundary-hint: |
   Herausnahme des Schwerpunkt-Schalters aus der Oberfläche — er schrieb
   einen Wert, den kein Codepfad las. In dieser Datei kommt das Thema
   deshalb bewusst gar nicht vor; der offene Punkt dazu steht in STATE.md.
+  Danach: offene Einheiten. Wer eine Einheit pausierte, kam über die Liste
+  nur in die Leseansicht und sah die fehlenden Übungen nicht; bei zwei
+  unvollständigen Einheiten bediente der Knopf unten wortlos eine davon.
+  Sektionen 2 und 8 sind entsprechend erweitert.
 -->

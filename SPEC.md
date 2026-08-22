@@ -220,6 +220,7 @@
 - Direkt darunter die manuelle Auswahl eines anderen Tags (Frank ist nie ins Schema gezwungen — Krankheit, zusätzliche Einheit etc.).
 - **Fortschritt** als Punktzahl und Kurve über alle Einheiten. Je Übung wird verglichen, was in dieser Einheit geschafft wurde, mit der ersten Einheit dieser Übung; der Tageswert ist der **Mittelwert** dieser Verhältnisse mal 100. Mittelwert und nicht Summe: Sonst zeigte die Kurve die Tagesart statt den Fortschritt, weil ein Tag mit neun Übungen immer über einem mit acht stünde. Der Vergleichswert je Satz ist Epley (`Gewicht × (1 + Wdh/30)`), der beste Satz zählt — nur das Gewicht zu nehmen ließe die Kurve wochenlang flach, während die doppelte Progression aus §7 die Wiederholungen hochklettert.
 - **Rückblick:** die letzten zehn Einheiten mit Datum, Trainingstag und Umfang. Antippen öffnet die Einheit (§5.5).
+- **Offene Einheiten** (ergänzt 22.08.2026). „Offen" ist enger als „unvollständig": von **heute** und nicht durch. Nur so eine lässt sich weitertrainieren; danach gilt eine Einheit als beendet, so als hätte man „Einheit beenden" gedrückt. Sie steht in der Liste mit gelbem Balken, dem Wort „offen" und „Weiter", und ein Tipp führt ins **Studio** statt in die Leseansicht — dort fehlten sonst genau die Übungen, die noch dran sind. Eine offene Einheit sticht außerdem den Rotationsvorschlag: sonst springt die Startseite nach einem Neuladen auf den nächsten Tag, obwohl man mitten in einem anderen steckt. Bei zwei offenen gewinnt oben die zuletzt angefangene, und die Hauptaktion unten **verschwindet** — sie könnte nicht sagen, welche sie fortsetzt. Ein frischer Tag bleibt über sie startbar.
 - Verweise auf den **Kalender** (§5.6) und auf die Einstellungen (§5.3).
 - Die Hauptaktion klebt am unteren Rand, damit sie bei wachsender Liste in der Daumenzone bleibt.
 
@@ -262,12 +263,12 @@
 ### 5.5 Eine abgeschlossene Einheit
 - Über den Rückblick der Startseite oder über den Kalender erreichbar.
 - Oben eine Zusammenfassung (Datum, Beginn, Trainingstag, Umfang, ob vollständig), darunter **dieselben Kacheln wie im Studio**, nur ausgefüllt: Foto, Name, Vorgabe, Punktreihe und die Sätze dieser Einheit. Beim Zurückblicken ist „welches Gerät war das" dieselbe Frage wie im Studio.
-- Rein lesend. Antippen einer Übung führt in ihren Verlauf (§5.4).
+- Rein lesend. Antippen einer Übung führt in ihren Verlauf (§5.4). Ausnahme: Ist die Einheit offen (§5.1), steht hier ein „Weiter trainieren". Über die Startseite ist dieser Fall gar nicht erreichbar — dort führt eine offene Einheit direkt ins Studio —, über den Kalender schon, und dann stünde man vor einer Ansicht ohne Weg zurück ins Training.
 - „Vollständig" wird gegen den heutigen Plan gerechnet und je Übung geprüft, nicht über die Summe. Ändert sich eine Zielsatzzahl, wechseln alte Einheiten die Markierung; das ist der Preis dafür, die Vorgabe nicht in jede Session zu duplizieren.
 
 ### 5.6 Kalender
 - Monatsraster über **alle** Tage, nicht nur die trainierten: Die Liste sagt „was habe ich gemacht", das Raster sagt „wie regelmäßig war ich", und dafür ist die Lücke so wichtig wie der Eintrag.
-- Woche beginnt am Montag. Trainierte Tage sind gefüllt und tragen das Kürzel des Trainingstags; Antippen öffnet die Einheit (§5.5).
+- Woche beginnt am Montag. Trainierte Tage sind gefüllt und tragen das Kürzel des Trainingstags; Antippen öffnet die Einheit (§5.5) — auch bei einer offenen. Eine Zelle kann nur eine Einheit halten, bei zweien an einem Tag wäre unklar welche; fortgesetzt wird deshalb über die Liste der Startseite oder über den Knopf in der Einheit selbst.
 - Geblättert wird nur zwischen dem ältesten Monat mit Daten und dem laufenden.
 
 ---

@@ -636,7 +636,24 @@
             html += '<button class="verweis" data-gehe="plan">Einstellungen</button>';
         }
 
-        if (anzahl > 0) {
+        /*
+         * Der Knopf unten verschwindet, wenn er nicht mehr sagen könnte,
+         * welche Einheit er fortsetzt.
+         *
+         * Er geht immer in den Tag, der oben steht. Solange es höchstens
+         * eine offene Einheit gibt, ist das eindeutig. Bei zweien war es das
+         * nicht mehr: In der Liste standen zwei unvollständige Einheiten,
+         * und der Knopf bediente wortlos eine davon.
+         *
+         * Ein FRISCHER Tag bleibt trotzdem startbar. Sonst könnte man bei
+         * zwei halben Einheiten gar nichts Neues mehr anfangen, und die
+         * Tagesknöpfe darüber führten ins Leere.
+         */
+        const offeneGesamt = (s.offene_einheiten || 0);
+        const dieserOffen  = heuteSaetze > 0;
+        const mehrdeutig   = dieserOffen && offeneGesamt > 1;
+
+        if (anzahl > 0 && !mehrdeutig) {
             html += '<div class="fussleiste"><button class="knopf" data-gehe="studio">'
                  + (heuteSaetze > 0 ? 'Weiter trainieren' : 'Los geht\'s')
                  + '</button></div>';
@@ -670,19 +687,37 @@
                      : '')
                  + '</div>';
 
+        /*
+         * Eine offene Einheit führt ins Studio, jede andere in die
+         * Leseansicht. Vorher führten beide in die Leseansicht — und die
+         * zeigt nur, was schon gemacht ist. Wer eine Einheit pausiert hatte
+         * und weitermachen wollte, sah dort genau die Übungen nicht, die
+         * noch fehlten.
+         *
+         * "Offen" heißt: von heute und nicht durch. Ein halber Trainingstag
+         * von vor drei Wochen bleibt unvollständig, ist aber Geschichte.
+         */
         r.sessions.forEach(function (e) {
-            html += '<button class="einheit" data-einheit="' + esc(e.key) + '">'
-                 + '<span class="einheit__wann">' + esc(datum(e.date)) + ' · '
+            html += e.offen
+                 ? '<button class="einheit einheit--offen" data-weiter="'
+                   + esc(e.day) + '">'
+                 : '<button class="einheit" data-einheit="' + esc(e.key) + '">';
+
+            html += '<span class="einheit__wann">' + esc(datum(e.date)) + ' · '
                  + esc(e.label)
-                 + (e.vollstaendig ? ''
-                     : ' · <span class="einheit__offen">unvollständig</span>')
+                 + (e.offen
+                     ? ' · <span class="einheit__marke">offen</span>'
+                     : (e.vollstaendig ? ''
+                        : ' · <span class="einheit__offen">unvollständig</span>'))
                  + '</span>'
                  + '<span class="einheit__umfang">' + e.exercises.length
                  + (e.exercises.length === 1 ? ' Übung · ' : ' Übungen · ')
                  + (e.vollstaendig || !e.set_target
                      ? e.set_count + (e.set_count === 1 ? ' Satz' : ' Sätze')
                      : e.set_count + ' von ' + e.set_target + ' Sätzen')
-                 + '</span></button>';
+                 + '</span>'
+                 + (e.offen ? '<span class="einheit__weiter">Weiter</span>' : '')
+                 + '</button>';
         });
 
         return html + '</section>';
@@ -860,10 +895,29 @@
             + (e.vollstaendig || !e.set_target
                 ? saetze + (saetze === 1 ? ' Satz' : ' Sätze')
                 : saetze + ' von ' + e.set_target + ' Sätzen')
-            + ' · ' + (e.vollstaendig
-                ? 'vollständig'
-                : '<span class="einheit__offen">unvollständig</span>')
+            + ' · ' + (e.offen
+                ? '<span class="einheit__marke">offen</span>'
+                : (e.vollstaendig
+                    ? 'vollständig'
+                    : '<span class="einheit__offen">unvollständig</span>'))
             + '</p>';
+
+        /*
+         * Eine offene Einheit ist über die Liste der Startseite gar nicht
+         * hier zu erreichen — dort führt sie direkt ins Studio. Über den
+         * Kalender schon, und dann stünde man vor einer Ansicht, die nur
+         * die erledigten Übungen zeigt und keinen Weg zurück ins Training.
+         *
+         * Hier ist eindeutig, welche Einheit gemeint ist. Deshalb der
+         * Ausgang, den der Knopf auf der Startseite bei zwei offenen
+         * Einheiten nicht anbieten kann.
+         */
+        if (e.offen) {
+            html += '<p class="tag__leer">Diese Einheit läuft noch. Es fehlen '
+                 + 'die Übungen, die heute noch nicht dran waren.</p>'
+                 + '<div class="werkzeuge"><button class="knopf" data-weiter="'
+                 + esc(e.day) + '">Weiter trainieren</button></div>';
+        }
 
         e.exercises.forEach(function (u) {
             const werte = u.sets.map(function (satz) {
@@ -2076,7 +2130,7 @@
             + '[data-foto], [data-bild], [data-bildweg], '
             + '[data-bestaetige], [data-korrigiere], [data-extra], [data-bearbeite], '
             + '[data-neu], [data-abbrechen], [data-frage], [data-loesche], [data-prio], '
-            + '[data-gewichtweg], [data-bereich], '
+            + '[data-gewichtweg], [data-bereich], [data-weiter], '
             + '[data-anleitung]');
         if (!ziel) {
             return;
@@ -2147,6 +2201,28 @@
             zustand.meldung = '';
             zustand.passwortText = '';
             window.scrollTo(0, 0);
+            return zeichnen();
+        }
+
+        /*
+         * Eine offene Einheit aus der Liste fortsetzen.
+         *
+         * Nicht derselbe Weg wie data-tag: Der lädt den Tag und bleibt auf
+         * der Startseite. Hier soll man direkt im Studio landen, denn man
+         * hat auf eine Einheit getippt, um weiterzumachen.
+         *
+         * tagWahl wird erst nach dem Laden gesetzt, sonst hielte ein
+         * Fehlschlag einen Tag fest, den man nie zu sehen bekam.
+         */
+        if (d.weiter) {
+            try {
+                await studioLaden(d.weiter);
+                zustand.tagWahl = d.weiter;
+                zustand.ansicht = 'studio';
+                window.scrollTo(0, 0);
+            } catch (err) {
+                zustand.meldung = err.message;
+            }
             return zeichnen();
         }
 
