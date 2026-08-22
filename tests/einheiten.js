@@ -24,7 +24,7 @@ module.exports = (port) => testlauf('Rückblick', port, async (t) => {
     }));
 
     // Eine Einheit im Vormonat, damit der Kalender etwas zum Blättern hat.
-    t.logs({
+    t.training({
         '2026-07': [einheit('2026-07-28', 'unterkoerper', 1, {
             beinpresse: saetze(120, 10, 10, 10, 10),
         })],

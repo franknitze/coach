@@ -24,7 +24,7 @@ module.exports = (port) => testlauf('Unterstützung', port, async (t) => {
 
     // Zweimal sauber an der Obergrenze, bei beiden Übungen. Davor eine
     // Einheit mit mehr Hilfe, damit der Verlauf eine Richtung hat.
-    t.logs({
+    t.training({
         '2026-08': [
             einheit('2026-08-01', 'oberkoerper', 0, {
                 latzug: saetze(35, 10, 9, 8, 8),

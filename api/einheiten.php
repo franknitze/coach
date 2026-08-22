@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 require_once __DIR__ . '/../lib/uebungen.php';
-require_once __DIR__ . '/../lib/logs.php';
+require_once __DIR__ . '/../lib/training.php';
 require_once __DIR__ . '/../lib/fortschritt.php';
 
 auth_require();
@@ -66,7 +66,7 @@ function einheiten_soll(string $tag, array $uebungen): array
 
 $ergebnis = [];
 
-$quelle = $monat === '' ? logs_letzte_sessions($grenze) : logs_monat($monat);
+$quelle = $monat === '' ? training_letzte_sessions($grenze) : training_monat($monat);
 
 foreach ($quelle as $session) {
     $tag  = (string) ($session['day'] ?? '');
@@ -150,11 +150,11 @@ foreach ($quelle as $session) {
 $antwort = [
     'sessions' => $ergebnis,
     'monat'    => $monat,
-    'monate'   => logs_monate(),
+    'monate'   => training_monate(),
 ];
 
 if ($monat === '') {
-    $antwort['total']       = logs_anzahl_sessions();
+    $antwort['total']       = training_anzahl_sessions();
     $antwort['limit']       = $grenze;
     $antwort['fortschritt'] = fortschritt_punkte($uebungen);
 }

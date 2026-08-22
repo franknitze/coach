@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/logs.php';
+require_once __DIR__ . '/training.php';
 require_once __DIR__ . '/gewicht.php';
 
 /**
@@ -94,8 +94,8 @@ function fortschritt_punkte(array $uebungen): array
     // Älteste zuerst: Die Basis einer Übung ist ihre erste Einheit, und die
     // erkennt man nur, wenn man vorwärts durchgeht.
     $sessions = [];
-    foreach (array_reverse(logs_monate()) as $monat) {
-        foreach (array_reverse(logs_monat($monat)) as $session) {
+    foreach (array_reverse(training_monate()) as $monat) {
+        foreach (array_reverse(training_monat($monat)) as $session) {
             $sessions[] = $session;
         }
     }

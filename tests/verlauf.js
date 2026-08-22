@@ -20,7 +20,7 @@ module.exports = (port) => testlauf('Verlauf', port, async (t) => {
         );
         tagInMs += 7 * 86400000;
     }
-    t.logs(proMonat);
+    t.training(proMonat);
 
     await t.anmelden();
     await page.click('[data-gehe="plan"]');

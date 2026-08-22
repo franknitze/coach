@@ -17,6 +17,7 @@ if (PHP_SAPI !== 'cli') {
 }
 
 require_once __DIR__ . '/../lib/config.php';
+require_once __DIR__ . '/../lib/standardplan.php';
 
 $force = in_array('--force', $argv, true);
 
@@ -45,32 +46,22 @@ json_write(CONFIG_FILE, [
 chmod(CONFIG_FILE, 0600);
 echo "config.json angelegt.\n";
 
-if (!is_file(EXERCISES_FILE)) {
-    // Bleibt leer bis zum Studiobesuch, siehe SPEC.md §11.
-    json_write(EXERCISES_FILE, new stdClass());
-    echo "exercises.json angelegt (noch leer).\n";
-}
-
+/*
+ * Derselbe Plan wie über den Browser (api/setup.php). Zwei Einrichtungswege
+ * dürfen nicht zwei verschiedene Zustände hinterlassen.
+ */
 if (!is_file(PLAN_FILE)) {
-    json_write(PLAN_FILE, [
-        'days' => [
-            'oberkoerper'  => ['label' => 'Oberkörper'],
-            'unterkoerper' => ['label' => 'Unterkörper'],
-        ],
-        'rotation' => ['oberkoerper', 'unterkoerper'],
-        'muscle_priorities' => [
-            'brust'    => 'normal',
-            'ruecken'  => 'normal',
-            'beine'    => 'normal',
-            'schulter' => 'normal',
-            'bizeps'   => 'normal',
-            'trizeps'  => 'normal',
-        ],
-    ]);
-    echo "plan.json angelegt (Grundgerüst aus SPEC.md §4).\n";
+    json_write(PLAN_FILE, standardplan_plan());
+    echo "plan.json angelegt (drei Trainingstage).\n";
 }
 
-ensure_dir(LOGS_DIR);
+if (!is_file(EXERCISES_FILE)) {
+    $uebungen = standardplan_uebungen();
+    json_write(EXERCISES_FILE, $uebungen);
+    echo "exercises.json angelegt (" . count($uebungen) . " Übungen).\n";
+}
+
+ensure_dir(TRAINING_DIR);
 
 /*
  * Den Riegel im Datenverzeichnis notfalls selbst anlegen.

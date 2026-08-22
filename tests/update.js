@@ -25,7 +25,7 @@ module.exports = function update() {
     };
 
     const ordner = fs.mkdtempSync(path.join(os.tmpdir(), 'coach-update-'));
-    fs.mkdirSync(path.join(ordner, 'logs'));
+    fs.mkdirSync(path.join(ordner, 'training'));
     fs.writeFileSync(path.join(ordner, 'config.json'), JSON.stringify({
         password_hash: 'x', api_key: 'y', default_weight_step: 5,
         rest_timer_seconds: 120, session_lifetime_days: 30,

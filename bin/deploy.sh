@@ -95,6 +95,7 @@ fi
 rsync -az --delete $TROCKEN -e "$SSH" \
     --include='data/' --include='data/.htaccess' --exclude='data/**' \
     --exclude 'assets/img/exercises/' \
+    --exclude 'sessions/' \
     --exclude 'tests/' --exclude 'images/' --exclude 'fotos/' --exclude '.git/' \
     --exclude '.DS_Store' --exclude 'bin/icons.js' --exclude 'bin/deploy.sh' \
     --exclude 'bin/ziel.conf*' \

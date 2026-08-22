@@ -23,7 +23,7 @@ module.exports = (port) => testlauf('Paare im Wechsel', port, async (t) => {
     fs.writeFileSync(t.datenordner + '/exercises.json',
         JSON.stringify(uebungen, null, 2));
 
-    t.logs({});
+    t.training({});
     await t.anmelden();
     await t.studio('Oberkörper');
 

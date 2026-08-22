@@ -9,7 +9,7 @@ module.exports = (port) => testlauf('Coach', port, async (t) => {
     // bankdruecken zweimal sauber an der Obergrenze  -> steigern
     // latzug mitten im Bereich                        -> halten
     // schulterdruecken auch bester Satz unter rep_min -> zurueckholen
-    t.logs({
+    t.training({
         '2026-08': [
             einheit('2026-08-05', 'oberkoerper', 0, {
                 bankdruecken: saetze(80, 10, 10, 10, 10),

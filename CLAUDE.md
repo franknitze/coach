@@ -51,7 +51,17 @@ Diese Punkte stehen verteilt in der Spezifikation und ergeben zusammen die Archi
 
 **JSON-Dateien als Datenhaltung heißt: jeder Schreibvorgang liest die ganze Datei, ändert sie und schreibt sie zurück.** Ohne Sperre (`flock`) oder atomares Schreiben (temporäre Datei plus `rename`) zerlegt ein abgebrochener Request eine Datei komplett. Es gibt nur einen Nutzer, aber Doppel-Tap auf einen Bestätigungs-Button und ein Service-Worker-Retry reichen für zwei parallele Requests.
 
-**Logs liegen monatsweise** (`data/logs/YYYY-MM.json`), damit die Dateien klein bleiben und das n8n-Backup handlich ist. Das hat eine Folge für die Leseseite: der Verlauf einer einzelnen Übung (`history.php`) und die Coach-Regel (`coach.php`) brauchen beide Sessions über Monatsgrenzen hinweg. Dieser Leser gehört einmal geschrieben und von beiden benutzt, nicht zweimal.
+**Die Trainingsdaten liegen monatsweise** (`data/training/YYYY-MM.json`), damit die Dateien klein bleiben und das n8n-Backup handlich ist.
+
+Der Ordner hieß bis zum 22.08.2026 `logs/`, so stand es auch in SPEC.md §3. Das war der falsche Name: Unter „logs" erwartet man Systemmeldungen und Fehlersuche, dort liegen aber die Trainingseinheiten. Mit umbenannt wurden `LOGS_DIR`, `lib/logs.php` und die zwölf `logs_*()`-Funktionen; `lib/config.php` benennt einen vorhandenen Ordner beim ersten Aufruf selbst um, damit eine bestehende Installation nach dem Update nicht ohne Historie dasteht.
+
+**Die PHP-Sitzungsdateien liegen nicht in `data/`**, sondern in `sessions/` neben `index.php` (`SESSION_DIR`, überschreibbar per `COACH_SESSIONS`). `data/` ist für Trainingsdaten, Sitzungen sind Betrieb. Drei Dinge hängen daran und dürfen nicht vergessen werden: Die `.htaccess` sperrt den Ordner (im Hauptverzeichnis wäre er sonst abrufbar), `bin/deploy.sh` schließt ihn aus (sonst löscht `rsync --delete` bei jedem Deployment alle Anmeldungen), und die Tests setzen `COACH_SESSIONS`, sonst schreiben sie in den Projektordner.
+
+Ein eigener Ordner überhaupt, weil die Vorgabe des Servers `session.gc_maxlifetime = 1440` ist, also 24 Minuten. Unsere 30 Tage gelten nur für unseren eigenen Prozess; im gemeinsamen Systemordner `/var/lib/php/sessions` räumt irgendwann ein fremder mit seiner eigenen Einstellung auf.
+
+**Ohne Cookie fängt `auth_start()` keine Sitzung an.** Sonst legt jeder Aufruf eine leere Datei an, auch der eines Prüfskripts oder eines Suchmaschinen-Roboters: Im Betrieb waren so 107 Dateien aufgelaufen, von denen genau eine eine echte Anmeldung war. Anmelden und Abmelden rufen `auth_start(true)`. Dazu räumt `auth_aufraeumen()` höchstens einmal am Tag abgelaufene Dateien weg; PHPs eigener Lauf greift nur mit 1:100 und erst nach 30 Tagen.
+
+**Die 30 Tage zählen ab der letzten Benutzung.** PHP schickt das Sitzungs-Cookie nur mit, wenn die Sitzung neu entsteht — ohne `auth_verlaengern()` lief es 30 Tage nach dem Anmelden ab, egal wie oft man die App benutzt hatte. Die Funktion setzt bei jedem angemeldeten Aufruf das Cookie neu und schreibt einen Zeitstempel in die Sitzung. Der Zeitstempel ist kein Beiwerk: `session.lazy_write` schreibt die Datei nur bei geändertem Inhalt, sonst altert sie weg, während jemand trainiert. Das hat eine Folge für die Leseseite: der Verlauf einer einzelnen Übung (`history.php`) und die Coach-Regel (`coach.php`) brauchen beide Sessions über Monatsgrenzen hinweg. Dieser Leser gehört einmal geschrieben und von beiden benutzt, nicht zweimal.
 
 **Der Tagesvorschlag wird abgeleitet, nicht gespeichert.** „Heute: Unterkörper" entsteht aus `plan.json → rotation` plus dem `day` der letzten Session in den Logs. Es gibt kein Feld „aktueller Tag", das man pflegen müsste. Die manuelle Auswahl eines anderen Tags muss immer möglich bleiben, Frank soll nie ins Schema gezwungen sein.
 
@@ -131,7 +141,13 @@ Der eingebaute PHP-Server liest **keine** `.htaccess`. Der Schutz von `data/` l�
 
 ## Der Trainingsplan
 
-Er steht in **`TRAININGSPLAN.md`** (Begründung: Aufteilung, Reihenfolge, Volumen) und in **`bin/plan-anlegen.php`** (die Zahlen, die nach `data/` geschrieben werden). Wer die Zahlen ändert, ändert die Begründung mit, sonst driften beide auseinander.
+Er steht in **`TRAININGSPLAN.md`** (Begründung: Aufteilung, Reihenfolge, Volumen) und in **`lib/standardplan.php`** (die Zahlen, die nach `data/` geschrieben werden). Wer die Zahlen ändert, ändert die Begründung mit, sonst driften beide auseinander.
+
+**Er wird beim Einrichten automatisch angelegt**, von `api/setup.php` beim ersten Aufruf im Browser und von `bin/init-config.php` auf der Kommandozeile. Beide benutzen dieselbe Quelle; zwei Einrichtungswege dürfen nicht zwei verschiedene Zustände hinterlassen.
+
+Vorher legte nur `init-config.php` ein Grundgerüst mit zwei Tagen an und `setup.php` gar nichts. Der Browser-Weg endete damit in einer Sackgasse: Ohne Trainingstag lässt sich keine Übung anlegen (`uebung_pruefen()` prüft den Tag gegen den Plan), und Tage anlegen kann die Oberfläche nicht — `api/settings.php` ändert nur Schwerpunkte und Rotation. Wer kein SSH hatte, kam da nicht mehr heraus.
+
+`bin/plan-anlegen.php` ist seitdem kein Einrichtungs-, sondern ein **Update-Werkzeug**: Es schiebt einen geänderten Standardplan in eine bestehende Installation, `--aktualisieren` ohne die Fotos anzutasten, `--neu` mit Sicherung. Es gehört nicht in die README, der Benutzer braucht es nie.
 
 Ein Skript und keine Datei im Repo, weil `data/` ausgeschlossen ist: dort liegen Passwort-Hash und Trainingshistorie. Der Plan selbst ist weder geheim noch verzichtbar und muss sich nach einem Serverneuaufbau in einem Befehl wiederherstellen lassen.
 
@@ -253,7 +269,13 @@ Das erprobte Vorgehen für denselben Host steht auch in `../lithium-rechner/CLAU
 
 **Nicht alles darin gehört in die App.** Dateien, die `IMG_*` heißen, überspringt `bin/fotos.sh`: Das sind die iPhone-Rohaufnahmen, 49 unsortierte Gerätebilder, die die Bildauswahl zumüllen würden. Soll eine davon doch hinein, bekommt sie einen sprechenden Namen, dann greift das Skript sie ab. Die 25 gezeichneten Übungsbilder heißen nach Tag und Position im Plan (`a1` bis `a9` für Tag A, `b1` bis `b8`, `c1` bis `c8`), also etwa `b2-klimmzug-untergriff.png`.
 
-Die Zuordnung Bild zu Übung passiert **in der App** unter „Einstellungen", nicht über Dateinamen. Auf einem Foto sieht man das Gerät, aber nicht, welche Übung jemand daran macht; das kann nur Frank entscheiden. Gespeichert wird sie als Feld `photo` in `data/exercises.json`, und weil `data/` nie deployed wird, reist eine lokal gemachte Zuordnung **nicht** mit auf den Server. Zugeordnet wird deshalb direkt auf dem Live-Server.
+**Die 25 gezeichneten Übungsbilder ordnet `lib/standardplan.php` beim Einrichten selbst zu**, abgeleitet aus Tag und Position (`a1`…`c8`). Der Dateiname trägt die Zuordnung schon, sie ein zweites Mal in die Plandaten zu schreiben liefe beim ersten Umbenennen auseinander. Fehlt eine Datei, bleibt das Feld leer.
+
+Für **Fotos echter Geräte** gilt das nicht: Die Zuordnung passiert in der App unter „Einstellungen", nicht über Dateinamen. Auf einem Foto sieht man das Gerät, aber nicht, welche Übung jemand daran macht; das kann nur Frank entscheiden. Gespeichert wird sie als Feld `photo` in `data/exercises.json`, und weil `data/` nie deployed wird, reist eine lokal gemachte Zuordnung **nicht** mit auf den Server. Zugeordnet wird deshalb direkt auf dem Live-Server.
+
+**Der Upload läuft auch ohne die GD-Bibliothek, dann aber roh.** Mit GD wird die Datei neu gezeichnet: 1600 px, gedreht nach EXIF, ohne Metadaten. Ohne GD wird sie geprüft (`getimagesize`, nur JPEG/PNG/WebP) und unverändert abgelegt, unter ihrer echten Endung — deshalb listet `api/fotos.php` auch `*.png` und `*.webp`, sonst tauchte so ein Bild nie in der Auswahl auf.
+
+Der Rückfall ist Franks Entscheidung und gilt für diese App: ein Nutzer, eigene Aufnahmen, keine fremden Dateien. Das Neuschreiben bleibt trotzdem der Normalfall, denn nur es macht aus einer Datei, die wie ein Bild aussieht, sicher ein Bild — ein gültiges JPEG mit angehängtem Code überlebt es nicht. Wer die App mit mehreren Nutzern betreibt, braucht GD. **Der Zweig ohne GD ist nicht durch Tests abgedeckt**, weil GD hier in jeder Umgebung vorhanden ist (lokal 2.3.3, auf dem Server 2.3.0 in allen sieben PHP-Versionen).
 
 Regeln fürs Aufbereiten, alle in `bin/fotos.sh` und in `tests/fotos.js` festgeschrieben:
 
@@ -308,7 +330,9 @@ COACH_BROWSER=webkit node tests/lauf.js fotos regel fortschritt update verwaltun
     studio verlauf coach paare hilfe einrichtung einheiten
 ```
 
-**Offline wird in Tests doppelt abgesichert.** `setOffline()` allein genügt nicht: Anfragen durch den Service Worker gehen je nach Playwright-Fassung trotzdem durch, und wird die Seite nach dem Neuladen aus dem Cache bedient, meldet `navigator.onLine` weiter `true` — woran die Statusleiste hängt. `tests/pwa.js` und `tests/offline.js` sperren deshalb zusätzlich die API per `page.route(...).abort()`, und `pwa` überschreibt `navigator.onLine` per `addInitScript`, damit schon der erste `statusZeichnen()`-Aufruf beim Hochfahren die Wahrheit sieht. Auf dem iPhone setzt Safari die Eigenschaft korrekt; das ist reine Werkzeug-Nachhilfe.
+**Offline wird in Tests doppelt abgesichert.** `setOffline()` allein genügt nicht: Anfragen durch den Service Worker gehen je nach Playwright-Fassung trotzdem durch, und wird die Seite nach dem Neuladen aus dem Cache bedient, meldet `navigator.onLine` weiter `true` — woran die Statusleiste hängt. `tests/pwa.js` und `tests/offline.js` sperren deshalb zusätzlich die API per `context.route(...).abort()`, und `pwa` überschreibt `navigator.onLine` per `addInitScript`, damit schon der erste `statusZeichnen()`-Aufruf beim Hochfahren die Wahrheit sieht.
+
+**Die Sperre muss am Kontext hängen, nicht an der Seite.** `page.route()` fängt keine Anfragen ab, die der Service Worker selbst stellt — und genau so geht der Offline-Puffer hinaus. Mit `page.route()` kam gelegentlich doch ein Satz beim Server an, aber nur im Gesamtlauf und nicht bei einzelnen Läufen: die Sorte Fehlschlag, die man dreimal für einen Zufall hält. Auf dem iPhone setzt Safari die Eigenschaft korrekt; das ist reine Werkzeug-Nachhilfe.
 
 **Testläufe legen echte Dateien in `assets/img/exercises/` ab.** `api/foto-upload.php` schreibt auf einen festen Pfad neben dem Code, den `COACH_DATA` nicht umleitet — der Browser lädt die Bilder ja per URL von dort. Der `bilder`-Lauf räumt selbst wieder auf, aber nur wenn er bis zum Ende kommt; nach einem Abbruch blieb eine 500-KB-Datei liegen und stand beim nächsten Deploy zum Hochladen an (abgefangen von der 400-KB-Grenze). `tests/hilfen.js` entfernt deshalb nach jedem Lauf, was neu dazukam und wie eine hochgeladene Datei heißt.
 
@@ -316,7 +340,7 @@ COACH_BROWSER=webkit node tests/lauf.js fotos regel fortschritt update verwaltun
 
 Ein iOS-Simulator bliebe der Goldstandard, dafür fehlt auf diesem Mac das volle Xcode (App Store, rund 15 GB, dazu die Simulator-Laufzeit als eigener Download; danach `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`, braucht Franks Passwort). Solange er fehlt gilt: **Was WebKit nicht abdeckt — der native Datumswähler, Tastaturverhalten, Scrollen — gilt erst als geprüft, wenn Frank es auf dem Gerät gesehen hat.**
 
-**Der Verwaltungsbereich heißt in der Oberfläche „Einstellungen", intern `plan`.** `data-gehe="plan"`, `zustand.ansicht === 'plan'`, `zeichnePlan()` — daran hängen `api/settings.php` und `plan.json`. Die beiden Namen dürfen auseinanderlaufen, aber nicht unbemerkt: zwei Tests in `tests/verwaltung.js` halten die sichtbare Beschriftung fest. SPEC.md §5.3 nennt beide Namen nebeneinander, die Beschriftung ist also keine Abweichung.
+**Der Verwaltungsbereich heißt in der Oberfläche „Einstellungen", intern `plan`.** `data-gehe="plan"`, `zustand.ansicht === 'plan'`, `zeichnePlan()` — daran hängen `api/settings.php` und `plan.json`. Die beiden Namen dürfen auseinanderlaufen, aber nicht unbemerkt: zwei Tests in `tests/verwaltung.js` halten die sichtbare Beschriftung fest. SPEC.md §5.3 heißt seit dem Abgleich vom 21.08.2026 ebenfalls „Einstellungen" und nennt den internen Namen dazu.
 
 **Diagramme** (Phase 3, `chart()` in `app.js`):
 

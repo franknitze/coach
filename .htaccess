@@ -20,10 +20,12 @@ RedirectMatch 404 ^/data(/|$)
     Require all denied
 </FilesMatch>
 
-# Interne Bibliothek und das Einrichtungsskript gehören nicht ins Web.
+# Interne Bibliothek, Werkzeuge und die PHP-Sitzungsdateien gehören nicht
+# ins Web. sessions/ liegt im Hauptverzeichnis, weil es Betrieb ist und keine
+# Nutzerdaten — und ist deshalb ohne diese Regel abrufbar.
 # bin/ wird ohnehin nicht hochgeladen, die Regel ist die Absicherung dagegen,
 # es doch einmal zu tun.
-RedirectMatch 404 ^/(lib|bin)(/|$)
+RedirectMatch 404 ^/(lib|bin|sessions)(/|$)
 
 # manifest.json und service-worker.js müssen erreichbar bleiben, sonst
 # funktioniert die PWA nicht. Deshalb hier bewusst keine Sperre auf *.json.

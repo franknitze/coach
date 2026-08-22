@@ -1,5 +1,8 @@
 /* Phase 1: Übungsbibliothek anlegen, ändern, löschen. */
 
+const fs = require('fs');
+const path = require('path');
+
 const { testlauf } = require('./hilfen');
 
 module.exports = (port) => testlauf('Verwaltung', port, async (t) => {
@@ -123,4 +126,85 @@ module.exports = (port) => testlauf('Verwaltung', port, async (t) => {
     await page.waitForSelector('.prio');
     const an = await page.locator('[data-prio="trizeps"][data-wert="focus"]').getAttribute('class');
     ok(an.includes('ist-an'), 'Schwerpunkt überlebt das Neuladen');
+    /* ---------- Die 30 Tage zählen ab der letzten Benutzung ----------
+     *
+     * Vorher lief das Cookie 30 Tage nach dem Anmelden ab, egal wie oft man
+     * die App benutzt hatte: PHP schickt es nur mit, wenn die Session neu
+     * entsteht. Wer täglich trainiert, wäre trotzdem nach einem Monat
+     * ausgesperrt worden.
+     */
+
+    const kekse = async () => (await page.context().cookies())
+        .find((c) => c.name === 'coach');
+
+    const sessionOrdner = path.join(t.datenordner, 'sessions');
+    const sessionZeit = () => {
+        const ordner = sessionOrdner;
+        return Math.max(...fs.readdirSync(ordner)
+            .map((f) => fs.statSync(path.join(ordner, f)).mtimeMs));
+    };
+
+    const vorherKeks = (await kekse()).expires;
+    const vorherDatei = sessionZeit();
+    ok(vorherKeks > Date.now() / 1000 + 86400 * 29,
+       'nach dem Anmelden läuft das Cookie in rund 30 Tagen ab');
+
+    await page.waitForTimeout(1500);
+    await page.reload();
+    await page.waitForSelector('#app');
+
+    const nachherKeks = (await kekse()).expires;
+    ok(nachherKeks > vorherKeks,
+       'jede Benutzung schiebt das Ablaufdatum weiter: +'
+       + Math.round(nachherKeks - vorherKeks) + ' Sekunden');
+    ok(sessionZeit() > vorherDatei,
+       'und die Session-Datei wird angefasst, sonst räumt der Aufräumlauf sie weg');
+
+    /* ---------- Ohne Cookie entsteht keine Sitzungsdatei ----------
+     *
+     * Vorher legte jeder Aufruf eine an, auch der eines Prüfskripts. Im
+     * Betrieb waren so über hundert Dateien mit null Byte aufgelaufen, von
+     * denen genau eine eine echte Anmeldung war.
+     */
+    const vorherAnzahl = fs.readdirSync(sessionOrdner).length;
+
+    const ohneKeks = await page.context().browser().newContext();
+    const fremd = await ohneKeks.newPage();
+    await fremd.goto(t.basis + '/');
+    await fremd.waitForSelector('#anmeldung');
+    await fremd.goto(t.basis + '/api/exercises.php');
+    await ohneKeks.close();
+
+    ok(fs.readdirSync(sessionOrdner).length === vorherAnzahl,
+       'zwei Aufrufe ohne Anmeldung legen keine Sitzungsdatei an');
+
+    /* ---------- Abgelaufene Dateien fliegen raus ---------- */
+
+    const uralt = path.join(sessionOrdner, 'sess_' + 'a'.repeat(32));
+    fs.writeFileSync(uralt, '');
+    const lange_her = Date.now() / 1000 - 86400 * 40;
+    fs.utimesSync(uralt, lange_her, lange_her);
+    // Die Marke zurückdatieren, sonst hält der Lauf sich an "einmal am Tag".
+    const marke = path.join(sessionOrdner, '.aufgeraeumt');
+    if (fs.existsSync(marke)) fs.utimesSync(marke, lange_her, lange_her);
+
+    await page.reload();
+    await page.waitForSelector('#app');
+    ok(!fs.existsSync(uralt),
+       'eine 40 Tage alte Sitzungsdatei wird beim nächsten Aufruf entfernt');
+
+    // Leere tragen nichts und dürfen früher weg, aber nicht sofort: Beim
+    // Schreiben ist eine Datei kurz leer.
+    const leerAlt = path.join(sessionOrdner, 'sess_' + 'b'.repeat(32));
+    const leerNeu = path.join(sessionOrdner, 'sess_' + 'c'.repeat(32));
+    fs.writeFileSync(leerAlt, '');
+    fs.writeFileSync(leerNeu, '');
+    const zweiStunden = Date.now() / 1000 - 7200;
+    fs.utimesSync(leerAlt, zweiStunden, zweiStunden);
+    fs.utimesSync(marke, lange_her, lange_her);
+
+    await page.reload();
+    await page.waitForSelector('#app');
+    ok(!fs.existsSync(leerAlt), 'eine leere Datei von vor zwei Stunden fliegt raus');
+    ok(fs.existsSync(leerNeu), 'eine gerade erst entstandene bleibt liegen');
 });

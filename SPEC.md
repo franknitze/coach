@@ -3,6 +3,10 @@
 > Persönliche Trainings-Tracking-App mit einem einzigen Ziel: **Muskelaufbau / Kraft**.
 > Schlank, schnell im Studio bedienbar, ohne überflüssige Features.
 > Dieses Dokument ist die Vorgabe für die Umsetzung mit Claude Code.
+>
+> **Am 21.08.2026 mit dem gebauten Stand abgeglichen.** Wo die Umsetzung von
+> der ursprünglichen Vorgabe abweicht, steht die Entscheidung samt Datum und
+> Begründung an Ort und Stelle. Die Begründungen im Detail führt `CLAUDE.md`.
 
 ---
 
@@ -25,7 +29,7 @@
 | Datenhaltung | **JSON-Dateien** auf dem Server, **keine Datenbank** |
 | Frontend | HTML + CSS + Vanilla-JS als leichte Single-Page-App, spricht eine kleine JSON-API im PHP-Backend an |
 | App-Feeling | **PWA** (manifest + service worker) → Homescreen-Icon, App-Look |
-| Charts | Schlanke Diagramm-Bibliothek per CDN (Empfehlung: **uPlot** oder **Chart.js**) |
+| Charts | **Inline-SVG, keine Bibliothek.** Gebraucht wird eine Linie mit zwei Achsen; dafür lohnt kein Nachladen, und ein CDN-Skript widerspricht der PWA, die ohne Netz laufen soll. *(Geändert 19.08.2026, vorher: uPlot oder Chart.js per CDN.)* |
 | HTTPS | Pflicht (All-Inkl Let's Encrypt) |
 
 > **Grundsatz:** Kein direkter Datei-Zugriff aus dem Browser. Das Frontend redet nur über die PHP-API, nie direkt mit den JSON-Dateien.
@@ -35,36 +39,72 @@
 ## 3. Ordnerstruktur
 
 ```
-/ (öffentlicher Web-Root, bei All-Inkl meist die Domain-Ebene)
+/ (öffentlicher Web-Root, bei All-Inkl die Domain-Ebene)
 ├── index.php              # App-Shell, Session-Gate
 ├── manifest.json          # PWA-Manifest
 ├── service-worker.js      # PWA-Cache (App-Shell offline)
-├── .htaccess              # Sperrt direkten Zugriff auf /data (Fallback, s. §8)
+├── .htaccess              # Sperrt data/, lib/ und bin/ (s. §8)
 │
 ├── api/
+│   ├── _bootstrap.php     # Session, JSON-Antworten, Methodenprüfung
 │   ├── login.php          # POST: Passwort prüfen, Session setzen
 │   ├── logout.php
+│   ├── setup.php          # POST: einmalig Passwort setzen und Plan anlegen
 │   ├── plan.php           # GET: heutiger/gewählter Tag + Übungen + letzte Werte
-│   ├── session.php        # POST: abgeschlossene Sätze speichern
+│   ├── session.php        # POST: einen Satz speichern (einzeln, nicht am Ende)
 │   ├── exercises.php      # GET/POST/DELETE: Übungsbibliothek (CRUD)
+│   ├── settings.php       # GET/POST: Struktur von plan.json (Rotation, Schwerpunkte)
 │   ├── history.php        # GET: Verlauf einer Übung
 │   ├── coach.php          # GET: regelbasierte Empfehlung pro Übung
+│   ├── einheiten.php      # GET: Rückblick, letzte Einheiten oder ein Monat
+│   ├── gewicht.php        # GET/POST: Körpergewicht mit Datum
+│   ├── fotos.php          # GET: verfügbare Gerätefotos
+│   ├── foto-upload.php    # POST: Foto vom Handy annehmen
+│   ├── foto-loeschen.php  # POST: Foto entfernen
 │   └── export.php         # GET: schlüsselgeschützter Endpunkt für n8n-Backup
+│
+├── lib/                   # gemeinsame Bibliothek, von außen gesperrt
+│   ├── storage.php        # atomares Schreiben, Sperren
+│   ├── config.php         # Pfade, Konstanten, Zeitzone
+│   ├── auth.php           # Session-Gate
+│   ├── uebungen.php       # Prüfung der Übungsdaten
+│   ├── logs.php           # Leser über Monatsgrenzen hinweg
+│   ├── coach.php          # die Progressionsregel aus §7
+│   ├── standardplan.php   # der mitgelieferte Plan: 3 Tage, 25 Übungen
+│   ├── gewicht.php        # Körpergewicht mit Datum
+│   └── fortschritt.php    # der Fortschritts-Index
+│
+├── sessions/              # PHP-Sitzungsdateien, von außen gesperrt
 │
 ├── assets/
 │   ├── app.js
 │   ├── app.css
-│   └── img/exercises/     # echte Gerätefotos (nachzureichen)
+│   ├── icons/             # PWA-Icons
+│   └── img/exercises/     # Gerätefotos, 1200 px JPEG
 │
-└── data/                  # IDEAL: eine Ebene ÜBER dem Web-Root (s. §8)
+├── bin/                   # Werkzeuge, nur Kommandozeile, von außen gesperrt
+│   ├── init-config.php    # data/ einrichten
+│   ├── plan-anlegen.php   # den Trainingsplan hineinschreiben
+│   ├── fotos.sh           # Webfassungen aus den Originalen rechnen
+│   ├── deploy.sh          # der einzige Weg auf den Server
+│   └── …
+│
+├── tests/                 # Testläufe, nicht auf dem Server
+│
+└── data/                  # im Web-Root, per .htaccess gesperrt (s. §8)
     ├── config.json        # Passwort-Hash, API-Key, globale Settings
     ├── exercises.json     # Übungsbibliothek
     ├── plan.json          # Tage, Rotation, Muskelgruppen-Prioritäten
-    └── logs/
-        └── 2026-08.json   # Trainings-Logs, ein Array pro Monat
+    ├── gewicht.json       # Körpergewicht mit Datum
+    └── training/
+        └── 2026-08.json   # Trainingseinheiten, ein Array pro Monat
 ```
 
-**Wichtig:** Ob `data/` außerhalb des Web-Roots liegen kann, hängt von der All-Inkl-Konfiguration ab und wird bei der Einrichtung geprüft (§8). Deshalb ist die `.htaccess`-Sperre der sichere Standard, der immer greift.
+`lib/` steht nicht im ursprünglichen Entwurf. Ohne gemeinsame Bibliothek müssten Pfadkonstante, atomares Schreiben, Session-Gate und Übungsprüfung in jedem Endpunkt neu stehen.
+
+`settings.php` gibt es, weil §3 den Namen `plan.php` für die Studio-Ansicht aus Phase 2 vergibt. Zwei verschiedene Aufgaben, zwei Endpunkte.
+
+**Entschieden (19.08.2026):** `data/` liegt **im** Web-Root und wird per `.htaccess` gesperrt, nicht eine Ebene darüber. Siehe §8.
 
 ---
 
@@ -77,9 +117,12 @@
   "api_key": "langer-zufaelliger-string-fuer-n8n",
   "default_weight_step": 5,
   "rest_timer_seconds": 120,
+  "rest_pair_seconds": 90,
   "session_lifetime_days": 30
 }
 ```
+
+- `rest_pair_seconds` gilt beim Wechsel innerhalb eines Supersets. Die kürzere Pause reicht dort, weil jeder Muskel ruht, während der Gegenspieler arbeitet.
 
 ### `exercises.json` — Übungsbibliothek (Objekt, Key = Übungs-ID)
 ```json
@@ -94,12 +137,21 @@
     "target_sets": 4,
     "rep_min": 8,
     "rep_max": 12,
-    "weight_step": 5
+    "weight_step": 5,
+    "station": "12",
+    "assisted": false,
+    "execution": "Rücken flach an die Lehne, Knie nicht ganz durchdrücken.",
+    "search": "leg press 45 degree",
+    "partner": null
   }
 }
 ```
-- `weight_step` überschreibt pro Übung den globalen Default (erlaubte Werte: `1.25`, `2.5`, `5`).
+- `weight_step` überschreibt pro Übung den globalen Default. Erlaubt sind `0.25`, `0.5`, `1`, `1.25`, `2.5` und `5`. *(Die drei kleinen Stufen kamen am 19.08.2026 dazu: an Kurzhanteln und an Maschinen mit Zusatzscheibe geht es feiner, und wo eine ganze Stufe zu viel wäre, bliebe die Progressionsregel sonst stehen.)*
 - `photo` verweist auf eine Datei in `assets/img/exercises/`.
+- `station` ist die aufgeklebte Gerätenummer aus dem Studio, optional. Sie ist der Grund, warum man das richtige Gerät wiederfindet, und trägt die gelbe Plakette in der Oberfläche.
+- `assisted` kennzeichnet eine Unterstützungsmaschine: Dort hebt ein Gegengewicht einen Teil des Körpergewichts an, **weniger Gewicht heißt schwerer**. Ohne dieses Feld schickte die Progressionsregel dort in die falsche Richtung.
+- `execution` und `search` tragen die Ausführung in einem Satz und einen englischen Suchbegriff für Video und Bildersuche.
+- `partner` verweist auf die Übung, mit der im Wechsel trainiert wird (Superset).
 
 ### `plan.json` — Struktur des Trainingsplans
 ```json
@@ -122,12 +174,13 @@
 - `rotation` ist **zweigliedrig**. Über drei Termine pro Woche (Mo/Mi/Fr) verschiebt sich der Wechsel dadurch von selbst: Woche 1 ist OK/UK/OK, Woche 2 ist UK/OK/UK, und jede Hälfte kommt im Schnitt 1,5-mal pro Woche dran, wie §12 es verlangt. *(Korrigiert 15.08.2026: die frühere dreigliedrige Fassung `[OK, UK, OK]` hätte sich jede Woche identisch wiederholt, Montag wäre für immer Oberkörper gewesen und der Unterkörper nur einmal pro Woche drangekommen.)*
 - `muscle_priorities`: `"normal"` oder `"focus"`. `focus` → diese Gruppe bekommt mehr Volumen. Default überall `normal`; Priorisierung ist vorhanden, aber optional nutzbar.
 
-### `logs/YYYY-MM.json` — Trainings-Logs (Array von Sessions)
+### `training/YYYY-MM.json` — Trainingseinheiten (Array von Sessions)
 ```json
 [
   {
     "date": "2026-08-11T07:05:00+02:00",
     "day": "unterkoerper",
+    "rotation_index": 1,
     "exercises": [
       {
         "exercise_id": "beinpresse",
@@ -141,16 +194,33 @@
   }
 ]
 ```
-- Monatsweise Dateien halten die Logs klein und machen das n8n-Backup handlich.
+- Monatsweise Dateien halten die Einheiten klein und machen das n8n-Backup handlich.
+- Der Ordner hieß bis zum 22.08.2026 `logs/`. Unter „logs“ erwartet man Systemmeldungen, nicht Trainingsdaten; umbenannt am 22.08.2026, bestehende Installationen ziehen beim ersten Aufruf selbst um.
+- `rotation_index` merkt sich die Position in der Rotation. Über den Tagesnamen allein wäre sie nicht eindeutig, sobald derselbe Tag mehrfach in der Rotation steht; der Tagesvorschlag bliebe dann zwischen zwei Positionen hängen. Ältere Einträge ohne das Feld fallen auf die Namenssuche zurück.
+- **Sätze werden einzeln gespeichert, nicht am Ende der Einheit.** Jede Bestätigung ist ein eigener POST auf `session.php` mit `set_index`. Damit ist der Aufruf wiederholbar: ein Doppel-Tap oder ein Wiederholungsversuch überschreibt denselben Satz, statt ihn anzuhängen. Im Studio kann der Akku leer werden; was bestätigt ist, liegt auf der Platte.
+
+### `gewicht.json` — Körpergewicht mit Datum
+```json
+[
+  { "date": "2026-08-19", "kg": 96.8 },
+  { "date": "2026-08-21", "kg": 96.3 }
+]
+```
+- Gebraucht vom Fortschritts-Index (§5.1): An der Unterstützungsmaschine ist die bewegte Last „Körpergewicht minus Hilfe".
+- Mit Datum und nicht als eine aktuelle Zahl. Sonst würde jeder Gang auf die Waage die gesamte Vergangenheit umrechnen, und fünf Kilo weniger erschienen in alten Einheiten als Rückschritt.
+- Eintragen ist freiwillig. Ohne Eintrag bleiben die unterstützten Übungen aus dem Index heraus, alles andere rechnet weiter.
 
 ---
 
 ## 5. Bildschirme & Abläufe
 
-### 5.1 Startseite (= ausbaubares Dashboard)
+### 5.1 Startseite (Dashboard)
 - Erkennt anhand der letzten Session, welcher Tag logisch als Nächstes dran ist, und zeigt groß: **„Heute: Unterkörper"** + großer **„Los geht's"**-Button.
-- Direkt daneben: manuelle Auswahl eines anderen Tags (Frank ist nie ins Schema gezwungen — Krankheit, zusätzliche Einheit etc.).
-- Modular gedacht: heute nur der Trainingsstart; später wachsen hier Widgets an (Wochenübersicht, Fortschrittskurven).
+- Direkt darunter die manuelle Auswahl eines anderen Tags (Frank ist nie ins Schema gezwungen — Krankheit, zusätzliche Einheit etc.).
+- **Fortschritt** als Punktzahl und Kurve über alle Einheiten. Je Übung wird verglichen, was in dieser Einheit geschafft wurde, mit der ersten Einheit dieser Übung; der Tageswert ist der **Mittelwert** dieser Verhältnisse mal 100. Mittelwert und nicht Summe: Sonst zeigte die Kurve die Tagesart statt den Fortschritt, weil ein Tag mit neun Übungen immer über einem mit acht stünde. Der Vergleichswert je Satz ist Epley (`Gewicht × (1 + Wdh/30)`), der beste Satz zählt — nur das Gewicht zu nehmen ließe die Kurve wochenlang flach, während die doppelte Progression aus §7 die Wiederholungen hochklettert.
+- **Rückblick:** die letzten zehn Einheiten mit Datum, Trainingstag und Umfang. Antippen öffnet die Einheit (§5.5).
+- Verweise auf den **Kalender** (§5.6) und auf die Einstellungen (§5.3).
+- Die Hauptaktion klebt am unteren Rand, damit sie bei wachsender Liste in der Daumenzone bleibt.
 
 ### 5.2 Studio-Modus (nach „Los geht's")
 - Liste der heutigen Übungen als **große Kacheln** untereinander.
@@ -161,18 +231,37 @@
   - Wiederholungen: 1er-Schritte.
   - Gewicht: Default 5 kg, pro Übung einstellbar (`weight_step`).
 - Felder sind mit dem letzten Wert **vorbefüllt** → gleiche Leistung = nur bestätigen, kein Ändern.
-- Ein großer Bestätigungs-Button pro Satz → optional startet danach der **Pausen-Timer** (`rest_timer_seconds`).
+- Ein großer Bestätigungs-Button pro Satz → danach läuft der **Pausen-Timer** (`rest_timer_seconds`), als Panel über dem unteren Bildschirmdrittel. Nach dem letzten Satz einer Einheit startet keine Pause: Sie dient dem nächsten Satz, und den gibt es dann nicht. Bei null verschwindet das Panel von selbst, es gibt keinen Zustand danach.
+- **Supersets:** Hat eine Übung einen `partner`, führt die App nach dem Satz dorthin und nimmt die kürzere Pause (`rest_pair_seconds`). Jeder Muskel bekommt trotzdem die volle Pause, weil er ruht, während der Gegenspieler arbeitet, und die Einheit wird rund ein Viertel kürzer.
+- Auf der offenen Kachel ein leiser Aufklapper **„Wie geht die Übung?"** mit Ausführungstext, Suchbegriff und Verweisen auf Video und Bildersuche. Dieselbe Auskunft steht in den Einstellungen, gebraucht wird sie aber hier: vor dem Gerät.
+- Der Ausgang aus der Einheit steht **immer** unter der letzten Kachel, fertig oder nicht. Der letzte Satz wird ganz unten bestätigt, und eine Meldung neun Kacheln weiter oben sieht man nicht. Eine Einheit wird nicht immer fertig.
+- **Ohne Netz:** Jeder bestätigte Satz geht zuerst in den lokalen Puffer, auch bei bester Verbindung. Der Satz gilt, sobald er dort liegt; das Senden ist eine Frage von später. Eine Statusleiste nennt jederzeit Zahl und Lage. Im Studio ist schlechter Empfang der Normalfall, kein Sonderfall.
 
-### 5.3 Verwaltungsbereich („Mein Plan" / Einstellungen)
-- Ruhig zuhause bedienbar, getrennt vom schnellen Studio-Modus.
-- **Übungsbibliothek:** Übung anlegen/ändern/entfernen (Name, Foto, Muskelgruppe, Zielsätze, Wdh-Bereich, Schrittweite, Tag-Zuordnung, Reihenfolge).
+### 5.3 Verwaltungsbereich („Einstellungen")
+- Ruhig zuhause bedienbar, getrennt vom schnellen Studio-Modus. In der Oberfläche heißt er **„Einstellungen"**, intern `plan`.
+- **Übungsbibliothek:** Übung anlegen/ändern/entfernen (Name, Foto, Gerätenummer, Muskelgruppe, Zielsätze, Wdh-Bereich, Schrittweite, Gewichtsrichtung, Tag-Zuordnung, Reihenfolge, Ausführung, Suchbegriff).
+- **Foto vom Handy hochladen** und einer Übung zuordnen. Das Formular öffnet direkt die Kamera; die Zuordnung kann nur ein Mensch treffen, weil man auf einem Foto das Gerät sieht, aber nicht die Übung.
+- **Körpergewicht** mit Datum eintragen, für den Fortschritts-Index.
 - Muskelgruppen-Priorität pro Gruppe setzen (`normal`/`focus`).
 - Plan ist eine frei pflegbare Liste, nichts Festgemauertes.
 
 ### 5.4 Auswertung (pro Übung)
-- In der Bibliothek eine Übung antippen → **Verlaufskurve**.
-- Darstellbar: max. Gewicht über Zeit **und** Trainingsvolumen (= Gewicht × Wdh × Sätze) — Volumen ist die aussagekräftigste Größe für Muskelaufbau.
-- Zeigt auf einen Blick: echte Steigerung oder Stagnation.
+- In den Einstellungen eine Übung antippen → **Verlaufskurve**.
+- **Zwei getrennte Diagramme**, nie eine zweite y-Achse: Arbeitsgewicht über Zeit und Trainingsvolumen (Gewicht × Wdh). Kilogramm und Volumen haben ganz andere Größenordnungen; in ein Achsenkreuz gezwungen suggerieren sich kreuzende Linien Zusammenhänge, die es nicht gibt.
+- An der Unterstützungsmaschine zeigt das erste Diagramm die **geringste Hilfe** und das zweite die Wiederholungen statt des Volumens. „Gewicht × Wdh" wäre dort die abgenommene Last und stiege, wenn man sich mehr helfen lässt.
+- x folgt der echten Zeit, nicht der Position: Eine Trainingspause von drei Wochen soll als Lücke sichtbar sein.
+- Bei einer einzigen Einheit gibt es keine Kurve, sondern den Wert als Zeile. Eine Linie aus einem Punkt behauptet einen Verlauf, den es nicht gibt.
+
+### 5.5 Eine abgeschlossene Einheit
+- Über den Rückblick der Startseite oder über den Kalender erreichbar.
+- Oben eine Zusammenfassung (Datum, Beginn, Trainingstag, Umfang, ob vollständig), darunter **dieselben Kacheln wie im Studio**, nur ausgefüllt: Foto, Name, Vorgabe, Punktreihe und die Sätze dieser Einheit. Beim Zurückblicken ist „welches Gerät war das" dieselbe Frage wie im Studio.
+- Rein lesend. Antippen einer Übung führt in ihren Verlauf (§5.4).
+- „Vollständig" wird gegen den heutigen Plan gerechnet und je Übung geprüft, nicht über die Summe. Ändert sich eine Zielsatzzahl, wechseln alte Einheiten die Markierung; das ist der Preis dafür, die Vorgabe nicht in jede Session zu duplizieren.
+
+### 5.6 Kalender
+- Monatsraster über **alle** Tage, nicht nur die trainierten: Die Liste sagt „was habe ich gemacht", das Raster sagt „wie regelmäßig war ich", und dafür ist die Lücke so wichtig wie der Eintrag.
+- Woche beginnt am Montag. Trainierte Tage sind gefüllt und tragen das Kürzel des Trainingstags; Antippen öffnet die Einheit (§5.5).
+- Geblättert wird nur zwischen dem ältesten Monat mit Daten und dem laufenden.
 
 ---
 
@@ -180,7 +269,7 @@
 
 - **Einzel-Login** für Frank. Passwort wird **niemals im Klartext** gespeichert, nur als Hash via PHP `password_hash()` / `password_verify()`.
 - Nach erfolgreichem Login **Session** mit langer Lebensdauer (`session_lifetime_days`, z.B. 30 Tage) → kein tägliches Neu-Einloggen im Studio.
-- Alle API-Endpunkte außer `login.php` und `export.php` prüfen die Session.
+- Alle API-Endpunkte außer `login.php`, `setup.php` und `export.php` prüfen die Session. `setup.php` ist der einzige, der sich selbst abschaltet: Er arbeitet nur, solange kein Passwort gesetzt ist, danach antwortet er dauerhaft mit 409.
 
 ---
 
@@ -210,6 +299,14 @@ regel(uebung):
 - Diese Regel ist kostenlos, deterministisch und deckt den Großteil des Nutzens ab.
 - Ausgabe erscheint als konkrete Ansage auf der Übungskachel (z.B. „3 Einheiten sauber 80 kg × 12 → heute 85 kg").
 
+**Festgelegt bei der Umsetzung**, wo die Regel oben offen bleibt:
+
+- **N = 2.** Der zügigere Wert; wer vorsichtiger steigern will, setzt `COACH_EINHEITEN` in `lib/coach.php` auf 3. Eine einzelne saubere Einheit reicht bewusst nicht, sonst schiebt ein guter Tag das Gewicht hoch, das am nächsten Termin wieder einbricht.
+- **Eine Einheit zählt nur mit ihrer Zielsatzzahl als sauber.** Zwei Sätze auf der Obergrenze sind kein Beleg dafür, dass vier gehen; ohne diese Bedingung schöbe ausgerechnet ein Abbruch das Gewicht hoch.
+- **„Eingebrochen" heißt: auch der beste Satz liegt unter `rep_min`.** Der letzte Satz fällt bei hartem Training regelmäßig ab, das ist Ermüdung und kein zu schweres Gewicht. Löste jeder schwache Satz die Warnung aus, stünde sie ständig da.
+- **An der Unterstützungsmaschine** (`assisted`) läuft die Regel andersherum: Arbeitsgewicht ist der Satz mit der geringsten Hilfe, Steigern heißt weniger Gewicht. Bei 0 kg Hilfe endet die Leiter, und die Ansage nennt den Wechsel auf Zusatzgewicht.
+- **Der Vorschlag befüllt die Eingabe nicht.** Vorbefüllt bleibt der letzte Wert (§5.2). Die App sagt, was fällig wäre; das Plus drückt Frank selbst, sonst bestätigt er im Halbschlaf eine Steigerung, die er nicht geschafft hat.
+
 ### Ausbaustufe: KI-Coach (optional, später)
 - Zusätzliche Analyse per Sprachmodell-API für übergreifende Muster: Stagnation über mehrere Übungen, Vorschlag Erholungswoche, Balance zwischen Muskelgruppen.
 - **Datenstruktur ist bereits API-tauglich** (Logs als sauberes JSON) → andockbar ohne Umbau.
@@ -221,21 +318,26 @@ regel(uebung):
 
 ## 8. Datei-Schutz (All-Inkl-spezifisch)
 
-Zwei Wege, kombiniert:
+**Entschieden (19.08.2026):** `data/` liegt **im** Web-Root und wird per `.htaccess` gesperrt. So wollte Frank es; die Ebene über dem Web-Root wird nicht genutzt.
 
-1. **Bevorzugt:** `data/` **eine Ebene über dem öffentlichen Ordner** ablegen. Dann ist der Ordner aus dem Browser gar nicht erreichbar, PHP liest ihn aber weiterhin.
-   → Ob diese Ebene bei diesem All-Inkl-Paket existiert, wird bei der Einrichtung per SFTP geprüft (evtl. landet man direkt im öffentlichen Bereich).
-2. **Sicherer Standard (immer):** `.htaccess`-Regel, die den direkten Zugriff auf `*.json` bzw. den `data/`-Pfad sperrt. Greift unabhängig von der Ordnerstruktur.
+Der Schutz hat trotzdem zwei Riegel:
 
-> Falls Weg 1 möglich ist, beide kombinieren („doppelt hält besser"). Falls nicht, reicht Weg 2.
+1. Die `.htaccess` im Web-Root sperrt den kompletten `data/`-Baum, dazu `lib/` und `bin/`, Verzeichnislisten und die `.lock`- und `.tmp`-Dateien des atomaren Schreibens.
+2. In `data/` liegt eine **zweite** `.htaccess` mit derselben Sperre, von `api/setup.php` angelegt. Geht die äußere bei einem Deployment verloren oder greift eine Regel nach einer Änderung an der Serverkonfiguration nicht mehr, wäre sonst der Passwort-Hash herunterladbar.
+
+Der Pfad zu `data/` steht an genau einer Stelle (`DATA_DIR` in `lib/config.php`, überschreibbar per `COACH_DATA`). Ein Umzug über den Web-Root hinaus wäre damit eine Zeile.
+
+Geprüft wird der Schutz bei jedem Deployment: `bin/deploy.sh` ruft `data/config.json`, `lib/config.php` und `bin/plan-anlegen.php` live ab und erwartet 403 beziehungsweise 404. Der eingebaute PHP-Server liest keine `.htaccess`, lokal lässt sich das also nicht prüfen.
 
 ---
 
 ## 9. Automatisiertes Backup via n8n
 
 - **Kein** manueller Export-Button.
-- `export.php` ist ein schlüsselgeschützter Endpunkt: `GET /api/export.php?key=<API_KEY>` liefert alle Daten (Bundle der `data/`-Inhalte als JSON oder ZIP).
+- `export.php` ist ein schlüsselgeschützter Endpunkt und liefert alle Daten als ein JSON-Bündel: `settings`, `exercises`, `plan`, `logs` und eine `summary`.
 - Der Schlüssel wird gegen `config.json → api_key` geprüft. Kein Login-Durchklicken nötig.
+- **Bevorzugt als Header** `X-API-Key`, `?key=` funktioniert weiter. Query-Strings landen im Zugriffsprotokoll des Webservers, bei All-Inkl liest die Statistik dort mit; ein Header steht nicht drin.
+- **Passwort-Hash und API-Key sind im Export nicht enthalten.** Ein Backup, das regelmäßig auf einen Zweitserver wandert und durch n8n-Protokolle läuft, soll keine Geheimnisse tragen. Beide sind mit `bin/init-config.php` in zwei Minuten neu gesetzt, die Trainingsdaten nicht.
 - Ein **n8n-Workflow** zieht den Endpunkt regelmäßig (Schedule-Trigger) und legt die Daten automatisiert auf einem Zweitserver ab. Kein händischer Eingriff.
 
 ---
@@ -261,7 +363,7 @@ Zwei Wege, kombiniert:
 - Pausen-Timer.
 
 **Phase 3 — Auswertung**
-- `history.php` + Verlaufskurven pro Übung (Gewicht & Volumen) mit schlanker Chart-Lib.
+- `history.php` + Verlaufskurven pro Übung (Gewicht & Volumen), als Inline-SVG statt mit einer Bibliothek (§2).
 
 **Phase 4 — Coach (regelbasiert)**
 - `coach.php` mit doppelter Progression, Ansage auf der Kachel.
@@ -271,15 +373,18 @@ Zwei Wege, kombiniert:
 - `manifest.json` + `service-worker.js` (App-Shell offline, Homescreen-Icon).
 
 **Phase 6 — Optional / später**
-- KI-Coach über Sprachmodell-API.
-- Dashboard-Widgets auf der Startseite (Wochenübersicht, Trends).
+- KI-Coach über Sprachmodell-API. *(Offen.)*
+- ~~Dashboard-Widgets auf der Startseite~~ *(Erledigt 19.08.2026: Rückblick, Fortschritts-Index mit Kurve und Kalender, siehe §5.1, §5.5, §5.6.)*
+
+**Stand 21.08.2026:** Phasen 0 bis 5 sind gebaut und laufen. Aus Phase 6 fehlt nur noch der KI-Coach. Der einzige offene Punkt außerhalb des Codes ist der n8n-Workflow aus §9 — bis er steht, ist `data/` auf dem Server die einzige Kopie der Trainingsdaten.
 
 ---
 
 ## 11. Offene Punkte (warten auf Frank)
 
-- [x] **Gerätefotos** aus dem Studio — echte Fotos verwenden (Wiedererkennung), höchstens dezent vereinheitlichen (Zuschnitt/Ausrichtung), nicht KI-stilisieren. *(49 Originale in `images/`, aufgenommen 12.08.2026; 14 davon verkleinert und ohne EXIF unter `assets/img/exercises/`)*
-- [ ] **Serverstruktur** bei All-Inkl prüfen: gibt es eine Ebene über dem Web-Root für `data/`? *(bei Einrichtung, 2-Minuten-Check)*
+- [x] **Gerätefotos** aus dem Studio — echte Fotos verwenden (Wiedererkennung), höchstens dezent vereinheitlichen (Zuschnitt/Ausrichtung), nicht KI-stilisieren. *(Erledigt: alle 25 Übungen haben ein Bild, 1200 px JPEG, ohne EXIF. Die Zuordnung passiert in der App unter „Einstellungen", nicht über Dateinamen — auf einem Foto sieht man das Gerät, aber nicht die Übung.)*
+- [x] **Serverstruktur** bei All-Inkl prüfen: gibt es eine Ebene über dem Web-Root für `data/`? *(Entschieden 19.08.2026: `data/` bleibt im Web-Root und wird per `.htaccess` gesperrt, siehe §8.)*
+- [ ] **Gerätenummern eintragen.** Das Feld `station` ist bei allen 25 Übungen leer. Solange es das ist, bleibt die gelbe Plakette ungenutzt — sie erscheint nur dort, wo ein Foto fehlt, und Fotos gibt es überall. Die Nummern stehen auf den Geräten im Studio und müssten einmal abgetippt werden.
 - [x] **Konkreter Trainingsplan**: Übungen je Tag (Oberkörper/Unterkörper-Split, 3x/Woche rotierend), plus **aktuelle Geräte + Startgewichte/Wdh** als realistische Startwerte. *(Steht in `TRAININGSPLAN.md` und in `data/`. Aufgestellt aus §12 und der Geräteaufnahme, kein Studiobesuch nötig gewesen. **Startgewichte gibt es bewusst keine**: die erste Einheit ist die Eichung, danach übernimmt die Progressionsregel aus §7. Offen bleiben zwei Gerätenummern, die auf den Fotos nicht lesbar sind, siehe TRAININGSPLAN.md.)*
 
 ---

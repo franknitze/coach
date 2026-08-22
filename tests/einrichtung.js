@@ -6,10 +6,22 @@ const fs = require('fs');
 module.exports = (port) => testlauf('Einrichtung', port, async (t) => {
     const { page, ok, basis } = t;
 
-    // Ausgangslage herstellen: config.json wegnehmen, die App ist "neu"
+    /*
+     * Ausgangslage herstellen: wirklich leer, nicht nur ohne Passwort.
+     *
+     * Der Testlauf legt sonst schon Plan und Übungen an, und setup.php
+     * überspringt vorhandene Dateien zu Recht. Um zu prüfen, was eine
+     * frische Installation bekommt, müssen alle drei weg.
+     */
     const config = t.datenordner + '/config.json';
     const gesichert = fs.readFileSync(config, 'utf8');
-    fs.unlinkSync(config);
+    const beiseite = {};
+
+    for (const datei of ['config.json', 'plan.json', 'exercises.json']) {
+        const pfad = t.datenordner + '/' + datei;
+        beiseite[datei] = fs.readFileSync(pfad, 'utf8');
+        fs.unlinkSync(pfad);
+    }
 
     await page.goto(basis + '/');
     ok(await page.locator('#einrichtung').count() === 1, 'ohne Passwort erscheint die Einrichtung');
@@ -59,11 +71,39 @@ module.exports = (port) => testlauf('Einrichtung', port, async (t) => {
     const danach = JSON.parse(fs.readFileSync(config, 'utf8'));
     ok(danach.password_hash === neu.password_hash, 'das gesetzte Passwort bleibt unverändert');
 
+    /*
+     * Der Plan muss beim Einrichten mitkommen. Ohne ihn endete der Weg über
+     * den Browser in einer Sackgasse: Ohne Trainingstag lässt sich keine
+     * Übung anlegen, und Tage anlegen kann die Oberfläche nicht. Wer kein
+     * SSH hatte, kam da nicht mehr heraus.
+     */
+    const plan = JSON.parse(fs.readFileSync(t.datenordner + '/plan.json', 'utf8'));
+    ok(Object.keys(plan.days).join(',') === 'oberkoerper,ganzkoerper,unterkoerper',
+       'beim Einrichten entstehen drei Trainingstage: ' + Object.keys(plan.days).join(', '));
+    ok(plan.rotation.length === 3, 'mit einer Rotation über alle drei');
+
+    const geliefert = JSON.parse(fs.readFileSync(t.datenordner + '/exercises.json', 'utf8'));
+    ok(Object.keys(geliefert).length === 25,
+       'und 25 Übungen: ' + Object.keys(geliefert).length);
+    ok(Object.values(geliefert).every((u) => /^[abc]\d-.+\.jpg$/.test(u.photo)),
+       'jede Übung hat ihr gezeichnetes Bild, abgeleitet aus Tag und Position');
+    ok(Object.values(geliefert).every((u) => u.station === ''),
+       'die Gerätenummer bleibt leer, die klebt am Gerät im eigenen Studio');
+
     // Anmelden mit dem neuen Passwort
     await page.fill('#passwort', 'langgenug1');
     await page.click('#anmelden');
     await page.waitForSelector('#app', { timeout: 10000 });
     ok(true, 'Anmeldung mit dem selbst gesetzten Passwort geht');
 
+    // Und man landet nicht bei "Der Plan fehlt noch", sondern im Training.
+    await page.waitForSelector('.heute__tag');
+    ok((await page.locator('.heute__tag').innerText()).length > 0,
+       'die Startseite bietet sofort einen Trainingstag an: '
+       + await page.locator('.heute__tag').innerText());
+
+    for (const [datei, inhalt] of Object.entries(beiseite)) {
+        fs.writeFileSync(t.datenordner + '/' + datei, inhalt);
+    }
     fs.writeFileSync(config, gesichert);
 });

@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
-require_once __DIR__ . '/../lib/logs.php';
+require_once __DIR__ . '/../lib/training.php';
 
 auth_require();
 require_method('POST');
@@ -74,9 +74,9 @@ if ($roh !== '') {
     }
 }
 
-logs_satz_eintragen($tag, $rotIdx, $uebung, $index, $gewicht, $wdh, $zeitpunkt);
+training_satz_eintragen($tag, $rotIdx, $uebung, $index, $gewicht, $wdh, $zeitpunkt);
 
-$heutige = logs_session_am($tag, $zeitpunkt);
+$heutige = training_session_am($tag, $zeitpunkt);
 $saetze  = [];
 foreach ((array) ($heutige['exercises'] ?? []) as $eintrag) {
     if (($eintrag['exercise_id'] ?? '') === $uebung) {

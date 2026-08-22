@@ -6,7 +6,7 @@ require_once __DIR__ . '/config.php';
 /**
  * Lesen und Schreiben der Trainings-Logs.
  *
- * Die Logs liegen monatsweise (data/logs/YYYY-MM.json), damit die Dateien
+ * Die Trainingsdaten liegen monatsweise (data/training/YYYY-MM.json), damit die Dateien
  * klein bleiben und das n8n-Backup handlich ist. Der Preis dafür: fast jede
  * Frage an die Vergangenheit geht über Monatsgrenzen. "Was habe ich zuletzt
  * an der Beinpresse gemacht" kann drei Dateien zurückliegen.
@@ -31,9 +31,9 @@ function beginnt_mit(string $text, string $anfang): bool
 }
 
 /** Monatsdateien, neueste zuerst. */
-function logs_monate(): array
+function training_monate(): array
 {
-    $dateien = glob(LOGS_DIR . '/*.json') ?: [];
+    $dateien = glob(TRAINING_DIR . '/*.json') ?: [];
     $monate = [];
 
     foreach ($dateien as $datei) {
@@ -55,9 +55,9 @@ function logs_monate(): array
  * unterscheidbar, und "welche Session war die letzte" entschiede der Zufall.
  * Angehängt wird hinten, später in der Datei heißt also später entstanden.
  */
-function logs_monat(string $monat): array
+function training_monat(string $monat): array
 {
-    $sessions = array_values((array) json_read(LOGS_DIR . '/' . $monat . '.json', []));
+    $sessions = array_values((array) json_read(TRAINING_DIR . '/' . $monat . '.json', []));
 
     $mitPosition = [];
     foreach ($sessions as $position => $session) {
@@ -82,10 +82,10 @@ function logs_monat(string $monat): array
  * Rückwärts und abbrechbar, damit die Vorbefüllung nicht jedes Mal die
  * gesamte Trainingshistorie einliest.
  */
-function logs_rueckwaerts(callable $besucher): void
+function training_rueckwaerts(callable $besucher): void
 {
-    foreach (logs_monate() as $monat) {
-        foreach (logs_monat($monat) as $session) {
+    foreach (training_monate() as $monat) {
+        foreach (training_monat($monat) as $session) {
             if ($besucher($session) === true) {
                 return;
             }
@@ -94,11 +94,11 @@ function logs_rueckwaerts(callable $besucher): void
 }
 
 /** Die jüngste Session, oder null wenn noch nie trainiert wurde. */
-function logs_letzte_session(): ?array
+function training_letzte_session(): ?array
 {
     $treffer = null;
 
-    logs_rueckwaerts(function (array $session) use (&$treffer): bool {
+    training_rueckwaerts(function (array $session) use (&$treffer): bool {
         $treffer = $session;
         return true;
     });
@@ -113,11 +113,11 @@ function logs_letzte_session(): ?array
  * überblickt, und die Antwort trägt die Sätze gleich mit. Ohne Deckel läse
  * jeder Aufruf der Startseite die gesamte Historie ein.
  */
-function logs_letzte_sessions(int $anzahl): array
+function training_letzte_sessions(int $anzahl): array
 {
     $gefunden = [];
 
-    logs_rueckwaerts(function (array $session) use ($anzahl, &$gefunden): bool {
+    training_rueckwaerts(function (array $session) use ($anzahl, &$gefunden): bool {
         $gefunden[] = $session;
         return count($gefunden) >= $anzahl;
     });
@@ -132,12 +132,12 @@ function logs_letzte_sessions(int $anzahl): array
  * Monatsdateien lesen; das ist der eine Fall, in dem das nötig ist, und er
  * betrifft eine Zahl und keine Schleife über Sätze.
  */
-function logs_anzahl_sessions(): int
+function training_anzahl_sessions(): int
 {
     $summe = 0;
 
-    foreach (logs_monate() as $monat) {
-        $summe += count(logs_monat($monat));
+    foreach (training_monate() as $monat) {
+        $summe += count(training_monat($monat));
     }
 
     return $summe;
@@ -149,11 +149,11 @@ function logs_anzahl_sessions(): int
  * Das ist die Grundlage der Vorbefüllung: gleiche Leistung bedeutet im
  * Studio nur bestätigen, nichts ändern.
  */
-function logs_letzte_werte(string $uebungId): ?array
+function training_letzte_werte(string $uebungId): ?array
 {
     $treffer = null;
 
-    logs_rueckwaerts(function (array $session) use ($uebungId, &$treffer): bool {
+    training_rueckwaerts(function (array $session) use ($uebungId, &$treffer): bool {
         foreach ((array) ($session['exercises'] ?? []) as $eintrag) {
             if (($eintrag['exercise_id'] ?? '') === $uebungId
                 && !empty($eintrag['sets'])) {
@@ -174,11 +174,11 @@ function logs_letzte_werte(string $uebungId): ?array
  * Die letzten $anzahl Einheiten einer Übung, neueste zuerst.
  * Grundlage der Progressionsregel aus SPEC.md §7 (Phase 4).
  */
-function logs_letzte_einheiten(string $uebungId, int $anzahl): array
+function training_letzte_einheiten(string $uebungId, int $anzahl): array
 {
     $gefunden = [];
 
-    logs_rueckwaerts(function (array $session) use ($uebungId, $anzahl, &$gefunden): bool {
+    training_rueckwaerts(function (array $session) use ($uebungId, $anzahl, &$gefunden): bool {
         foreach ((array) ($session['exercises'] ?? []) as $eintrag) {
             if (($eintrag['exercise_id'] ?? '') === $uebungId && !empty($eintrag['sets'])) {
                 $gefunden[] = [
@@ -211,11 +211,11 @@ function logs_letzte_einheiten(string $uebungId, int $anzahl): array
  * Gerechnet wird hier und nicht im Browser: das Frontend zeigt an, es
  * rechnet nicht. Sonst driften Kurve und spätere Coach-Ansage auseinander.
  */
-function logs_verlauf(string $uebungId, bool $unterstuetzt = false): array
+function training_verlauf(string $uebungId, bool $unterstuetzt = false): array
 {
     $punkte = [];
 
-    logs_rueckwaerts(function (array $session) use ($uebungId, $unterstuetzt, &$punkte): bool {
+    training_rueckwaerts(function (array $session) use ($uebungId, $unterstuetzt, &$punkte): bool {
         foreach ((array) ($session['exercises'] ?? []) as $eintrag) {
             if (($eintrag['exercise_id'] ?? '') !== $uebungId) {
                 continue;
@@ -267,7 +267,7 @@ function logs_verlauf(string $uebungId, bool $unterstuetzt = false): array
  * Bestätigungs-Button oder ein Wiederholungsversuch des Service Workers
  * überschreibt denselben Satz, statt ihn ein zweites Mal anzuhängen.
  */
-function logs_satz_eintragen(
+function training_satz_eintragen(
     string $tag,
     int $rotationIndex,
     string $uebungId,
@@ -282,7 +282,7 @@ function logs_satz_eintragen(
     $jetzt  = $zeitpunkt ?? new DateTimeImmutable('now');
     $monat  = $jetzt->format('Y-m');
     $heute  = $jetzt->format('Y-m-d');
-    $datei  = LOGS_DIR . '/' . $monat . '.json';
+    $datei  = TRAINING_DIR . '/' . $monat . '.json';
 
     $satz = ['weight' => $gewicht, 'reps' => $wiederholungen];
 
@@ -335,12 +335,12 @@ function logs_satz_eintragen(
 }
 
 /** Die Session dieses Trainingstags an diesem Kalendertag, oder null. */
-function logs_session_am(string $tag, ?DateTimeImmutable $zeitpunkt = null): ?array
+function training_session_am(string $tag, ?DateTimeImmutable $zeitpunkt = null): ?array
 {
     $wann = $zeitpunkt ?? new DateTimeImmutable('now');
     $tagesdatum = $wann->format('Y-m-d');
 
-    foreach (logs_monat($wann->format('Y-m')) as $session) {
+    foreach (training_monat($wann->format('Y-m')) as $session) {
         if (beginnt_mit((string) ($session['date'] ?? ''), $tagesdatum)
             && ($session['day'] ?? '') === $tag) {
             return $session;
@@ -351,7 +351,7 @@ function logs_session_am(string $tag, ?DateTimeImmutable $zeitpunkt = null): ?ar
 }
 
 /** Die heutige Session dieses Trainingstags, oder null. */
-function logs_heutige_session(string $tag): ?array
+function training_heutige_session(string $tag): ?array
 {
-    return logs_session_am($tag, null);
+    return training_session_am($tag, null);
 }

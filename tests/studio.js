@@ -8,7 +8,7 @@ const { testlauf, saetze, einheit } = require('./hilfen');
 module.exports = (port) => testlauf('Studio', port, async (t) => {
     const { page, ok } = t;
 
-    t.logs({
+    t.training({
         '2026-07': [
             einheit('2026-07-29', 'oberkoerper', 2, { bankdruecken: saetze(75, 10) }),
         ],
@@ -231,7 +231,7 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
     cfg.rest_pair_seconds = 2;
     fs.writeFileSync(cfgDatei, JSON.stringify(cfg, null, 2));
 
-    t.logs({});
+    t.training({});
     await page.reload();
     await page.waitForSelector('.heute__tag');
     await t.studio('Oberkörper');
@@ -255,7 +255,7 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
      */
 
     const heuteIso = new Date().toISOString().slice(0, 10);
-    t.logs({
+    t.training({
         [heuteIso.slice(0, 7)]: [
             einheit(heuteIso, 'oberkoerper', 0, {
                 bankdruecken: saetze(80, 10, 10, 10, 10),
@@ -288,7 +288,7 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
      */
 
     const heute = new Date().toISOString().slice(0, 10);
-    t.logs({
+    t.training({
         [heute.slice(0, 7)]: [
             einheit(heute, 'oberkoerper', 0, {
                 bankdruecken: saetze(80, 10, 10, 10, 10),

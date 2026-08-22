@@ -102,7 +102,7 @@ async function browserStarten() {
 
 /** Legt data/ für den Testlauf an: Passwort, leerer Plan, drei Übungen. */
 function datenAnlegen(ordner) {
-    fs.mkdirSync(path.join(ordner, 'logs'), { recursive: true });
+    fs.mkdirSync(path.join(ordner, 'training'), { recursive: true });
 
     const hash = execFileSync('php', [
         '-r', 'echo password_hash($argv[1], PASSWORD_DEFAULT);', PASSWORT,
@@ -161,7 +161,7 @@ function schreibe(ordner, datei, inhalt) {
 /**
  * Startet Server und Browser, führt $lauf aus und räumt danach auf.
  *
- * $lauf bekommt ein Objekt mit page, ok() für eine Prüfung, logs() zum
+ * $lauf bekommt ein Objekt mit page, ok() für eine Prüfung, training() zum
  * Setzen des Ausgangszustands und anmelden().
  */
 async function testlauf(name, port, lauf) {
@@ -205,7 +205,11 @@ async function testlauf(name, port, lauf) {
         '-S', '127.0.0.1:' + port, '-t', WURZEL,
     ], {
         cwd: WURZEL,
-        env: Object.assign({}, process.env, { COACH_DATA: ordner }),
+        env: Object.assign({}, process.env, {
+            COACH_DATA: ordner,
+            // Sonst schreibt der Lauf Sitzungsdateien in den Projektordner.
+            COACH_SESSIONS: path.join(ordner, 'sessions'),
+        }),
         stdio: 'ignore',
     });
 
@@ -268,8 +272,8 @@ async function testlauf(name, port, lauf) {
         },
 
         /** Setzt die Logdateien auf einen festen Ausgangszustand. */
-        logs(proMonat) {
-            const ziel = path.join(ordner, 'logs');
+        training(proMonat) {
+            const ziel = path.join(ordner, 'training');
             for (const f of fs.readdirSync(ziel)) {
                 fs.unlinkSync(path.join(ziel, f));
             }

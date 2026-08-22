@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
-require_once __DIR__ . '/../lib/logs.php';
+require_once __DIR__ . '/../lib/training.php';
 
 /**
  * Schlüsselgeschützter Export für das n8n-Backup (SPEC.md §9).
@@ -48,13 +48,13 @@ if ($geliefert === '' || !hash_equals($erwartet, $geliefert)) {
 $einstellungen = config();
 unset($einstellungen['password_hash'], $einstellungen['api_key']);
 
-$logs = [];
-foreach (logs_monate() as $monat) {
-    $logs[$monat] = json_read(LOGS_DIR . '/' . $monat . '.json', []);
+$training = [];
+foreach (training_monate() as $monat) {
+    $training[$monat] = json_read(TRAINING_DIR . '/' . $monat . '.json', []);
 }
 
 $einheiten = 0;
-foreach ($logs as $sessions) {
+foreach ($training as $sessions) {
     $einheiten += count((array) $sessions);
 }
 
@@ -65,9 +65,9 @@ json_out([
     'settings'    => $einstellungen,
     'exercises'   => json_read(EXERCISES_FILE, new stdClass()),
     'plan'        => json_read(PLAN_FILE, new stdClass()),
-    'logs'        => $logs,
+    'training'    => $training,
     'summary'     => [
-        'months'    => count($logs),
+        'months'    => count($training),
         'sessions'  => $einheiten,
         'exercises' => count((array) json_read(EXERCISES_FILE, [])),
     ],

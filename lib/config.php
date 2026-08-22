@@ -44,12 +44,55 @@ function coach_datenpfad(): string
     }
     return __DIR__ . '/../data';
 }
-define('LOGS_DIR', DATA_DIR . '/logs');
+define('TRAINING_DIR', DATA_DIR . '/training');
+
+/*
+ * Der Ordner hieß bis zum 22.08.2026 logs/. Das war der falsche Name: Unter
+ * "logs" erwartet man Systemmeldungen und Fehlersuche, dort liegen aber die
+ * Trainingseinheiten.
+ *
+ * Die Umbenennung passiert von selbst, damit eine bestehende Installation
+ * nach dem Update nicht ohne Historie dasteht. rename() ist ein einziger
+ * Schritt im Dateisystem; es gibt keinen Moment, in dem die Daten halb hier
+ * und halb dort liegen. Danach greift die Bedingung nie wieder.
+ */
+if (!is_dir(TRAINING_DIR) && is_dir(DATA_DIR . '/logs')) {
+    @rename(DATA_DIR . '/logs', TRAINING_DIR);
+}
+
 
 define('CONFIG_FILE',    DATA_DIR . '/config.json');
 define('EXERCISES_FILE', DATA_DIR . '/exercises.json');
 define('PLAN_FILE',      DATA_DIR . '/plan.json');
 define('GEWICHT_FILE',   DATA_DIR . '/gewicht.json');
+
+/*
+ * Die Sitzungsdateien von PHP. Sie gehören nicht nach data/ — dort liegen
+ * Trainingsdaten, hier liegt Betrieb: eine Datei je angemeldetem Browser,
+ * Inhalt "angemeldet ja, seit wann". Deshalb ein eigener Ordner neben
+ * index.php.
+ *
+ * Warum überhaupt ein eigener und nicht der des Servers: Dessen Vorgabe ist,
+ * Sitzungen nach 24 Minuten wegzuräumen. Unsere 30 Tage gelten nur für
+ * unseren eigenen Prozess; im gemeinsamen Systemordner räumt irgendwann ein
+ * fremder mit seiner eigenen Einstellung auf.
+ *
+ * COACH_SESSIONS sticht den Pfad, so wie COACH_DATA den der Daten. Die Tests
+ * brauchen das: Sie dürfen keine Dateien im Projektordner hinterlassen.
+ */
+define('SESSION_DIR', coach_sessionpfad());
+
+function coach_sessionpfad(): string
+{
+    $aus_umgebung = getenv('COACH_SESSIONS') ?: ($_ENV['COACH_SESSIONS'] ?? '');
+    return $aus_umgebung !== '' ? rtrim($aus_umgebung, '/') : __DIR__ . '/../sessions';
+}
+
+// Einmalig: die Sitzungen lagen bis zum 22.08.2026 unter data/sessions/.
+// Umziehen statt löschen, damit eine laufende Anmeldung erhalten bleibt.
+if (!is_dir(SESSION_DIR) && is_dir(DATA_DIR . '/sessions')) {
+    @rename(DATA_DIR . '/sessions', SESSION_DIR);
+}
 
 /** Globale Einstellungen aus config.json, mit den Vorgaben aus SPEC.md §4. */
 function config(): array

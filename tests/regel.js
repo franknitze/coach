@@ -15,7 +15,7 @@ module.exports = function regel() {
     console.log('### Progressionsregel ###');
 
     const ordner = fs.mkdtempSync(path.join(os.tmpdir(), 'coach-regel-'));
-    fs.mkdirSync(path.join(ordner, 'logs'));
+    fs.mkdirSync(path.join(ordner, 'training'));
     fs.writeFileSync(path.join(ordner, 'config.json'), JSON.stringify({
         password_hash: '', api_key: '', default_weight_step: 5,
         rest_timer_seconds: 120, session_lifetime_days: 30,
@@ -53,7 +53,7 @@ module.exports = function regel() {
             day: 'oberkoerper', rotation_index: 0,
             exercises: [{ exercise_id: 'test', sets: sets }],
         }));
-        fs.writeFileSync(path.join(ordner, 'logs', '2026-08.json'), JSON.stringify(sessions));
+        fs.writeFileSync(path.join(ordner, 'training', '2026-08.json'), JSON.stringify(sessions));
 
         const ausgabe = execFileSync('php', ['-r', `
             require "${WURZEL}/lib/coach.php";
@@ -74,7 +74,7 @@ module.exports = function regel() {
     }
 
     // Die Texte dürfen nie über rep_max hinaus zielen
-    fs.writeFileSync(path.join(ordner, 'logs', '2026-08.json'), JSON.stringify([{
+    fs.writeFileSync(path.join(ordner, 'training', '2026-08.json'), JSON.stringify([{
         date: '2026-08-01T07:00:00+02:00', day: 'oberkoerper', rotation_index: 0,
         exercises: [{ exercise_id: 'test', sets: s(80, 12, 12, 12) }],
     }]));
@@ -116,7 +116,7 @@ module.exports = function regel() {
             day: 'oberkoerper', rotation_index: 0,
             exercises: [{ exercise_id: 'test', sets: sets }],
         }));
-        fs.writeFileSync(path.join(ordner, 'logs', '2026-08.json'), JSON.stringify(sessions));
+        fs.writeFileSync(path.join(ordner, 'training', '2026-08.json'), JSON.stringify(sessions));
 
         const ausgabe = execFileSync('php', ['-r', `
             require "${WURZEL}/lib/coach.php";
@@ -139,7 +139,7 @@ module.exports = function regel() {
 
     // Keine Ansage darf an der Maschine "0 kg" sagen: dort steht keine Last
     // auf der Stange, sondern das eigene Gewicht.
-    fs.writeFileSync(path.join(ordner, 'logs', '2026-08.json'), JSON.stringify([{
+    fs.writeFileSync(path.join(ordner, 'training', '2026-08.json'), JSON.stringify([{
         date: '2026-08-01T07:00:00+02:00', day: 'oberkoerper', rotation_index: 0,
         exercises: [{ exercise_id: 'test', sets: s(0, 10, 9, 9) }],
     }]));

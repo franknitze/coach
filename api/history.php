@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
-require_once __DIR__ . '/../lib/logs.php';
+require_once __DIR__ . '/../lib/training.php';
 
 auth_require();
 require_method('GET');
@@ -23,5 +23,5 @@ if (!isset($alle[$id])) {
 
 json_out([
     'exercise' => $alle[$id],
-    'points'   => logs_verlauf($id, !empty($alle[$id]['assisted'])),
+    'points'   => training_verlauf($id, !empty($alle[$id]['assisted'])),
 ]);

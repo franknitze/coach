@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 require_once __DIR__ . '/../lib/uebungen.php';
-require_once __DIR__ . '/../lib/logs.php';
+require_once __DIR__ . '/../lib/training.php';
 require_once __DIR__ . '/../lib/coach.php';
 
 auth_require();
@@ -46,7 +46,7 @@ if ($istVorschlag) {
     $rotationIndex = $pos === false ? 0 : (int) $pos;
 }
 
-$heutige = logs_heutige_session($tag);
+$heutige = training_heutige_session($tag);
 $erledigt = [];
 foreach ((array) ($heutige['exercises'] ?? []) as $eintrag) {
     $erledigt[$eintrag['exercise_id'] ?? ''] = $eintrag['sets'] ?? [];
@@ -60,7 +60,7 @@ foreach ($alle as $uebung) {
         continue;
     }
     $id = $uebung['id'];
-    $uebung['last']  = logs_letzte_werte($id);
+    $uebung['last']  = training_letzte_werte($id);
     $uebung['today'] = $erledigt[$id] ?? [];
     $uebung['coach'] = coach_empfehlung($uebung);
     $heute[] = $uebung;
@@ -87,7 +87,7 @@ json_out([
  */
 function naechster_tag(array $rotation): array
 {
-    $letzte = logs_letzte_session();
+    $letzte = training_letzte_session();
 
     if ($letzte === null) {
         return ['day' => $rotation[0], 'index' => 0];

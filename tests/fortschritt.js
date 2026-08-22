@@ -11,7 +11,7 @@ module.exports = function fortschritt() {
     console.log('### Fortschritts-Index ###');
 
     const ordner = fs.mkdtempSync(path.join(os.tmpdir(), 'coach-index-'));
-    fs.mkdirSync(path.join(ordner, 'logs'));
+    fs.mkdirSync(path.join(ordner, 'training'));
     fs.writeFileSync(path.join(ordner, 'config.json'), JSON.stringify({
         password_hash: '', api_key: '', default_weight_step: 5,
         rest_timer_seconds: 120, session_lifetime_days: 30,
@@ -34,7 +34,7 @@ module.exports = function fortschritt() {
 
     /** Schreibt Logs und Körpergewicht, rechnet den Index und gibt ihn zurück. */
     function rechne(sessions, uebungen, gewichte) {
-        fs.writeFileSync(path.join(ordner, 'logs', '2026-08.json'), JSON.stringify(sessions));
+        fs.writeFileSync(path.join(ordner, 'training', '2026-08.json'), JSON.stringify(sessions));
         fs.writeFileSync(path.join(ordner, 'gewicht.json'), JSON.stringify(gewichte || []));
 
         const ausgabe = execFileSync('php', ['-r', `

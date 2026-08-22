@@ -15,8 +15,13 @@ require_method('GET');
  * hier zur Auswahl. Kein Eintrag von Hand, keine Dateinamen zu merken.
  */
 
+/*
+ * Auch PNG und WebP: Ohne die GD-Bibliothek legt api/foto-upload.php die
+ * Datei unter ihrer echten Endung ab, statt sie in ein JPEG umzuschreiben.
+ * Stünde hier nur *.jpg, tauchte so ein Bild nie in der Auswahl auf.
+ */
 $ordner = __DIR__ . '/../assets/img/exercises';
-$dateien = glob($ordner . '/*.jpg') ?: [];
+$dateien = glob($ordner . '/*.{jpg,png,webp}', GLOB_BRACE) ?: [];
 
 $fotos = [];
 foreach ($dateien as $pfad) {

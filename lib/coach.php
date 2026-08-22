@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/logs.php';
+require_once __DIR__ . '/training.php';
 
 /**
  * Regelbasierte progressive Überlastung, doppelte Progression (SPEC.md §7).
@@ -73,7 +73,7 @@ function coach_empfehlung(array $uebung): array
      */
     $unterstuetzt = !empty($uebung['assisted']);
 
-    $einheiten = logs_letzte_einheiten((string) $uebung['id'], COACH_EINHEITEN);
+    $einheiten = training_letzte_einheiten((string) $uebung['id'], COACH_EINHEITEN);
 
     if ($einheiten === []) {
         // Kurz halten. Der Wiederholungsbereich steht auf der Kachel schon

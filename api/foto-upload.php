@@ -13,14 +13,25 @@ require_method('POST');
  * landet hier, und danach lässt es sich in der Bildauswahl antippen.
  * Kein Dateiname zu merken, kein Skript, kein SFTP.
  *
- * Die Datei wird beim Speichern neu gezeichnet, nicht durchgereicht.
- * Das hat zwei Gründe, die beide nichts mit Sparsamkeit zu tun haben:
+ * Ist die GD-Bibliothek da, wird die Datei beim Speichern neu gezeichnet
+ * statt durchgereicht. Das hat drei Gründe, die alle nichts mit
+ * Sparsamkeit zu tun haben:
  *
  * 1. Sicherheit. Eine hochgeladene Datei ist erst dann sicher ein Bild,
  *    wenn sie sich als Bild einlesen und neu schreiben lässt. Alles, was
  *    sonst noch drinstecken könnte, überlebt das nicht.
  * 2. Die GPS-Koordinaten aus der Handykamera fallen dabei weg. Die
  *    Bilder liegen auf dem Server ohne Anmeldung.
+ * 3. Aufrecht aufgenommene Handyfotos werden gedreht. Ihre Lage steht
+ *    nur im EXIF, und ohne die Korrektur läge das Gerät auf der Seite.
+ *
+ * Fehlt GD, wird die geprüfte Datei unverändert abgelegt. Das ist eine
+ * bewusste Entscheidung für diese App: Sie hat genau einen Nutzer, und
+ * der lädt seine eigenen Aufnahmen hoch, keine fremden. Wer sie auf
+ * einem Server mit mehreren Nutzern betreibt, sollte GD installieren.
+ *
+ * Ohne GD gilt: das Bild behält Größe, Format und Metadaten, und
+ * gedrehte Handyfotos bleiben gedreht.
  *
  * Die Kantenlänge bleibt großzügig: die Bilder sollen sich in der
  * Großansicht lohnen. Platz ist genug da.
@@ -56,18 +67,52 @@ if ($masse === false) {
     fail('Das ist kein lesbares Bild.', 422);
 }
 
-$erlaubt = [
+$endungen = [
+    IMAGETYPE_JPEG => 'jpg',
+    IMAGETYPE_PNG  => 'png',
+    IMAGETYPE_WEBP => 'webp',
+];
+
+$leser = [
     IMAGETYPE_JPEG => 'imagecreatefromjpeg',
     IMAGETYPE_PNG  => 'imagecreatefrompng',
     IMAGETYPE_WEBP => 'imagecreatefromwebp',
 ];
 
 $typ = $masse[2];
-if (!isset($erlaubt[$typ]) || !function_exists($erlaubt[$typ])) {
+if (!isset($endungen[$typ])) {
     fail('Nur JPEG, PNG und WebP.', 422);
 }
 
-$bild = @$erlaubt[$typ]($datei['tmp_name']);
+// Zwei getrennte Fragen: Ist das Format erlaubt, und kann dieser Server
+// es überhaupt bearbeiten? Vorher hing beides an einer Bedingung, und ein
+// fehlendes GD sah aus wie ein nicht unterstütztes Format.
+$mitGd = function_exists($leser[$typ]) && function_exists('imagejpeg');
+
+$ordner = __DIR__ . '/../assets/img/exercises';
+ensure_dir($ordner);
+
+// Eigener Name statt des vom Client geschickten: darin kann alles stehen,
+// von Pfadangaben bis zu Zeichen, die der Webserver anders auslegt.
+$basis = 'foto-' . (new DateTimeImmutable('now'))->format('Ymd-His')
+       . '-' . bin2hex(random_bytes(3));
+
+/*
+ * Ohne GD: die geprüfte Datei unverändert ablegen, unter ihrer echten
+ * Endung. Ein PNG als .jpg zu speichern wäre gelogen, und api/fotos.php
+ * würde es beim Auflisten übersehen.
+ */
+if (!$mitGd) {
+    $name = $basis . '.' . $endungen[$typ];
+
+    if (!move_uploaded_file($datei['tmp_name'], $ordner . '/' . $name)) {
+        fail('Das Bild ließ sich nicht speichern.', 500);
+    }
+
+    json_out(['photo' => $name, 'width' => $masse[0], 'height' => $masse[1]]);
+}
+
+$bild = @$leser[$typ]($datei['tmp_name']);
 if ($bild === false) {
     fail('Das Bild ließ sich nicht öffnen.', 422);
 }
@@ -98,13 +143,7 @@ if ($faktor < 1.0) {
     }
 }
 
-$ordner = __DIR__ . '/../assets/img/exercises';
-ensure_dir($ordner);
-
-// Eigener Name statt des vom Client geschickten: darin kann alles stehen,
-// von Pfadangaben bis zu Zeichen, die der Webserver anders auslegt.
-$name = 'foto-' . (new DateTimeImmutable('now'))->format('Ymd-His')
-      . '-' . bin2hex(random_bytes(3)) . '.jpg';
+$name = $basis . '.jpg';
 
 $breiteFertig = imagesx($bild);
 $hoeheFertig  = imagesy($bild);

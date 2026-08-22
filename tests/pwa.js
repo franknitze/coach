@@ -117,7 +117,7 @@ module.exports = (port) => testlauf('PWA und Export', port, async (t) => {
     await page.context().addInitScript(() => {
         Object.defineProperty(navigator, 'onLine', { get: () => false });
     });
-    await page.route('**/api/**', function (route) { return route.abort(); });
+    await page.context().route('**/api/**', function (route) { return route.abort(); });
     await page.context().setOffline(true);
     await page.reload();
     ok(await page.locator('.wortmarke').count() === 1,
@@ -133,7 +133,7 @@ module.exports = (port) => testlauf('PWA und Export', port, async (t) => {
     ok(!/Failed to fetch/i.test(await page.locator('body').innerText()),
        'nirgends englischer Browsertext auf dem Bildschirm');
 
-    await page.unroute('**/api/**');
+    await page.context().unroute('**/api/**');
     await page.context().setOffline(false);
 
     /* ---------- Export ---------- */

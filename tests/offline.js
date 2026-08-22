@@ -11,7 +11,7 @@ const { testlauf, saetze, einheit } = require('./hilfen');
 module.exports = (port) => testlauf('Offline-Puffer', port, async (t) => {
     const { page, ok, basis } = t;
 
-    t.logs({
+    t.training({
         '2026-08': [
             einheit('2026-08-11', 'oberkoerper', 0, { bankdruecken: saetze(80, 10, 10, 10) }),
         ],
@@ -33,11 +33,13 @@ module.exports = (port) => testlauf('Offline-Puffer', port, async (t) => {
      * Dann kam gelegentlich doch ein Satz beim Server an, und der Lauf
      * scheiterte an der Prüfung, dass dort noch nichts stehen darf.
      *
-     * Die Route-Sperre schließt den Weg unabhängig davon. Sie gilt nur für
-     * die API: die Seite selbst soll weiter aus dem Cache kommen, das ist
-     * ja der Punkt der Übung.
+     * Die Route-Sperre schließt den Weg unabhängig davon. Sie hängt am
+     * Kontext und nicht an der Seite: page.route() fängt keine Anfragen ab,
+     * die der Service Worker selbst stellt, und genau so geht der Puffer
+     * hinaus. Sie gilt nur für die API — die Seite selbst soll weiter aus
+     * dem Cache kommen, das ist ja der Punkt der Übung.
      */
-    await page.route('**/api/**', function (route) { return route.abort(); });
+    await page.context().route('**/api/**', function (route) { return route.abort(); });
     await page.context().setOffline(true);
 
     const bank = page.locator('.kachel', { hasText: 'Bankdrücken' });
@@ -98,7 +100,7 @@ module.exports = (port) => testlauf('Offline-Puffer', port, async (t) => {
 
     /* ---------- Netz zurück ---------- */
 
-    await page.unroute('**/api/**');
+    await page.context().unroute('**/api/**');
     await page.context().setOffline(false);
     await page.evaluate(() => dispatchEvent(new Event('online')));
 
@@ -113,7 +115,7 @@ module.exports = (port) => testlauf('Offline-Puffer', port, async (t) => {
     ok(nachher.summary.sessions === 2, 'auf dem Server steht jetzt eine zweite Einheit');
 
     const heute = new Date().toISOString().slice(0, 10);
-    const neu = Object.values(nachher.logs).flat()
+    const neu = Object.values(nachher.training).flat()
         .find((s) => s.date.startsWith(heute));
     ok(!!neu, 'sie trägt das heutige Datum, nicht das der Übertragung');
 
@@ -139,7 +141,7 @@ module.exports = (port) => testlauf('Offline-Puffer', port, async (t) => {
 
     const nochmal = await (await fetch(basis + '/api/export.php',
         { headers: { 'X-API-Key': 'testschluessel' } })).json();
-    const wieder = Object.values(nochmal.logs).flat()
+    const wieder = Object.values(nochmal.training).flat()
         .find((s) => s.date.startsWith(heute))
         .exercises.find((e) => e.exercise_id === 'bankdruecken');
     ok(wieder.sets.length === 3,
@@ -170,7 +172,7 @@ module.exports = (port) => testlauf('Offline-Puffer', port, async (t) => {
 
     const spaet = await (await fetch(basis + '/api/export.php',
         { headers: { 'X-API-Key': 'testschluessel' } })).json();
-    const gesternSession = Object.values(spaet.logs).flat()
+    const gesternSession = Object.values(spaet.training).flat()
         .find((s) => s.date.startsWith(gesternTag));
     ok(!!gesternSession && gesternSession.exercises.some((e) => e.exercise_id === 'latzug'),
        'und liegt unter dem ' + gesternTag + ', nicht unter heute');
