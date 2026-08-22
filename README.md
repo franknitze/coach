@@ -35,7 +35,8 @@ Passwort fest, mindestens acht Zeichen. Danach bleibst du 30 Tage angemeldet.
 Mach das gleich nach dem Hochladen. Bis dahin könnte es jeder setzen, der die
 Adresse kennt.
 
-Später ändern geht nur über die Kommandozeile:
+Ändern kannst du es später unter „Einstellungen" → „Allgemein". Hast du es
+vergessen, hilft nur noch die Kommandozeile:
 
 ```bash
 php bin/init-config.php --force

@@ -209,6 +209,8 @@ module.exports = (port) => testlauf('Rückblick', port, async (t) => {
     /* ---------- Körpergewicht eintragen ---------- */
 
     await page.click('[data-gehe="plan"]');
+    // Das Körpergewicht steht seit dem 22.08.2026 im Bereich "Allgemein".
+    await page.click('[data-bereich="allgemein"]');
     await page.waitForSelector('#gewicht-form');
 
     /*

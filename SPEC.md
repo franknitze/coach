@@ -50,6 +50,7 @@
 │   ├── login.php          # POST: Passwort prüfen, Session setzen
 │   ├── logout.php
 │   ├── setup.php          # POST: einmalig Passwort setzen und Plan anlegen
+│   ├── passwort.php       # POST: Passwort ändern (verlangt das alte)
 │   ├── plan.php           # GET: heutiger/gewählter Tag + Übungen + letzte Werte
 │   ├── session.php        # POST: einen Satz speichern (einzeln, nicht am Ende)
 │   ├── exercises.php      # GET/POST/DELETE: Übungsbibliothek (CRUD)
@@ -239,11 +240,17 @@
 
 ### 5.3 Verwaltungsbereich („Einstellungen")
 - Ruhig zuhause bedienbar, getrennt vom schnellen Studio-Modus. In der Oberfläche heißt er **„Einstellungen"**, intern `plan`.
+- **Zwei Bereiche zur Auswahl, „Übungen" und „Allgemein"** (ergänzt 22.08.2026, auf Wunsch von Frank). Die Seite trug vorher alles untereinander; das Passwort wäre der vierte Block hinter 25 Übungszeilen gewesen. Umgeschaltet wird mit demselben Schalter, der auch die Schwerpunkte umlegt — „eins von zweien" hat in dieser App eine Form. „Übungen" ist der Bereich, in dem man landet.
+
+**Übungen**
 - **Übungsbibliothek:** Übung anlegen/ändern/entfernen (Name, Foto, Gerätenummer, Muskelgruppe, Zielsätze, Wdh-Bereich, Schrittweite, Gewichtsrichtung, Tag-Zuordnung, Reihenfolge, Ausführung, Suchbegriff).
 - **Foto vom Handy hochladen** und einer Übung zuordnen. Das Formular öffnet direkt die Kamera; die Zuordnung kann nur ein Mensch treffen, weil man auf einem Foto das Gerät sieht, aber nicht die Übung.
+- Plan ist eine frei pflegbare Liste, nichts Festgemauertes.
+
+**Allgemein**
 - **Körpergewicht** mit Datum eintragen, für den Fortschritts-Index.
 - Muskelgruppen-Priorität pro Gruppe setzen (`normal`/`focus`).
-- Plan ist eine frei pflegbare Liste, nichts Festgemauertes.
+- **Passwort ändern** (ergänzt 22.08.2026). Verlangt das alte Passwort, obwohl die Session schon geprüft ist: Sie hält 30 Tage und liegt auf einem Handy, das man liegen lässt. Der Endpunkt antwortet bei falschem alten Passwort mit **403 und nicht 401** — auf eine 401 lädt das Frontend im angemeldeten Bereich neu, weil das dort „Sitzung abgelaufen" heißt, und die Meldung wäre wortlos weg. Angemeldet bleibt man; Anmeldungen in anderen Browsern bleiben ebenfalls bestehen.
 
 ### 5.4 Auswertung (pro Übung)
 - In den Einstellungen eine Übung antippen → **Verlaufskurve**.
@@ -269,7 +276,7 @@
 
 - **Einzel-Login** für Frank. Passwort wird **niemals im Klartext** gespeichert, nur als Hash via PHP `password_hash()` / `password_verify()`.
 - Nach erfolgreichem Login **Session** mit langer Lebensdauer (`session_lifetime_days`, z.B. 30 Tage) → kein tägliches Neu-Einloggen im Studio.
-- Alle API-Endpunkte außer `login.php`, `setup.php` und `export.php` prüfen die Session. `setup.php` ist der einzige, der sich selbst abschaltet: Er arbeitet nur, solange kein Passwort gesetzt ist, danach antwortet er dauerhaft mit 409.
+- Alle API-Endpunkte außer `login.php`, `setup.php` und `export.php` prüfen die Session. `passwort.php` prüft als einziger zusätzlich noch das Passwort selbst. `setup.php` ist der einzige, der sich selbst abschaltet: Er arbeitet nur, solange kein Passwort gesetzt ist, danach antwortet er dauerhaft mit 409.
 
 ---
 

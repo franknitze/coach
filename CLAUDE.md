@@ -10,11 +10,11 @@ Die Phasen 0 bis 5 aus §10 sind gebaut und laufen live auf dem Server. Der Trai
 
 | Steht | Fehlt |
 |---|---|
-| `lib/`: `storage`, `config`, `auth`, `uebungen`, `logs`, `coach`, `gewicht`, `fortschritt` | **der n8n-Workflow**, der `export.php` abholt (siehe unten). `data/` auf dem Server hat damit **keine Sicherung**. |
-| `api/`: `login`, `logout`, `exercises`, `settings`, `plan`, `session`, `history`, `coach`, `einheiten`, `gewicht`, `export`, `setup`, `fotos`, `foto-upload`, `foto-loeschen` | Phase 6 (KI-Coach), ausdrücklich optional |
+| `lib/`: `storage`, `config`, `auth`, `uebungen`, `training`, `coach`, `gewicht`, `fortschritt`, `standardplan` | **der n8n-Workflow**, der `export.php` abholt (siehe unten). `data/` auf dem Server hat damit **keine Sicherung**. |
+| `api/`: `login`, `logout`, `exercises`, `settings`, `plan`, `session`, `history`, `coach`, `einheiten`, `gewicht`, `export`, `setup`, `passwort`, `fotos`, `foto-upload`, `foto-loeschen` | Phase 6 (KI-Coach), ausdrücklich optional |
 | `index.php`, `assets/`: Start mit Rückblick und Fortschrittskurve, Studio, Einstellungen, Übungsdetail mit Verlauf, abgeschlossene Einheit, Kalender, Coach-Ansage | |
 | `manifest.json`, `service-worker.js`, `assets/icons/`, Offline-Puffer | |
-| `.htaccess`, `bin/` (init-config, plan-anlegen, fotos, deploy, icons), `tests/` (330 Prüfungen) | |
+| `.htaccess`, `bin/` (init-config, plan-anlegen, fotos, deploy, icons), `tests/` (364 Prüfungen) | |
 
 Der flüchtige Arbeitsstand steht in `STATE.md`. Die Datei ist **nicht versioniert** (siehe `.gitignore`): Sie handelt nur von dieser einen Installation und liegt ausschließlich auf Franks Rechner. Wer das Repo frisch klont, hat sie nicht, und das ist Absicht.
 
@@ -48,6 +48,10 @@ Diese Punkte stehen verteilt in der Spezifikation und ergeben zusammen die Archi
 **Das Frontend spricht ausschließlich mit der PHP-API, nie mit den JSON-Dateien.** Es gibt keinen Pfad, auf dem der Browser eine Datei aus `data/` direkt liest. Der Schutz von `data/` hat zwei Ebenen (§8): bevorzugt liegt der Ordner eine Ebene über dem Web-Root, zusätzlich sperrt eine `.htaccess`-Regel den Zugriff. Ob die Ebene über dem Web-Root bei diesem All-Inkl-Paket existiert, ist noch nicht geprüft. Deshalb steht der Pfad zu `data/` an **einer** Stelle (`DATA_DIR` in `lib/config.php`), damit der Umzug später eine Zeile ist und keine Suche über alle Endpunkte. Die Umgebungsvariable `COACH_DATA` sticht ihn; darüber laufen die Tests in einem eigenen Verzeichnis.
 
 **Zwei getrennte Zugangswege.** Alle Endpunkte prüfen die Session, mit genau zwei Ausnahmen: `login.php` (setzt sie) und `export.php` (prüft stattdessen `api_key` gegen `config.json`, weil n8n sich nicht einloggen kann). Beim Anlegen eines neuen Endpunkts ist die Session-Prüfung der Normalfall.
+
+**`api/passwort.php` prüft als einziger Endpunkt zusätzlich das Passwort selbst** und antwortet bei falscher Eingabe mit **403, nicht mit 401**. Der Grund liegt im Frontend: `api()` in `assets/app.js` liest eine 401 im angemeldeten Bereich als „Sitzung abgelaufen" und lädt die Seite neu. Mit 401 wäre die Meldung „Das aktuelle Passwort stimmt nicht" wortlos verschwunden und man stünde wieder auf der Startseite. Wer einen Endpunkt baut, der etwas ablehnt, obwohl der Nutzer angemeldet ist, nimmt 403.
+
+Das alte Passwort wird trotz geprüfter Session verlangt. Sie hält 30 Tage und liegt auf einem Handy, das man auch mal liegen lässt; ohne die Abfrage genügte ein unbeaufsichtigtes Gerät, um den Zugang zu übernehmen. Geschrieben wird über `json_update()` und nicht mit einer neuen Datei: Ginge dabei der `api_key` verloren, holte das Backup ab sofort nichts mehr ab, und es fiele niemandem auf. Ein Test prüft genau das.
 
 **JSON-Dateien als Datenhaltung heißt: jeder Schreibvorgang liest die ganze Datei, ändert sie und schreibt sie zurück.** Ohne Sperre (`flock`) oder atomares Schreiben (temporäre Datei plus `rename`) zerlegt ein abgebrochener Request eine Datei komplett. Es gibt nur einen Nutzer, aber Doppel-Tap auf einen Bestätigungs-Button und ein Service-Worker-Retry reichen für zwei parallele Requests.
 
@@ -339,6 +343,16 @@ COACH_BROWSER=webkit node tests/lauf.js fotos regel fortschritt update verwaltun
 `tests/hilfen.js` sortiert die Playwright-Fassungen aus dem npx-Cache nach Version **absteigend**. Dort liegen sieben nebeneinander (1.52 bis 1.62), und jede erwartet eine bestimmte Browser-Fassung. Wer einfach die erste nimmt, die er findet, bekommt „Executable doesn't exist" für einen Browser, der sehr wohl da ist.
 
 Ein iOS-Simulator bliebe der Goldstandard, dafür fehlt auf diesem Mac das volle Xcode (App Store, rund 15 GB, dazu die Simulator-Laufzeit als eigener Download; danach `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`, braucht Franks Passwort). Solange er fehlt gilt: **Was WebKit nicht abdeckt — der native Datumswähler, Tastaturverhalten, Scrollen — gilt erst als geprüft, wenn Frank es auf dem Gerät gesehen hat.**
+
+**Die Einstellungen haben zwei Bereiche, „Übungen" und „Allgemein"** (22.08.2026). Vorher trug die Seite alles untereinander: Übungen, Körpergewicht, Schwerpunkte. Das Passwort wäre der vierte Block gewesen, hinter 25 Übungszeilen.
+
+Umgeschaltet wird mit **demselben Schalter, der auch die Schwerpunkte umlegt** (`.schalter`, hier als `.schalter--breit`). „Eins von zweien" hat in dieser App eine Form; ein Reiter im Stil einer fremden Bibliothek wäre eine zweite Bildsprache für denselben Handgriff. Er füllt die Breite und ist 48px hoch, weil er hier die Seite gliedert und nicht beiläufig in einer Zeile sitzt.
+
+Der leere Fall („Hier ist noch kein Plan") steht jetzt **innerhalb** des Übungsbereichs. Vorher endete dort die ganze Seite — ausgerechnet in einer kaputten Installation kam man so weder ans Passwort noch ans Körpergewicht.
+
+**Formulare in der App prüfen selbst, der Browser nicht.** Die Anmeldeformulare in `index.php` tragen `novalidate`, das Passwortformular ebenso. Die eingebaute Prüfung käme als Sprechblase in fremder Gestalt, säße woanders und sagte je nach Browser etwas anderes; außerdem verdeckte sie den Weg zum Server, auf dem die Regel tatsächlich lebt. Wer `required` oder `minlength` setzt, hebelt die eigene Meldung aus — genau daran ist der erste Testlauf gescheitert.
+
+**Eine Bestätigung ist kein Kasten.** `.quittung` ist reiner Text in der Schriftfarbe, fett, an derselben Stelle wie `.fehler` und nur durch die Farbe von ihr unterschieden. Mit Rahmen, Fläche und Rundung sah sie aus wie ein viertes, leeres Eingabefeld unter den dreien darüber. Kein Grün: Gelb heißt „hier tippen", Orange heißt „Steigerung fällig", ein dritter Akzent nur für „hat geklappt" wäre einer zu viel.
 
 **Der Verwaltungsbereich heißt in der Oberfläche „Einstellungen", intern `plan`.** `data-gehe="plan"`, `zustand.ansicht === 'plan'`, `zeichnePlan()` — daran hängen `api/settings.php` und `plan.json`. Die beiden Namen dürfen auseinanderlaufen, aber nicht unbemerkt: zwei Tests in `tests/verwaltung.js` halten die sichtbare Beschriftung fest. SPEC.md §5.3 heißt seit dem Abgleich vom 21.08.2026 ebenfalls „Einstellungen" und nennt den internen Namen dazu.
 

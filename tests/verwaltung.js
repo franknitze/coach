@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const { testlauf } = require('./hilfen');
+const { testlauf, PASSWORT } = require('./hilfen');
 
 module.exports = (port) => testlauf('Verwaltung', port, async (t) => {
     const { page, ok } = t;
@@ -115,7 +115,9 @@ module.exports = (port) => testlauf('Verwaltung', port, async (t) => {
     await page.waitForFunction((n) => document.querySelectorAll('.zeile').length === n, vorher);
     ok(true, 'gelöscht, Liste wieder bei ' + vorher);
 
-    // Schwerpunkt
+    // Schwerpunkt — seit dem 22.08.2026 im Bereich "Allgemein"
+    await page.click('[data-bereich="allgemein"]');
+    await page.waitForSelector('.prio');
     await page.locator('[data-prio="trizeps"][data-wert="focus"]').click();
     await page.waitForTimeout(400);
     await page.reload();
@@ -123,6 +125,7 @@ module.exports = (port) => testlauf('Verwaltung', port, async (t) => {
     // schon mit "Wird geladen" im HTML, bevor die API geantwortet hat.
     await page.waitForSelector('[data-gehe="plan"]');
     await page.click('[data-gehe="plan"]');
+    await page.click('[data-bereich="allgemein"]');
     await page.waitForSelector('.prio');
     const an = await page.locator('[data-prio="trizeps"][data-wert="focus"]').getAttribute('class');
     ok(an.includes('ist-an'), 'Schwerpunkt überlebt das Neuladen');
@@ -207,4 +210,131 @@ module.exports = (port) => testlauf('Verwaltung', port, async (t) => {
     await page.waitForSelector('#app');
     ok(!fs.existsSync(leerAlt), 'eine leere Datei von vor zwei Stunden fliegt raus');
     ok(fs.existsSync(leerNeu), 'eine gerade erst entstandene bleibt liegen');
+
+    /* ---------- Einstellungen: zwei Bereiche ----------
+     *
+     * Die Seite trug alles auf einmal: Übungen, Körpergewicht,
+     * Schwerpunkte. Das Passwort wäre der vierte Block gewesen, ganz
+     * unten, hinter 25 Übungszeilen.
+     */
+
+    await page.click('[data-gehe="plan"]');
+    await page.waitForSelector('.schalter--breit');
+
+    const bereiche = await page.locator('.schalter--breit .schalter__teil').allInnerTexts();
+    ok(bereiche.join('|') === 'Übungen|Allgemein',
+       'zwei Bereiche zur Auswahl: ' + bereiche.join(', '));
+
+    ok(await page.locator('[data-bereich="uebungen"].ist-an').count() === 1,
+       'Übungen ist der Bereich, in dem man landet');
+    ok(await page.locator('.zeile').count() > 0, 'und zeigt die Übungsbibliothek');
+    ok(await page.locator('#passwort-form').count() === 0,
+       'das Passwortformular steht dort nicht mit herum');
+
+    await page.click('[data-bereich="allgemein"]');
+    await page.waitForSelector('#passwort-form');
+    ok(await page.locator('.zeile__text').count() === 0,
+       'Allgemein zeigt keine Übungen');
+    ok(await page.locator('#gewicht-form').count() === 1, 'dafür das Körpergewicht');
+    ok(await page.locator('.prio').count() > 0, 'und die Schwerpunkte');
+
+    /* ---------- Passwort ändern ----------
+     *
+     * Ging bis zum 22.08.2026 nur über die Kommandozeile. Wer die App auf
+     * gewöhnlichem Webspace ohne SSH betreibt, konnte sein Passwort also
+     * überhaupt nicht wechseln.
+     */
+
+    const konfig = () => JSON.parse(
+        fs.readFileSync(path.join(t.datenordner, 'config.json'), 'utf8'));
+
+    const konfigVorher = konfig();
+
+    /**
+     * Füllt die drei Felder, schickt ab und gibt die Rückmeldung zurück.
+     *
+     * Gewartet wird auf das geleerte erste Feld: Die Felder leeren sich
+     * nur durch das Neuzeichnen nach der Antwort, das ist also der
+     * eindeutige Moment. Auf den Text der Meldung zu warten ginge nicht,
+     * die vorige steht bis dahin noch da.
+     */
+    async function passwortSenden(alt, neu, wiederholung) {
+        await page.fill('#p-alt', alt);
+        await page.fill('#p-neu', neu);
+        await page.fill('#p-neu2', wiederholung === undefined ? neu : wiederholung);
+        await page.click('#passwort-form button[type="submit"]');
+        await page.waitForFunction(() => {
+            const f = document.getElementById('p-alt');
+            return f && f.value === '';
+        });
+        const m = page.locator('#passwort-form .fehler, #passwort-form .quittung');
+        return await m.count() === 0 ? '' : (await m.first().innerText()).trim();
+    }
+
+    let meldung = await passwortSenden('das-ist-nicht-das-passwort', 'egal-egal-egal');
+    ok(meldung === 'Das aktuelle Passwort stimmt nicht.',
+       'ein falsches aktuelles Passwort wird abgewiesen: "' + meldung + '"');
+
+    /*
+     * Und die Meldung bleibt stehen. Der Endpunkt antwortet mit 403 und
+     * nicht mit 401: Auf eine 401 lädt das Frontend im angemeldeten
+     * Bereich die Seite neu, weil das dort "Sitzung abgelaufen" heißt.
+     * Man stünde wortlos wieder auf der Startseite.
+     */
+    ok(await page.locator('#passwort-form').count() === 1,
+       'und man steht weiter im Formular, die Seite lädt nicht neu');
+    ok(konfig().password_hash === konfigVorher.password_hash,
+       'das Passwort auf der Platte ist unverändert');
+
+    meldung = await passwortSenden(PASSWORT, 'kurz');
+    ok(meldung.includes('8 Zeichen'), 'zu kurz wird abgewiesen: "' + meldung + '"');
+
+    meldung = await passwortSenden(PASSWORT, 'lang-genug-1', 'lang-genug-2');
+    ok(meldung.includes('nicht überein'),
+       'zwei verschiedene Eingaben werden abgewiesen: "' + meldung + '"');
+
+    ok(konfig().password_hash === konfigVorher.password_hash,
+       'nach drei Fehlversuchen steht immer noch das alte Passwort');
+
+    const NEU = 'das-neue-testpasswort';
+    meldung = await passwortSenden(PASSWORT, NEU);
+    ok(meldung === 'Passwort geändert.', 'die Bestätigung steht da: "' + meldung + '"');
+    ok(await page.locator('#passwort-form .quittung').count() === 1,
+       'als Bestätigung und nicht als Fehler');
+
+    const konfigNachher = konfig();
+    ok(konfigNachher.password_hash !== konfigVorher.password_hash, 'der Hash ist ein anderer');
+
+    /*
+     * Der Rest von config.json muss stehen bleiben. Ginge der api_key
+     * verloren, holte das n8n-Backup ab sofort nichts mehr ab, und es
+     * würde niemandem auffallen.
+     */
+    ok(konfigNachher.api_key === konfigVorher.api_key,
+       'der API-Schlüssel für das Backup bleibt unangetastet');
+    ok(konfigNachher.session_lifetime_days === konfigVorher.session_lifetime_days,
+       'die übrigen Einstellungen auch');
+
+    // Angemeldet bleibt man: die Session bekommt nur eine neue Kennung.
+    await page.reload();
+    await page.waitForSelector('#app .heute__tag');
+    ok(await page.locator('#anmeldung').count() === 0,
+       'man bleibt angemeldet, obwohl das Passwort ein anderes ist');
+
+    /* ---------- Und es gilt wirklich ---------- */
+
+    const raus2 = page.locator('#abmelden');
+    await raus2.click();
+    await raus2.click();
+    await page.waitForSelector('#anmeldung');
+
+    await page.fill('#passwort', PASSWORT);
+    await page.click('#anmelden');
+    await page.waitForFunction(() => document.getElementById('fehler').textContent.length > 0);
+    ok(await page.locator('#app').count() === 0, 'das alte Passwort lässt niemanden mehr rein');
+
+    await page.fill('#passwort', NEU);
+    await page.click('#anmelden');
+    await page.waitForSelector('#app .heute__tag');
+    ok(true, 'das neue Passwort tut es');
 });

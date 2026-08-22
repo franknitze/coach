@@ -261,6 +261,23 @@ body {
     font: var(--s-neben)/1.4 var(--sans);
 }
 
+/*
+ * Bestätigung, wenn etwas geklappt hat.
+ *
+ * Kein Grün: Gelb heißt "hier tippen", Orange heißt "Steigerung fällig",
+ * und ein dritter Akzent allein dafür, dass etwas gutgegangen ist, wäre
+ * einer zu viel. Sie steht an derselben Stelle wie die Fehlermeldung und
+ * unterscheidet sich von ihr durch die Farbe der Schrift.
+ *
+ * Bewusst ohne Kasten: Mit Rahmen, Fläche und Rundung sah sie aus wie ein
+ * viertes, leeres Eingabefeld unter den dreien darüber.
+ */
+.quittung {
+    margin: 12px 0 0;
+    color: var(--schrift);
+    font: 600 var(--s-neben)/1.4 var(--sans);
+}
+
 .tor__fuss {
     padding: 0 var(--rand) calc(env(safe-area-inset-bottom) + 24px);
 }
@@ -689,6 +706,28 @@ body {
     font-weight: 600;
 }
 
+/*
+ * Derselbe Schalter, aber als Gliederung einer ganzen Seite statt einer
+ * Zeile: die Bereichswahl in den Einstellungen.
+ *
+ * Kein zweites Muster für dieselbe Frage. "Eins von zweien" sieht in
+ * dieser App so aus, seit die Schwerpunkte es so machen; ein Reiter im
+ * Stil einer fremden Bibliothek wäre eine zweite Bildsprache für
+ * denselben Handgriff. Größer ist er trotzdem: hier wird er beim Betreten
+ * der Seite gelesen und nicht beiläufig umgelegt.
+ */
+.schalter--breit {
+    display: flex;
+    width: 100%;
+    margin-bottom: 28px;
+}
+
+.schalter--breit .schalter__teil {
+    flex: 1;
+    min-height: 48px;
+    font-size: var(--s-neben);
+}
+
 /* ---------- Statusleiste des Puffers ----------
  *
  * Ohne dritte Farbe: Gelb heißt "hier tippen", Orange heißt "Steigerung
@@ -810,8 +849,17 @@ body {
 
 /* Körpergewicht eintragen. Die Felder erben .paar aus dem
    Übungsformular, hier bleibt nur der Abstand zum Knopf und zur Liste. */
-.gewicht { margin-bottom: 18px; }
-.gewicht .knopf { margin-top: 16px; }
+/*
+ * Ein Formular innerhalb eines Abschnitts: Körpergewicht, Passwort.
+ *
+ * Der Abstand hängt am direkten Kind, nicht an jeder Beschriftung. Im
+ * Gewichtsformular stehen Datum und Kilo nebeneinander in einem Raster;
+ * dort setzt die Lücke des Rasters den Abstand, und ein margin-top an
+ * denselben Beschriftungen schöbe sie in ihren Zellen nach unten.
+ */
+.formular { margin-bottom: 18px; }
+.formular .knopf { margin-top: 16px; }
+.formular > .mini { margin-top: 16px; }
 
 /*
  * Das Datumsfeld soll aussehen wie das Feld daneben. iOS bringt dafür ein

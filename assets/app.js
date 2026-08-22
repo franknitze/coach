@@ -266,6 +266,9 @@
         verlauf: null,         // Antwort von api/history.php
         punktIndex: null,      // gewählte Einheit im Diagramm, null = letzte
         ausPuffer: false,      // Studio-Ansicht kommt aus dem lokalen Stand
+        planBereich: 'uebungen',  // gewählter Bereich der Einstellungen
+        passwortText: '',      // Rückmeldung des Passwortformulars
+        passwortOk: false,     // true = Bestätigung, false = Fehler
         loeschfrage: null,
         meldung: '',
     };
@@ -1502,10 +1505,30 @@
     /* ---------- Ansicht: Einstellungen (intern "plan") ---------- */
 
     function zeichnePlan() {
-        const tage = zustand.plan.days || {};
         let html = '<div class="titelzeile">'
             + '<h1 class="titel">Einstellungen</h1>'
             + '<button class="kopfknopf" data-gehe="start">Fertig</button>'
+            + '</div>';
+
+        /*
+         * Zwei Bereiche statt einer langen Seite. Die Übungen sind das,
+         * wofür man hierher kommt; alles andere ändert man einmal im Jahr
+         * und soll dabei nicht im Weg stehen.
+         *
+         * Dieselbe Bauform wie der Schalter bei den Schwerpunkten: "eins
+         * von zweien" sieht in dieser App so aus. Ein Reiter im Stil einer
+         * fremden Bibliothek wäre eine zweite Bildsprache für denselben
+         * Handgriff.
+         */
+        const bereich = zustand.planBereich === 'allgemein' ? 'allgemein' : 'uebungen';
+
+        html += '<div class="schalter schalter--breit">'
+            + '<button type="button" class="schalter__teil'
+            + (bereich === 'uebungen' ? ' ist-an' : '')
+            + '" data-bereich="uebungen">Übungen</button>'
+            + '<button type="button" class="schalter__teil'
+            + (bereich === 'allgemein' ? ' ist-an' : '')
+            + '" data-bereich="allgemein">Allgemein</button>'
             + '</div>';
 
         // Ohne das scheiterte eine abgelehnte Eingabe stumm: das Formular
@@ -1514,12 +1537,26 @@
             html += '<p class="fehler" role="alert">' + esc(zustand.meldung) + '</p>';
         }
 
-        // Kein Plan, keine Tage: dann gibt es hier nichts zu bedienen, und
-        // das muss dastehen. Ein leerer Bildschirm mit Überschriften lässt
-        // einen ratlos zurück, weil man nach einem Knopf sucht, den es
-        // nicht gibt.
+        return html + (bereich === 'allgemein'
+            ? zeichneGewicht() + zeichneSchwerpunkte() + zeichnePasswort()
+            : zeichneUebungsliste());
+    }
+
+    /**
+     * Bereich "Übungen": die Bibliothek, nach Trainingstagen sortiert.
+     *
+     * Der leere Fall steht hier und nicht eine Ebene höher. Ohne Plan gibt
+     * es keine Übungen, aber Körpergewicht und Passwort lassen sich
+     * trotzdem bedienen — vorher endete an dieser Stelle die ganze Seite.
+     */
+    function zeichneUebungsliste() {
+        const tage = zustand.plan.days || {};
+        let html = '';
+
+        // Ein leerer Bildschirm mit Überschriften lässt einen ratlos
+        // zurück, weil man nach einem Knopf sucht, den es nicht gibt.
         if (Object.keys(tage).length === 0) {
-            return html + '<section class="leer">'
+            return '<section class="leer">'
                 + '<h2 class="leer__titel">Hier ist noch kein Plan</h2>'
                 + '<p class="leer__text">Es sind weder Trainingstage noch Übungen '
                 + 'hinterlegt. Der Plan wird auf dem Server einmalig angelegt, '
@@ -1553,7 +1590,7 @@
                  + 'Übung zufügen</button></section>';
         });
 
-        return html + zeichneGewicht() + zeichneSchwerpunkte();
+        return html;
     }
 
     function zeichneZeile(u) {
@@ -1780,7 +1817,7 @@
              * Feld bis an den Rand und schob die Kalenderschaltfläche
              * hinaus, und welches Feld was war, stand nirgends.
              */
-            + '<form class="gewicht" id="gewicht-form">'
+            + '<form class="formular" id="gewicht-form">'
             + '<div class="paar">'
             + '<div><label class="mini" for="g-datum">Datum</label>'
             + '<input class="feld feld--text" type="date" id="g-datum" name="date" '
@@ -1841,6 +1878,59 @@
         });
 
         return html + '</section>';
+    }
+
+    /**
+     * Bereich "Allgemein": Passwort ändern.
+     *
+     * Das alte Passwort wird mit abgefragt, obwohl man angemeldet ist. Die
+     * Anmeldung hält 30 Tage und liegt auf einem Handy, das man auch mal
+     * liegen lässt; ohne die Abfrage genügte ein unbeaufsichtigtes Gerät,
+     * um den Zugang zu übernehmen.
+     *
+     * Die drei Felder tragen autocomplete-Angaben, damit ein Passwort-
+     * verwalter das alte einsetzen und das neue anbieten kann. Ohne sie
+     * hält iOS alle drei für dasselbe Feld.
+     */
+    function zeichnePasswort() {
+        let html = '<section class="tag">'
+            + '<div class="tag__kopf"><span class="tag__name">Passwort</span></div>'
+            + '<p class="tag__leer">Mindestens 8 Zeichen. Auf diesem Gerät '
+            + 'bleibst du angemeldet.</p>'
+
+            /*
+             * novalidate wie bei den Anmeldeformularen in index.php: Die
+             * App prüft selbst und schreibt die Meldung an ihre Stelle im
+             * Formular. Die eingebaute Prüfung des Browsers käme als
+             * Sprechblase in fremder Gestalt, säße woanders und sagte je
+             * nach Browser etwas anderes.
+             */
+            + '<form class="formular" id="passwort-form" novalidate>'
+            + '<label class="mini" for="p-alt">Aktuelles Passwort</label>'
+            + '<input class="feld feld--text" type="password" id="p-alt" '
+            + 'name="current" autocomplete="current-password">'
+
+            + '<label class="mini" for="p-neu">Neues Passwort</label>'
+            + '<input class="feld feld--text" type="password" id="p-neu" '
+            + 'name="password" autocomplete="new-password">'
+
+            + '<label class="mini" for="p-neu2">Noch einmal</label>'
+            + '<input class="feld feld--text" type="password" id="p-neu2" '
+            + 'name="password_repeat" autocomplete="new-password">';
+
+        /*
+         * Rückmeldung direkt über dem Knopf, nicht oben am Seitenkopf.
+         * Wer gerade auf "Passwort ändern" getippt hat, schaut dorthin,
+         * wo sein Daumen ist.
+         */
+        if (zustand.passwortText) {
+            html += zustand.passwortOk
+                ? '<p class="quittung" role="status">' + esc(zustand.passwortText) + '</p>'
+                : '<p class="fehler" role="alert">' + esc(zustand.passwortText) + '</p>';
+        }
+
+        return html + '<button class="knopf" type="submit">Passwort ändern</button>'
+            + '</form></section>';
     }
 
     /* ---------- Zeichnen ---------- */
@@ -1959,7 +2049,7 @@
             + '[data-foto], [data-bild], [data-bildweg], '
             + '[data-bestaetige], [data-korrigiere], [data-extra], [data-bearbeite], '
             + '[data-neu], [data-abbrechen], [data-frage], [data-loesche], [data-prio], '
-            + '[data-gewichtweg], '
+            + '[data-gewichtweg], [data-bereich], '
             + '[data-anleitung]');
         if (!ziel) {
             return;
@@ -1973,6 +2063,7 @@
             zustand.uebungId = null;
             zustand.offen = null;
             zustand.meldung = '';
+            zustand.passwortText = '';
             if (d.gehe !== 'studio') {
                 pauseBeenden();
             }
@@ -2016,6 +2107,19 @@
                 await kalenderLaden(monatVon(new Date()));
             }
 
+            return zeichnen();
+        }
+
+        /*
+         * Bereichswechsel in den Einstellungen. Eine stehengebliebene
+         * Rückmeldung geht dabei weg: "Passwort geändert." unter dem
+         * Gewichtsformular hätte niemand mehr zuzuordnen.
+         */
+        if (d.bereich) {
+            zustand.planBereich = d.bereich;
+            zustand.meldung = '';
+            zustand.passwortText = '';
+            window.scrollTo(0, 0);
             return zeichnen();
         }
 
@@ -2412,6 +2516,32 @@
             } catch (err) {
                 zustand.meldung = err.message;
             }
+            return zeichnen();
+        }
+
+        const pform = e.target.closest('#passwort-form');
+        if (pform) {
+            e.preventDefault();
+            const daten = {};
+            new FormData(pform).forEach(function (wert, schluessel) {
+                daten[schluessel] = wert;
+            });
+
+            const knopf = pform.querySelector('button[type="submit"]');
+            knopf.disabled = true;
+            knopf.textContent = 'Moment';
+
+            try {
+                await api('api/passwort.php', { daten: daten });
+                zustand.passwortText = 'Passwort geändert.';
+                zustand.passwortOk = true;
+            } catch (err) {
+                zustand.passwortText = err.message;
+                zustand.passwortOk = false;
+            }
+            // Neu zeichnen leert die drei Felder. Nach einem Fehlschlag
+            // ist das gewollt: welches der drei falsch war, weiß man
+            // nicht, und ein halb gefülltes Formular lädt zum Raten ein.
             return zeichnen();
         }
 
