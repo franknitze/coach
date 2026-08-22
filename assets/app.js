@@ -1537,9 +1537,36 @@
             html += '<p class="fehler" role="alert">' + esc(zustand.meldung) + '</p>';
         }
 
-        return html + (bereich === 'allgemein'
-            ? zeichneGewicht() + zeichneSchwerpunkte() + zeichnePasswort()
-            : zeichneUebungsliste());
+        /*
+         * Die Schwerpunkte sind am 22.08.2026 aus der Oberfläche genommen
+         * worden, aber nicht aus dem Code.
+         *
+         * Der Schalter schrieb "focus" nach plan.json, und dort las den Wert
+         * niemand: nicht lib/coach.php, nicht api/plan.php, nirgends. Die
+         * Beschriftung versprach "mehr Sätze pro Woche für diese Gruppe" —
+         * passiert ist nichts. Auf dem Server standen drei Gruppen auf
+         * Schwerpunkt, ohne jede Wirkung. Etwas anzuzeigen, das nichts tut,
+         * ist schlechter als es wegzulassen.
+         *
+         * Wieder einschalten heißt: den Aufruf unten zurückholen.
+         * zeichneSchwerpunkte(), der Zweig d.prio im Klick-Handler, das
+         * Attribut data-prio im Selektor und die CSS-Klasse .prio stehen
+         * unverändert da. Vorher muss aber entschieden sein, WAS ein
+         * Schwerpunkt bewirken soll — der offene Punkt steht in STATE.md.
+         *
+         * ACHTUNG, nicht aufräumen: muscle_priorities in plan.json bleibt.
+         * Seine SCHLÜSSEL sind die Liste der gültigen Muskelgruppen.
+         * lib/uebungen.php prüft jede Übung dagegen, und die Auswahl im
+         * Übungsformular wird daraus gebaut. Ohne das Objekt ließe sich
+         * keine Übung mehr anlegen.
+         */
+        if (bereich === 'allgemein') {
+            // Hier hing zwischen Gewicht und Passwort:
+            //     + zeichneSchwerpunkte()
+            return html + zeichneGewicht() + zeichnePasswort();
+        }
+
+        return html + zeichneUebungsliste();
     }
 
     /**

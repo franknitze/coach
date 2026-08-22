@@ -344,6 +344,10 @@ COACH_BROWSER=webkit node tests/lauf.js fotos regel fortschritt update verwaltun
 
 Ein iOS-Simulator bliebe der Goldstandard, dafür fehlt auf diesem Mac das volle Xcode (App Store, rund 15 GB, dazu die Simulator-Laufzeit als eigener Download; danach `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`, braucht Franks Passwort). Solange er fehlt gilt: **Was WebKit nicht abdeckt — der native Datumswähler, Tastaturverhalten, Scrollen — gilt erst als geprüft, wenn Frank es auf dem Gerät gesehen hat.**
 
+**Der Schwerpunkt-Schalter ist auskommentiert, nicht gelöscht** (22.08.2026). Er schrieb `focus` nach `plan.json`, und den **Wert** las kein einziger Codepfad — weder `lib/coach.php` noch `api/plan.php`. Die Beschriftung versprach „mehr Sätze pro Woche für diese Gruppe"; drei Gruppen standen auf dem Server so eingestellt, ohne jede Wirkung. SPEC.md §7 hatte es zugesagt, gebaut wurde es nie. Zurückholen ist eine Zeile in `zeichnePlan()`; `zeichneSchwerpunkte()`, der Zweig `d.prio`, `.prio` und der auskommentierte Testlauf stehen unverändert da. Ein Test hält fest, dass der Schalter derzeit **nicht** in der Oberfläche steht.
+
+**`muscle_priorities` in `plan.json` darf trotzdem nicht aufgeräumt werden.** Seine **Schlüssel** sind die Liste der gültigen Muskelgruppen: `uebung_pruefen()` prüft jede Übung dagegen, und die Auswahl im Übungsformular wird daraus gebaut. Ohne das Objekt ließe sich keine Übung mehr anlegen. Der Wert dahinter ist es, der niemanden interessiert.
+
 **Die Einstellungen haben zwei Bereiche, „Übungen" und „Allgemein"** (22.08.2026). Vorher trug die Seite alles untereinander: Übungen, Körpergewicht, Schwerpunkte. Das Passwort wäre der vierte Block gewesen, hinter 25 Übungszeilen.
 
 Umgeschaltet wird mit **demselben Schalter, der auch die Schwerpunkte umlegt** (`.schalter`, hier als `.schalter--breit`). „Eins von zweien" hat in dieser App eine Form; ein Reiter im Stil einer fremden Bibliothek wäre eine zweite Bildsprache für denselben Handgriff. Er füllt die Breite und ist 48px hoch, weil er hier die Seite gliedert und nicht beiläufig in einer Zeile sitzt.
@@ -370,4 +374,5 @@ Der leere Fall („Hier ist noch kein Plan") steht jetzt **innerhalb** des Übun
 - Kein Framework, keine Paketmanager-Abhängigkeit, keine Datenbank. Wenn eine Lösung eine dieser drei Sachen braucht, ist sie für dieses Projekt die falsche Lösung.
 - Charts über eine schlanke Bibliothek per CDN (uPlot oder Chart.js), erst in Phase 3.
 - `config.json` enthält den Passwort-Hash und den API-Key und gehört niemals in ein Repo.
+- **`HELP.md`** ist die Endnutzer-Hilfe: Verhalten plus Begründung, in der Sprache dessen, der die App benutzt. Nicht mit dieser Datei verwechseln — hier steht, warum der Code so ist, dort, warum die App sich so verhält. Gepflegt über den `save-help`-Skill. Was in der Oberfläche nicht existiert, kommt dort auch nicht vor.
 - Übergeordnete Regeln und die Landkarte: `/Users/frank/AI-OS/CLAUDE.md`. Flüchtiger Arbeitsstand gehört in die (nicht versionierte) `STATE.md` (Skills `save-state` / `read-state`), nicht hierher.

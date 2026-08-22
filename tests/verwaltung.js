@@ -115,20 +115,27 @@ module.exports = (port) => testlauf('Verwaltung', port, async (t) => {
     await page.waitForFunction((n) => document.querySelectorAll('.zeile').length === n, vorher);
     ok(true, 'gelöscht, Liste wieder bei ' + vorher);
 
-    // Schwerpunkt — seit dem 22.08.2026 im Bereich "Allgemein"
-    await page.click('[data-bereich="allgemein"]');
-    await page.waitForSelector('.prio');
-    await page.locator('[data-prio="trizeps"][data-wert="focus"]').click();
-    await page.waitForTimeout(400);
-    await page.reload();
-    // Auf den fertig gezeichneten Bereich warten, nicht auf #app: das steht
-    // schon mit "Wird geladen" im HTML, bevor die API geantwortet hat.
-    await page.waitForSelector('[data-gehe="plan"]');
-    await page.click('[data-gehe="plan"]');
-    await page.click('[data-bereich="allgemein"]');
-    await page.waitForSelector('.prio');
-    const an = await page.locator('[data-prio="trizeps"][data-wert="focus"]').getAttribute('class');
-    ok(an.includes('ist-an'), 'Schwerpunkt überlebt das Neuladen');
+    /* ---------- Schwerpunkte: am 22.08.2026 aus der Oberfläche genommen ----
+     *
+     * Der Schalter schrieb einen Wert, den kein Codepfad las. Der Lauf steht
+     * hier auskommentiert, damit er mit dem Schalter zusammen zurückkommt.
+     * Die Prüfung, dass er WEG ist, steht weiter unten und läuft.
+     *
+     * await page.click('[data-bereich="allgemein"]');
+     * await page.waitForSelector('.prio');
+     * await page.locator('[data-prio="trizeps"][data-wert="focus"]').click();
+     * await page.waitForTimeout(400);
+     * await page.reload();
+     * // Auf den fertig gezeichneten Bereich warten, nicht auf #app: das
+     * // steht schon mit "Wird geladen" im HTML, bevor die API antwortete.
+     * await page.waitForSelector('[data-gehe="plan"]');
+     * await page.click('[data-gehe="plan"]');
+     * await page.click('[data-bereich="allgemein"]');
+     * await page.waitForSelector('.prio');
+     * const an = await page.locator('[data-prio="trizeps"][data-wert="focus"]')
+     *     .getAttribute('class');
+     * ok(an.includes('ist-an'), 'Schwerpunkt überlebt das Neuladen');
+     */
     /* ---------- Die 30 Tage zählen ab der letzten Benutzung ----------
      *
      * Vorher lief das Cookie 30 Tage nach dem Anmelden ab, egal wie oft man
@@ -236,7 +243,16 @@ module.exports = (port) => testlauf('Verwaltung', port, async (t) => {
     ok(await page.locator('.zeile__text').count() === 0,
        'Allgemein zeigt keine Übungen');
     ok(await page.locator('#gewicht-form').count() === 1, 'dafür das Körpergewicht');
-    ok(await page.locator('.prio').count() > 0, 'und die Schwerpunkte');
+
+    /*
+     * Der Schwerpunkt-Schalter ist am 22.08.2026 aus der Oberfläche genommen
+     * worden: Er schrieb "focus" nach plan.json, und den Wert las kein
+     * Codepfad. Etwas anzuzeigen, das nichts bewirkt, ist schlechter als es
+     * wegzulassen. Diese Prüfung hält den Zustand fest — wer den Schalter
+     * zurückholt, ohne die Wirkung zu bauen, sieht hier Rot.
+     */
+    ok(await page.locator('.prio').count() === 0,
+       'der Schwerpunkt-Schalter steht nicht mehr in der Oberfläche');
 
     /* ---------- Passwort ändern ----------
      *
