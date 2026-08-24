@@ -772,9 +772,9 @@ Du bist im Bereich „Allgemein". Tippe oben auf „Übungen".
 
 **Was bedeutet die Gerätenummer?**
 Die aufgeklebte Nummer am Gerät im Studio. Sie erscheint als gelbes
-Nummernschild und ist oft der schnellste Weg, das richtige Gerät
-wiederzufinden. Sie ist freiwillig; hat eine Übung ein Foto, zeigt Coach das
-Foto.
+Nummernschild unter dem Foto und ist oft der schnellste Weg, das richtige
+Gerät wiederzufinden — im Studio suchst du die Maschine, nicht den Namen.
+Sie ist freiwillig. Trägst du keine ein, steht dort nur das Foto.
 
 **Was heißt „Gewichtsrichtung"?**
 Bei den meisten Geräten ist mehr Gewicht schwerer. An einer
@@ -839,7 +839,13 @@ wichtigste Grund, GD einschalten zu lassen.
 
 **Warum sehe ich statt eines Fotos ein gelbes Nummernschild?**
 Weil diese Übung kein Foto hat, aber eine Gerätenummer. Fehlt beides, steht
-dort ein Platzhalter.
+dort ein Platzhalter. Hat die Übung ein Foto **und** eine Nummer, siehst du
+beides: das Bild, darunter die Nummer.
+
+**Wo sehe ich die Gerätenummer, die ich eingetragen habe?**
+Auf der Übungskachel im Studio und in der Liste unter „Einstellungen", jeweils
+als gelbes Schild direkt unter dem Foto. Hat die Übung kein Foto, steht die
+Nummer an dessen Stelle.
 
 **Kann ich ein hochgeladenes Foto wieder löschen?**
 Ja, in der Bildauswahl, ebenfalls in zwei Schritten.

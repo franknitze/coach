@@ -1197,6 +1197,70 @@ body {
     cursor: zoom-in;
 }
 
+/* ---------- Die Gerätenummer unter dem Foto ----------
+ *
+ * Sie lag bisher NUR dort, wo ein Foto fehlt — und da alle Übungen ein Bild
+ * haben, war sie unsichtbar. Eingetragene Nummern sah man nirgends, außer
+ * man tippte das Foto groß auf. Das half im Studio nicht: Dort sucht man
+ * das Gerät, und dafür muss die Nummer ohne Zutun dastehen.
+ *
+ * Unter dem Foto und nicht darauf: Die Textspalte daneben ist rund 130
+ * Punkte hoch, das Bild nur 76 — darunter liegt ohnehin Platz brach. So
+ * bleibt das Foto unversehrt, und die Nummer bekommt die volle Bildbreite
+ * und darf so groß sein, wie man sie auf Armlänge lesen muss. Auf dem Bild
+ * hätte sie ein Viertel davon verdeckt (Vorgabe von Frank: kleiner ist auf
+ * dem Handy nicht lesbar).
+ */
+.kachel__geraet {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.plakette--unten {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    padding: 3px 0;
+    border-radius: 8px;
+    font-size: var(--s-zahl);
+}
+
+.zeile .plakette--unten {
+    padding: 1px 0;
+    border-radius: 6px;
+    font-size: var(--s-neben);
+}
+
+/*
+ * Alle gelben Nummernfelder einer Liste gleich breit.
+ *
+ * Sie sitzen in derselben Spalte: mal unter einem Foto, mal anstelle eines
+ * fehlenden. Inhaltsbreite ergab dort eine ausgefranste Kante — "7" schmal,
+ * "43" breiter, und darunter ein Foto von 56 Punkten. Maßgeblich ist die
+ * Breite des Fotos, denn die bestimmt die Spalte.
+ *
+ * Gilt nur für das direkte Kind: Die Plakette unter einem Foto steckt in
+ * .kachel__geraet und holt ihre Breite schon von dort.
+ */
+.zeile > .plakette {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    padding: 3px 0;
+}
+
+/* Dieselbe Regel eine Ebene höher: Auf der Kachel ist das Foto 76 breit. */
+.kachel__kopf > .plakette {
+    display: grid;
+    place-items: center;
+    width: 76px;
+    padding: 3px 0;
+}
+
+
+
 .kachel__text {
     display: flex;
     flex-direction: column;

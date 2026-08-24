@@ -227,6 +227,7 @@
 ### 5.2 Studio-Modus (nach „Los geht's")
 - Liste der heutigen Übungen als **große Kacheln** untereinander.
 - Jede Kachel zeigt: **Foto des richtigen Geräts**, Name, Zielvorgabe (z.B. „4 Sätze, 8–12 Wdh"), **letztes Ergebnis** („zuletzt: 80 kg × 10").
+- Ist eine **Gerätenummer** hinterlegt, steht sie als gelbes Schild **unter** dem Foto, in voller Bildbreite (ergänzt 22.08.2026). Vorher trat sie nur an die Stelle eines fehlenden Fotos und war damit praktisch unsichtbar, weil jede Übung ein Bild hat. Im Studio sucht man das Gerät über die Nummer, also muss sie ohne Zutun dastehen. Ohne Foto steht sie weiterhin an dessen Stelle.
 - Coach-Ansage direkt auf der Kachel, wenn eine Steigerung fällig ist (§7).
 - Tippen klappt die Kachel auf → pro Satz eine Zeile mit zwei großen Werten: **Gewicht** und **Wiederholungen**.
 - **Eingabe ausschließlich über große Plus/Minus-Buttons**, nie Tastatur:

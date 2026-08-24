@@ -319,7 +319,15 @@ Die Richtung ist aus Franks Studio abgeleitet, nicht aus einer Fitness-App-Schab
 - **Zwei Akzente mit fester Bedeutung, sonst nirgends:** `--tag` `#f2b705` (das Gelb der Gerätenummern-Schilder) heißt „hier tippen". `--vinyl` `#c8562b` (das Orange des Bankpolsters) heißt „Steigerung fällig" und ist für die Coach-Ansage aus §7 reserviert. Wer eines der beiden dekorativ verwendet, nimmt ihm die Aussage.
 - **Monospace für alle Zahlen und Kürzel, Sans für Fließtext.** Ein Trainingslog ist eine Zahlentabelle. Keine Webfonts, die PWA muss offline laufen.
 - **Hauptaktionen sitzen unten am Rand**, nicht mittig. Bedienung mit dem Daumen heißt Daumenzone. Touch-Ziele ab 56px, `env(safe-area-inset-*)` beachten.
-- **Signature ist die Geräteplakette** (`.plakette`): das gelbe Nummernschild, das im Studio an den Geräten klebt. Sie trägt die echte Stationsnummer, in der Liste klein, auf der Übungskachel groß als Ersatz für ein fehlendes Foto. Nie mit erfundenen Nummern dekorieren.
+- **Signature ist die Geräteplakette** (`.plakette`): das gelbe Nummernschild, das im Studio an den Geräten klebt. Sie trägt die echte Stationsnummer. Nie mit erfundenen Nummern dekorieren.
+
+**Die Nummer steht unter dem Foto, nicht darauf** (22.08.2026). Bis dahin trat sie nur an die Stelle eines **fehlenden** Fotos — und weil alle 25 Übungen ein Bild haben, war sie unsichtbar: Frank trug drei Nummern ein und sah nirgends etwas. Sichtbar war sie einzig in der vergrößerten Ansicht, nach einem Tipp aufs Bild. Im Studio hilft sie aber beim **Suchen**, und dafür muss sie ohne Zutun dastehen.
+
+Unter dem Bild und nicht darauf, weil daneben die Textspalte rund 130 Punkte hoch ist und das Foto nur 76 — der Platz lag ohnehin brach. So bleibt das Foto unversehrt und die Nummer bekommt die volle Bildbreite. Vorgabe von Frank war „mindestens ein Viertelbild", kleiner sei auf dem Handy nicht lesbar; eine Ecklösung auf dem Bild hätte genau dieses Viertel verdeckt.
+
+**Alle gelben Nummernfelder einer Liste sind gleich breit**, nämlich so breit wie das Foto daneben (76 auf der Kachel, 56 in der Zeile). Inhaltsbreite ergab eine ausgefranste linke Kante, weil „7" schmaler ist als „43". Die Regel hängt am direkten Kind (`.zeile > .plakette`, `.kachel__kopf > .plakette`); die Plakette unter einem Foto steckt in `.kachel__geraet` und holt ihre Breite von dort.
+
+Ohne Foto bleibt es beim Alten: Dann steht die Nummer **an der Stelle** des Bildes (Frank, 22.08.2026). Die beiden Ansichten formen diesen Fall unterschiedlich — Quadrat auf der Kachel, Balken in der Zeile —, was bewusst so bleibt.
 
 **Die Pausenfarbe ist kein dritter Akzent.** `--ruhe` (dunkles Rot) tritt ausschließlich im Pausen-Panel auf und sagt dort „warte". Bewusst dunkel: die Pause dauert zwei Minuten, ein leuchtender Block über ein Drittel des Bildschirms blendet morgens um sieben. Gelb und Orange bleiben unangetastet.
 

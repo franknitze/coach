@@ -1149,11 +1149,20 @@
          * gäbe es ja nichts zu vergrößern.
          */
         const bild = u.photo
-            ? '<button class="kachel__foto" data-foto="' + esc(u.photo)
+            // Foto und Nummer in einer Spalte. Ohne die Klammer stellte das
+            // Flex-Layout sie nebeneinander statt untereinander.
+            ? '<span class="kachel__geraet">'
+              + '<button class="kachel__foto" data-foto="' + esc(u.photo)
               + '" data-name="' + esc(u.name) + '" data-nummer="' + esc(u.station || '')
               + '" aria-label="Foto von ' + esc(u.name) + ' vergrößern">'
               + '<img class="kachel__bild" src="assets/img/exercises/' + esc(u.photo)
               + '" alt="" loading="lazy"></button>'
+              // Die Nummer steht UNTER dem Bild, nicht darauf: daneben ist
+              // die Textspalte höher, hier liegt der Platz ohnehin brach.
+              + (u.station
+                  ? '<span class="plakette plakette--unten">' + esc(u.station) + '</span>'
+                  : '')
+              + '</span>'
             : '<span class="kachel__platzhalter">'
               + (u.station ? esc(u.station) : '?') + '</span>';
 
@@ -1682,11 +1691,16 @@
          * Bild als am Namen.
          */
         const vorschau = u.photo
-            ? '<button class="zeile__foto" data-foto="' + esc(u.photo)
+            ? '<span class="kachel__geraet">'
+              + '<button class="zeile__foto" data-foto="' + esc(u.photo)
               + '" data-name="' + esc(u.name) + '" data-nummer="' + esc(u.station || '')
               + '" aria-label="Foto vergrößern">'
               + '<img src="assets/img/exercises/' + esc(u.photo)
               + '" alt="" loading="lazy" class="kachel__bild"></button>'
+              + (u.station
+                  ? '<span class="plakette plakette--unten">' + esc(u.station) + '</span>'
+                  : '')
+              + '</span>'
             : (u.station
                 ? '<span class="plakette">' + esc(u.station) + '</span>'
                 : '<span class="plakette plakette--leer" title="Kein Foto, keine Nummer">–</span>');
