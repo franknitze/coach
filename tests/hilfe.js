@@ -49,21 +49,27 @@ module.exports = (port) => testlauf('Unterstützung', port, async (t) => {
     const bank = page.locator('[data-uebung="bankdruecken"]');
     const hilfe = page.locator('[data-uebung="latzug"]');
 
-    const bankText = await bank.locator('.kachel__coach').innerText();
-    ok(bankText.includes('82,5'),
-       'normal: aus 80 kg werden 82,5 → "' + bankText + '"');
+    /*
+     * Seit dem 26.08.2026 steht die Ansage nicht mehr auf der Kachel. Die
+     * Richtung zeigt sich also am Regler: Er ist mit dem Tagesziel
+     * vorbelegt, und das rechnet an der Unterstützungsmaschine nach unten.
+     */
+    await bank.locator('.kachel__text').click();
+    await page.waitForSelector('.satz--dran');
+    ok((await bank.locator('.regler__wert').first().innerText()) === '82,5 kg',
+       'normal: aus 80 kg werden 82,5');
 
-    const hilfeText = await hilfe.locator('.kachel__coach').innerText();
-    ok(hilfeText.includes('25'),
-       'unterstützt: aus 30 kg Hilfe werden 25 → "' + hilfeText + '"');
-    ok(!hilfeText.includes('35'),
+    await hilfe.locator('.kachel__text').click();
+    await page.waitForFunction(() =>
+        document.querySelector('.kachel:has(.satz--dran)').innerText.includes('Klimmzug'));
+    const hilfeWert = await hilfe.locator('.regler__wert').first().innerText();
+    ok(hilfeWert === '25 kg',
+       'unterstützt: aus 30 kg Hilfe werden 25 → "' + hilfeWert + '"');
+    ok(hilfeWert !== '35 kg',
        'und ausdrücklich NICHT 35, das wäre leichter statt schwerer');
-    ok(/weniger/i.test(hilfeText), 'die Ansage sagt dazu, dass es weniger wird');
 
     /* ---------- Die Eingabe warnt vor der Richtung ---------- */
 
-    await hilfe.locator('.kachel__text').click();
-    await page.waitForSelector('.satz--dran');
     const warnung = await hilfe.locator('.wechsel--hilfe').innerText();
     ok(/weniger Gewicht heißt schwerer/i.test(warnung),
        'über den Reglern steht die Umkehr: "' + warnung.split('.')[0] + '"');

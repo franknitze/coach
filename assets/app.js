@@ -1099,18 +1099,6 @@
         // Auf den zugeklappten nur die fällige Steigerung, denn die muss man
         // vorher wissen. Sonst stünde derselbe Hinweis neunmal untereinander
         // und niemand läse ihn mehr.
-        const c = u.coach;
-        const zeigen = c && c.text && (offen || c.status === 'steigern');
-        let ansage = '';
-        if (zeigen) {
-            ansage = '<span class="kachel__coach'
-                   + (c.status === 'steigern' ? ' ist-faellig' : '') + '">'
-                   + esc(c.text) + '</span>';
-            if (c.reason) {
-                ansage += '<span class="kachel__grund">' + esc(c.reason) + '</span>';
-            }
-        }
-
         const fertig = heute.length >= ziel;
 
         let html = '<section class="kachel' + (offen ? ' ist-offen' : '')
@@ -1118,9 +1106,9 @@
             + zeichneKachelKopf(u, {
                 voll: heute.length,
                 knopf: 'data-oeffne="' + esc(u.id) + '"',
-                zeilen: (letztesErgebnis(u)
+                zeilen: letztesErgebnis(u)
                     ? '<span class="kachel__zuletzt">' + esc(letztesErgebnis(u)) + '</span>'
-                    : '') + ansage,
+                    : '',
             });
 
         if (offen) {
@@ -1265,8 +1253,7 @@
             return '';
         }
         const s = u.last.sets[u.last.sets.length - 1];
-        return 'zuletzt ' + last(s.weight, u.assisted) + ' × ' + s.reps
-             + (u.last.date ? ' · ' + datumKurz(u.last.date) : '');
+        return 'Zuletzt ' + last(s.weight, u.assisted) + ' × ' + s.reps;
     }
 
     /**

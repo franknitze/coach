@@ -63,7 +63,9 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
        'und zurückhaltend gesetzt, das Gelb gehört "Satz bestätigen"');
 
     const bank = page.locator('.kachel', { hasText: 'Bankdrücken' });
-    ok((await bank.innerText()).includes('zuletzt 80 kg × 10'), 'Kachel zeigt das letzte Ergebnis');
+    ok((await bank.innerText()).includes('Zuletzt 80 kg × 10'), 'Kachel zeigt das letzte Ergebnis');
+    ok(!(await bank.innerText()).includes('Aug'),
+       'ohne Datum dahinter (Vorgabe vom 26.08.2026)');
     ok(await bank.locator('.punkt').count() === 4, '4 Punkte für 4 Zielsätze');
     ok(await bank.locator('.punkt.ist-voll').count() === 0, 'heute noch nichts erledigt');
     ok(await bank.locator('.kachel__platzhalter').innerText() === '43', 'Gerätenummer statt fehlendem Foto');

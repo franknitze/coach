@@ -1393,7 +1393,7 @@ body {
 
 .kachel__ziel,
 .kachel__zuletzt {
-    font: var(--s-klein)/1.35 var(--mono);
+    font: var(--s-betont)/1.35 var(--mono);
     color: var(--schrift-leise);
 }
 
@@ -1420,18 +1420,6 @@ body {
 
 /* Die Coach-Ansage. Orange heißt in dieser App "Steigerung fällig", und
    genau dieser eine Fall wird hervorgehoben. Alles andere bleibt leise. */
-.kachel__coach {
-    margin-top: 2px;
-    font: var(--s-klein)/1.35 var(--mono);
-    color: var(--schrift-leise);
-}
-
-.kachel__coach.ist-faellig {
-    color: var(--vinyl);
-    font-weight: 600;
-    font-size: var(--s-neben);
-}
-
 /* Die Begründung unter der Handlung: erklärt, warum, drängt sich aber
    nicht vor. Im Studio wird nur die erste Zeile gelesen. */
 .kachel__grund {
@@ -1452,9 +1440,9 @@ body {
    noch kommt. Mit haarfeinem Rand in Linienfarbe war er auf Armlänge nicht
    zu sehen, damit war die Reihe nur halb zu lesen. */
 .punkt {
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--schrift-leise);
+    width: 28px;
+    height: 28px;
+    border: 3px solid var(--schrift-leise);
     border-radius: 50%;
 }
 

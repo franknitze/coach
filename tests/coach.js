@@ -31,41 +31,33 @@ module.exports = (port) => testlauf('Coach', port, async (t) => {
     const latz = page.locator('.kachel', { hasText: 'Latzug' });
     const schu = page.locator('.kachel', { hasText: 'Schulterdrücken' });
 
-    // Bankdrücken steht als erste unfertige Übung von selbst offen.
-    ok((await bank.locator('.kachel__coach').innerText()).includes('82,5 kg'),
-       'Handlung steht vorn: "' + (await bank.locator('.kachel__coach').innerText()) + '"');
-    ok((await bank.locator('.kachel__grund').innerText()).includes('sauber'),
-       'Begründung leise darunter: "' + (await bank.locator('.kachel__grund').innerText()) + '"');
-    ok(await bank.locator('.kachel__coach.ist-faellig').count() === 1,
-       'fällige Steigerung ist hervorgehoben');
-
-    const faellig = await bank.locator('.kachel__coach').evaluate((n) => getComputedStyle(n).color);
-    ok(faellig === 'rgb(200, 86, 43)', 'und trägt das Orange: ' + faellig);
-
-    /*
-     * Auf den zugeklappten Kacheln steht nur, was man vorher wissen muss:
-     * eine fällige Steigerung. Halten und Zurückholen bleiben still, sonst
-     * stünde auf allen neun Kacheln ein Hinweis und keiner würde gelesen.
+    /* ---------- Die Ansage steht nicht mehr auf der Kachel ----------
+     *
+     * Bis zum 26.08.2026 stand dort "82,5 kg" beziehungsweise "Ziel 11
+     * Wiederholungen", bei einer fälligen Steigerung in Orange. Frank hat
+     * die Zeile entfernt: Auf der Kachel soll unter der Vorgabe nur noch
+     * das letzte Ergebnis stehen.
+     *
+     * Die REGEL lebt weiter — sie befüllt die Regler. Geprüft wird sie
+     * direkt in PHP (tests/regel.js, alle zwölf Zweige) und hier unten am
+     * Ergebnis in der Oberfläche.
      */
-    ok(await latz.locator('.kachel__coach').count() === 0,
-       'zugeklappt bleibt ein Halten-Hinweis still');
-    ok(await schu.locator('.kachel__coach').count() === 0,
-       'zugeklappt bleibt auch Zurückholen still');
+    ok(await page.locator('.kachel__coach').count() === 0,
+       'die Coach-Ansage steht auf keiner Kachel mehr');
 
-    // Aufgeklappt steht die Ansage da, dort wird ja gehandelt.
     await latz.locator('.kachel__text').click();
     await page.waitForFunction(() =>
         document.querySelectorAll('.kachel:has(.satz--dran)').length === 1);
-    const latzText = await latz.locator('.kachel__coach').innerText();
-    ok(latzText.includes('Ziel 11'), 'aufgeklappt nennt Halten das Ziel: "' + latzText + '"');
-    const leise = await latz.locator('.kachel__coach').evaluate((n) => getComputedStyle(n).color);
-    ok(leise !== faellig, 'und ist sichtbar zurückhaltender gesetzt als die Steigerung');
+    ok(await latz.locator('.kachel__coach').count() === 0,
+       'auch aufgeklappt nicht');
 
     await schu.locator('.kachel__text').click();
     await page.waitForFunction(() =>
         document.querySelector('.kachel:has(.satz--dran)').innerText.includes('Schulterdrücken'));
-    ok((await schu.locator('.kachel__coach').innerText()).includes('zurück auf 8'),
-       'Zurückholen nennt die untere Grenze');
+    ok((await schu.locator('.regler__wert').first().innerText()) === '45 kg',
+       'Zurückholen wirkt trotzdem: der Regler hält das Gewicht');
+    ok((await schu.locator('.regler__wert').nth(1).innerText()) === '8 Wdh',
+       'und setzt die Wiederholungen auf die untere Grenze zurück');
 
     /* ---------- Die Regler stehen auf dem Tagesziel ----------
      *
