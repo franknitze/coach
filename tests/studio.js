@@ -125,9 +125,13 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
        + gross + ' gegen ' + klein);
 
     await bank.locator('[data-bestaetige]').click();
-    await page.waitForSelector('.satz--fertig');
-    ok((await bank.locator('.satz--fertig').innerText()).includes('82,5 kg × 9'), 'Satz steht als erledigt da');
+    // Erledigte Sätze werden seit dem 26.08.2026 nicht mehr aufgelistet.
+    // Dass der Satz steht, sagt die Punktreihe.
+    await page.waitForFunction(() =>
+        document.querySelectorAll('.kachel.ist-offen .punkt.ist-voll').length === 1);
     ok(await bank.locator('.punkt.ist-voll').count() === 1, 'ein Punkt ist gefüllt');
+    ok(await bank.locator('.satz--fertig').count() === 0,
+       'und keine Zeile darunter, die Regler bleiben oben');
     ok(await page.locator('#pause').isVisible(), 'Pausen-Timer läuft');
 
     // Der Balken darf die unterste Kachel nicht verdecken

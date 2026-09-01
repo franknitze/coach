@@ -151,6 +151,12 @@ Geblättert wird nur zwischen dem ältesten Monat mit Daten und dem laufenden; d
 
 Ohne Foto wird das Bild in der Lupe ausgeblendet statt eine leere Fläche zu zeigen; die Anleitung muss auch dann erreichbar sein. Beim Schließen wird der Text geleert, sonst blitzt beim nächsten Öffnen der der vorigen Übung auf.
 
+**Unter dem Kachelkopf stehen nur die Regler** (Vorgabe von Frank, 26.08.2026). Die Liste der erledigten Sätze ist weg, mitsamt „SATZ 1", dem Wert und „ändern"; `.satz--fertig`, `.satz__wert` und `.satz__mini` gibt es nicht mehr. Die Zeilen standen zwischen Punktreihe und Eingabe und schoben die Regler mit jedem Satz weiter nach unten.
+
+**Damit entfällt das nachträgliche Ändern eines Satzes in der laufenden Einheit.** Der Zweig `d.korrigiere` steht unverändert im Klick-Handler, falls die Liste zurückkommt.
+
+Die Zählung übernimmt die **Punktreihe** im Kachelkopf, und die ist dafür von 15 auf 20 Pixel gewachsen: gefüllt heißt erledigt, leer steht aus, auf Armlänge zählbar. Die Reihenfolge der Zeilen sagt dasselbe ein zweites Mal. `.punkte` bricht um, weil eine Übung zwölf Sätze haben darf und zwölf große Punkte nicht mehr in eine Zeile der Textspalte passen.
+
 **Studio und Rückblick teilen sich den Kachelkopf.** `zeichneKachelKopf()` zeichnet Foto, Name, Vorgabe und Punktreihe für beide. Beim Zurückblicken ist „welches Gerät war das" dieselbe Frage wie im Studio, und eine zweite Darstellung dafür wäre eine zweite Bildsprache für denselben Gegenstand. Bewusst als eigene Funktion und nicht als Modus-Schalter quer durch `zeichneKachel()`: die hat schon genug Verzweigungen.
 
 **Der Trainingstag wird festgehalten, nicht aus dem geladenen Tag abgeleitet.** `zustand.tagWahl` ist ein eigenes Feld, `null` heißt „dem Vorschlag des Servers folgen". Betreten des Studios hält den Tag fest, „Einheit beenden" gibt ihn frei. Der Grund für beide Richtungen: `naechster_tag()` rückt ab dem **ersten** bestätigten Satz weiter, weil die laufende Einheit dann die letzte in den Logs ist. Ohne Festhalten spränge die Ansicht mitten in der Einheit weg; ohne Freigeben bot die Startseite nach dem Ende weiter die abgeschlossene Einheit an, und „Weiter trainieren" führte in eine Liste, in der alles abgehakt war. Der geladene Tag (`zustand.studio.day.key`) darf diese Rolle nicht mitübernehmen, genau daran ist es einmal gescheitert.

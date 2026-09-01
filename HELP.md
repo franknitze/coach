@@ -166,9 +166,10 @@ großen Plus- und Minus-Knöpfen ein, **nie über die Tastatur**. Halten lässt
 die Zahl weiterlaufen und wird schneller. Beide Felder sind mit deinem
 letzten Ergebnis vorbefüllt.
 
-Ein großer Knopf bestätigt den Satz. Eine Punktreihe auf der Kachel zeigt,
-wie viele Sätze schon stehen. Einen bereits bestätigten Satz kannst du
-antippen und korrigieren.
+Ein großer Knopf bestätigt den Satz. **Die Punktreihe auf der Kachel zeigt,
+bei welchem Satz du bist** — gefüllte Punkte sind erledigt, leere stehen noch
+aus. Unter dem Kachelkopf stehen nur die Regler, damit die Eingabe nicht mit
+jedem Satz weiter nach unten rutscht.
 
 ### Begründung
 
@@ -214,8 +215,8 @@ Steckgewicht. Ändern kannst du das unter Einstellungen bei der Übung.
 
 **Ich habe mich vertippt und den Satz schon bestätigt. Kann ich das
 korrigieren?**
-Ja, in der laufenden Einheit: Satz antippen, Werte ändern, erneut bestätigen.
-Sätze aus früheren Einheiten sind dagegen nur noch lesbar.
+Nein. Seit die Satzliste unter dem Kachelkopf weg ist, gibt es kein „ändern"
+mehr — was bestätigt ist, steht.
 
 **Warum kann ich alte Einheiten nicht mehr korrigieren?**
 Das ist eine bewusste Einschränkung, um den Schreibweg schlank zu halten.

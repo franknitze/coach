@@ -1441,7 +1441,10 @@ body {
 
 .punkte {
     display: flex;
-    gap: 7px;
+    /* Umbruch als Sicherung: Eine Übung darf bis zu zwölf Sätze haben, und
+       zwölf größere Punkte passen nicht mehr in eine Zeile der Textspalte. */
+    flex-wrap: wrap;
+    gap: 8px;
     margin-top: 6px;
 }
 
@@ -1449,8 +1452,8 @@ body {
    noch kommt. Mit haarfeinem Rand in Linienfarbe war er auf Armlänge nicht
    zu sehen, damit war die Reihe nur halb zu lesen. */
 .punkt {
-    width: 15px;
-    height: 15px;
+    width: 20px;
+    height: 20px;
     border: 2px solid var(--schrift-leise);
     border-radius: 50%;
 }
@@ -1467,27 +1470,6 @@ body {
     border-top: 1px solid var(--linie);
 }
 
-.satz--fertig {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-height: 48px;
-    border-bottom: 1px solid var(--linie);
-}
-
-.satz__mini {
-    flex: 0 0 auto;
-    font: 600 var(--s-marke)/1 var(--mono);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--schrift-leise);
-}
-
-.satz__wert {
-    flex: 1;
-    font: var(--s-text)/1 var(--mono);
-}
-
 .satz__korr {
     min-height: 40px;
     padding: 0 10px;
@@ -1499,7 +1481,6 @@ body {
 }
 
 .satz--dran { padding: 16px 0 4px; }
-.satz--dran .satz__mini { display: block; margin-bottom: 12px; }
 
 .satz__fertig {
     margin: 14px 0 0;

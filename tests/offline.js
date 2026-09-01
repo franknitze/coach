@@ -56,11 +56,11 @@ module.exports = (port) => testlauf('Offline-Puffer', port, async (t) => {
     for (let i = 0; i < 3; i++) {
         await bank.locator('[data-bestaetige]').click();
         await page.waitForFunction((n) =>
-            document.querySelectorAll('.satz--fertig').length === n, i + 1);
+            document.querySelectorAll('.kachel.ist-offen .punkt.ist-voll').length === n, i + 1);
         await page.click('#pause-weg');
     }
 
-    ok(await bank.locator('.satz--fertig').count() === 3, 'drei Sätze ohne Netz bestätigt');
+    ok(await bank.locator('.punkt.ist-voll').count() === 3, 'drei Sätze ohne Netz bestätigt');
     ok(await page.locator('.kachel', { hasText: 'Latzug' })
         .locator('.kachel__platzhalter').count() === 1,
        'ein ohne Netz nicht ladbares Foto weicht der Gerätenummer, kein kaputtes Bildsymbol');

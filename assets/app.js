@@ -1324,14 +1324,16 @@
         const heute = u.today || [];
         let html = '<div class="saetze">';
 
-        heute.forEach(function (satz, i) {
-            html += '<div class="satz satz--fertig">'
-                + '<span class="satz__mini">Satz ' + (i + 1) + '</span>'
-                + '<span class="satz__wert">' + last(satz.weight, u.assisted)
-                + ' × ' + satz.reps + '</span>'
-                + '<button class="satz__korr" data-korrigiere="' + esc(u.id) + ':' + i
-                + '">ändern</button></div>';
-        });
+        /*
+         * Die erledigten Sätze werden nicht mehr aufgelistet (Vorgabe von
+         * Frank, 26.08.2026). Was gemacht ist, sagt die Punktreihe im
+         * Kachelkopf; die Zeilen darunter standen zwischen ihr und den
+         * Reglern und schoben die Eingabe mit jedem Satz weiter nach unten.
+         *
+         * Damit entfällt auch das nachträgliche Ändern eines Satzes über
+         * "ändern". Der Zweig d.korrigiere bleibt im Klick-Handler stehen,
+         * falls die Liste zurückkommt.
+         */
 
         if (heute.length >= u.target_sets && zustand.entwurf[u.id] === undefined) {
             html += '<p class="satz__fertig">Alle ' + u.target_sets + ' Sätze stehen.</p>'
@@ -1341,9 +1343,6 @@
         }
 
         const e = zustand.entwurf[u.id] || vorbelegung(u);
-        const nummer = (zustand.entwurf[u.id] && zustand.entwurf[u.id].index !== undefined)
-            ? zustand.entwurf[u.id].index + 1
-            : heute.length + 1;
 
         /*
          * An der Unterstützungsmaschine ist die Richtung umgekehrt. Das
@@ -1363,8 +1362,14 @@
             : '';
 
         html += hilfeHinweis + partnerHinweis
+            /*
+             * Kein "Satz N", weder hier noch über den erledigten Sätzen.
+             * Die Punktreihe im Kachelkopf sagt dasselbe und ist von weiter
+             * weg zu lesen; die Reihenfolge der Zeilen sagt es noch einmal.
+             * Vorgabe von Frank, 26.08.2026: In der Satzliste steht nur,
+             * was gemacht wurde, kein Text darum herum.
+             */
             + '<div class="satz satz--dran">'
-            + '<span class="satz__mini">Satz ' + nummer + '</span>'
             + regler(u.id, 'weight', zahl(e.weight), 'kg',
                 u.assisted
                     ? '± ' + zahl(u.weight_step) + ' kg Hilfe · weniger ist schwerer'
