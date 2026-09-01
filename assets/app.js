@@ -256,7 +256,6 @@
         neuTag: null,          // Trainingstag einer neu angelegten Übung
         fotos: null,           // Dateinamen aus api/fotos.php
         bildLoeschfrage: null, // Foto, das gerade zum Löschen angefragt ist
-        anleitung: null,       // Übung, deren Ausführung im Studio aufgeklappt ist
         gewicht: null,         // Antwort von api/gewicht.php, Körpergewicht mit Datum
         einheiten: null,       // Antwort von api/einheiten.php, der Rückblick
         kalender: null,        // Antwort von api/einheiten.php?monat=…
@@ -451,23 +450,51 @@
     const lupeBild   = document.getElementById('lupe-bild');
     const lupeName   = document.getElementById('lupe-name');
     const lupeNummer = document.getElementById('lupe-nummer');
+    const lupeAnleitung = document.getElementById('lupe-anleitung');
 
-    function lupeZeigen(datei, name, nummer) {
+    /**
+     * Die Großansicht: Foto, Gerätenummer, Name — und die Ausführung.
+     *
+     * Die Ausführung war bis zum 26.08.2026 ein Aufklapper auf der Kachel.
+     * Sie steht jetzt hier, weil beides dieselbe Frage beantwortet: "Was ist
+     * das für ein Gerät und wie geht die Übung daran?" Auf der Kachel kostete
+     * sie außerdem Platz an der Stelle, an der man eintippt.
+     *
+     * Ohne Foto wird das Bild ausgeblendet statt eine leere Fläche zu zeigen —
+     * die Anleitung soll auch dann erreichbar sein.
+     */
+    function lupeZeigen(datei, name, nummer, uebungId) {
         if (!lupe) {
             return;
         }
-        lupeBild.src = 'assets/img/exercises/' + datei;
+        lupeBild.hidden = !datei;
+        lupeBild.src = datei ? 'assets/img/exercises/' + datei : '';
         lupeBild.alt = name;
         lupeName.textContent = name;
         lupeNummer.textContent = nummer;
         lupeNummer.hidden = !nummer;
+
+        const u = uebungImStudio(uebungId);
+        lupeAnleitung.innerHTML = u ? zeichneAusfuehrung(u) : '';
+
         lupe.hidden = false;
+    }
+
+    /** Die Übung aus der geladenen Studio-Ansicht, oder null. */
+    function uebungImStudio(id) {
+        if (!id || !zustand.studio) {
+            return null;
+        }
+        return (zustand.studio.exercises || []).find(function (u) {
+            return u.id === id;
+        }) || null;
     }
 
     function lupeSchliessen() {
         if (lupe && !lupe.hidden) {
             lupe.hidden = true;
-            lupeBild.src = '';   // Speicher freigeben
+            lupeBild.src = '';        // Speicher freigeben
+            lupeAnleitung.innerHTML = '';
         }
     }
 
@@ -1153,6 +1180,9 @@
             // Flex-Layout sie nebeneinander statt untereinander.
             ? '<span class="kachel__geraet">'
               + '<button class="kachel__foto" data-foto="' + esc(u.photo)
+              // data-anleitung statt data-uebung: das trägt schon die Kachel
+              // selbst, und der Foto-Zweig wird im Handler zuerst geprüft.
+              + '" data-anleitung="' + esc(u.id)
               + '" data-name="' + esc(u.name) + '" data-nummer="' + esc(u.station || '')
               + '" aria-label="Foto von ' + esc(u.name) + ' vergrößern">'
               + '<img class="kachel__bild" src="assets/img/exercises/' + esc(u.photo)
@@ -1209,14 +1239,16 @@
             return '';
         }
 
-        const auf = zustand.anleitung === u.id;
-
-        return '<button class="anleitung' + (auf ? ' ist-auf' : '') + '" type="button" '
-             + 'aria-expanded="' + (auf ? 'true' : 'false') + '" '
+        /*
+         * Kein Aufklapper mehr, sondern ein Auslöser: Die Ausführung steht
+         * in der Großansicht neben dem Foto des Geräts. Auf der Kachel
+         * schob sie die Regler nach unten, also genau das weg, wofür man
+         * die Kachel geöffnet hat.
+         */
+        return '<button class="anleitung" type="button" '
              + 'data-anleitung="' + esc(u.id) + '">'
              + '<span class="anleitung__pfeil" aria-hidden="true"></span>'
-             + 'Wie geht die Übung?</button>'
-             + (auf ? zeichneAusfuehrung(u) : '');
+             + 'Wie geht die Übung?</button>';
     }
 
     function letztesErgebnis(u) {
@@ -1724,6 +1756,7 @@
         const vorschau = u.photo
             ? '<span class="kachel__geraet">'
               + '<button class="zeile__foto" data-foto="' + esc(u.photo)
+              + '" data-anleitung="' + esc(u.id)
               + '" data-name="' + esc(u.name) + '" data-nummer="' + esc(u.station || '')
               + '" aria-label="Foto vergrößern">'
               + '<img src="assets/img/exercises/' + esc(u.photo)
@@ -2344,21 +2377,22 @@
             // Nicht die Übung auf- oder zuklappen: das Foto hat sein
             // eigenes Ziel, sonst würde ein Blick aufs Gerät die Kachel
             // schließen, an der man gerade arbeitet.
-            lupeZeigen(d.foto, d.name || '', d.nummer || '');
+            lupeZeigen(d.foto, d.name || '', d.nummer || '', d.anleitung || '');
             return;
         }
 
         if (d.oeffne) {
             zustand.offen = zustand.offen === d.oeffne ? null : d.oeffne;
             delete zustand.entwurf[d.oeffne];
-            // Eine andere Übung fängt ohne aufgeklappte Anleitung an.
-            zustand.anleitung = null;
             return zeichnen();
         }
 
         if (d.anleitung) {
-            zustand.anleitung = zustand.anleitung === d.anleitung ? null : d.anleitung;
-            return zeichnen();
+            const u = uebungImStudio(d.anleitung);
+            if (u) {
+                lupeZeigen(u.photo || '', u.name, u.station || '', u.id);
+            }
+            return;
         }
 
         // data-aendere läuft nicht über den Klick, sondern über

@@ -1311,7 +1311,14 @@ body {
     padding-bottom: calc(env(safe-area-inset-bottom) + 20px);
     background: rgba(12, 14, 18, 0.96);
     cursor: zoom-out;
+    /* Bild und Ausführung zusammen können höher werden als der Bildschirm.
+       Ohne das wäre der untere Teil der Anleitung nicht erreichbar. */
+    overflow-y: auto;
 }
+
+/* Bei zusätzlicher Anleitung darf das Bild weniger Höhe nehmen, sonst
+   bliebe für den Text nichts übrig. */
+.lupe:has(.lupe__anleitung:not(:empty)) .lupe__bild { max-height: 46vh; }
 
 .lupe__bild {
     max-width: 100%;
@@ -1332,6 +1339,26 @@ body {
 }
 
 .lupe .plakette { font-size: var(--s-text); padding: 5px 12px; }
+
+/* ---------- Die Ausführung in der Großansicht ----------
+ *
+ * Sie war bis zum 26.08.2026 ein Aufklapper auf der Kachel und schob dort
+ * die Regler nach unten — also genau das weg, wofür man die Kachel
+ * geöffnet hat. Jetzt steht sie neben dem Bild des Geräts, wo dieselbe
+ * Frage ohnehin gestellt wird.
+ *
+ * Der Cursor wird zurückgesetzt: Über der Lupe steht zoom-out, weil ein
+ * Tipp sie schließt. Über einem Textabsatz wäre das eine Lüge, und über
+ * den Verweisen erst recht.
+ */
+.lupe__anleitung {
+    max-width: var(--breite);
+    cursor: auto;
+}
+
+.lupe__anleitung:empty { display: none; }
+
+.lupe__anleitung .ausfuehrung { margin: 0; }
 
 .kachel__bild,
 .kachel__platzhalter {

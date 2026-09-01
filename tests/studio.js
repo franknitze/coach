@@ -185,47 +185,69 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
      */
 
     // Latzug ist gerade offen und hat in der Vorgabe keine Ausführung.
-    ok(await page.locator('.kachel.ist-offen [data-anleitung]').count() === 0,
-       'ohne hinterlegte Ausführung gibt es keinen Aufklapper');
+    // .anleitung meint den Verweis selbst: data-anleitung trägt inzwischen
+    // auch das Foto, das dieselbe Großansicht öffnet.
+    ok(await page.locator('.kachel.ist-offen button.anleitung').count() === 0,
+       'ohne hinterlegte Ausführung gibt es keinen Verweis darauf');
 
     await page.locator('.kachel', { hasText: 'Bankdrücken' }).locator('.kachel__text').click();
     await page.waitForSelector('.kachel.ist-offen [data-anleitung]');
     const kachel = page.locator('.kachel.ist-offen');
-    ok(await kachel.locator('[data-anleitung]').count() === 1,
+    ok(await kachel.locator('button.anleitung').count() === 1,
        'die offene Kachel bietet die Ausführung an');
+
+    /*
+     * Sie steht seit dem 26.08.2026 in der Großansicht neben dem Foto und
+     * nicht mehr als Aufklapper auf der Kachel. Dort schob sie die Regler
+     * nach unten — also genau das weg, wofür man die Kachel geöffnet hat.
+     */
     ok(await kachel.locator('.ausfuehrung').count() === 0,
-       'aber eingeklappt, die Regler bleiben oben');
+       'auf der Kachel selbst steht sie nicht, die Regler bleiben oben');
 
-    await kachel.locator('[data-anleitung]').click();
-    await page.waitForSelector('.kachel .ausfuehrung');
-    const text = await kachel.locator('.ausfuehrung__text').innerText();
-    ok(text.length > 20, 'aufgeklappt steht die Ausführung da: "'
-        + text.slice(0, 46) + '…"');
-    ok(await kachel.locator('[data-anleitung]').getAttribute('aria-expanded') === 'true',
-       'und der Aufklapper sagt es auch der Vorlesehilfe');
+    await kachel.locator('button.anleitung').click();
+    await page.waitForSelector('#lupe .ausfuehrung');
+    ok(await page.locator('#lupe').isVisible(), 'der Verweis öffnet die Großansicht');
+    const text = await page.locator('#lupe .ausfuehrung__text').innerText();
+    ok(text.length > 20, 'dort steht die Ausführung: "' + text.slice(0, 46) + '…"');
+    ok((await page.locator('#lupe-name').innerText()).includes('Bankdrücken'),
+       'mit dem Namen der Übung');
 
-    const video = kachel.locator('.ausfuehrung__suche a').first();
+    const video = page.locator('#lupe .ausfuehrung__suche a').first();
     ok((await video.getAttribute('href')).includes('youtube.com'),
        'das Video ist von hier aus erreichbar');
     ok(await video.getAttribute('target') === '_blank',
        'und öffnet daneben, damit die Einheit nicht verlassen wird');
 
-    // Die Regler müssen erreichbar bleiben, sonst verdeckt die Anleitung
-    // genau das, wofür man die Kachel geöffnet hat.
+    await page.click('#lupe');
+    ok(await page.locator('#lupe').isHidden(), 'ein Tipp schließt sie wieder');
+
+    // Die Regler stehen unverändert da: die Anleitung hat sie nie verdrängt.
     ok(await kachel.locator('.satz__fertig, .satz--dran').count() >= 1,
        'die Eingabe steht weiter darunter');
 
-    await kachel.locator('[data-anleitung]').click();
-    await page.waitForSelector('.kachel .ausfuehrung', { state: 'detached' });
-    ok(true, 'ein zweiter Tipp klappt sie wieder zu');
+    /*
+     * Bankdrücken hat im Testdatensatz eine Ausführung, aber kein Foto.
+     * Genau dann muss das Bild verschwinden statt eine leere Fläche zu
+     * zeigen — und die Anleitung trotzdem erreichbar sein. Über das Foto
+     * wäre sie es nicht, denn es gibt keins.
+     */
+    await kachel.locator('button.anleitung').click();
+    await page.waitForSelector('#lupe .ausfuehrung');
+    ok(await page.locator('#lupe-bild').isHidden(),
+       'ohne Foto zeigt die Großansicht kein leeres Bild');
+    await page.click('#lupe');
 
-    // Eine andere Übung fängt zugeklappt an
-    await kachel.locator('[data-anleitung]').click();
-    await page.waitForSelector('.kachel .ausfuehrung');
-    await page.locator('.kachel', { hasText: 'Schulterdrücken' }).locator('.kachel__text').click();
-    await page.waitForSelector('.kachel.ist-offen .satz--dran');
-    ok(await page.locator('.kachel .ausfuehrung').count() === 0,
-       'die nächste Übung beginnt wieder zugeklappt');
+    /*
+     * Latzug ist der umgekehrte Fall: Foto ja, Ausführung nein. Beim
+     * Schließen wird geleert, sonst stünde hier die Anleitung der vorigen
+     * Übung.
+     */
+    await page.locator('.kachel', { hasText: 'Latzug' }).locator('.kachel__foto').click();
+    await page.waitForSelector('#lupe:not([hidden])');
+    ok(await page.locator('#lupe-bild').isVisible(), 'mit Foto steht das Bild da');
+    ok(await page.locator('#lupe .ausfuehrung').count() === 0,
+       'und eine Übung ohne Ausführung zeigt auch keine fremde');
+    await page.click('#lupe');
 
     /* ---------- Bei null verschwindet die Pause von selbst ----------
      *

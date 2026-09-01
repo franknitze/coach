@@ -143,6 +143,10 @@ function version(string $pfad): string
             <span class="plakette" id="lupe-nummer" hidden></span>
             <span class="lupe__name" id="lupe-name"></span>
         </div>
+        <!-- Die Ausführung steht hier und nicht mehr als Aufklapper auf der
+             Kachel: Wer wissen will, wie die Übung geht, schaut ohnehin auf
+             das Bild des Geräts. Beides gehört zusammen. -->
+        <div class="lupe__anleitung" id="lupe-anleitung"></div>
     </div>
 
     <!-- Abmelden steht ganz unten und leise, nicht im Kopf.
