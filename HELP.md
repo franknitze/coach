@@ -889,6 +889,12 @@ Normalerweise passiert das von selbst beim ersten Öffnen nach einer Änderung.
 Ja. Ohne verschlüsselte Verbindung legt kein Browser eine App auf den
 Homescreen, und offline funktioniert sie dann auch nicht.
 
+**Auf dem iPhone: über Safari auf den Homescreen legen, nicht über Chrome.**
+Coach benutzt Apples Angaben für den Vollbildmodus, und die wertet nur Safari
+aus. Über Chrome installiert kann sich die Anzeige beim Drehen ins Querformat
+verstellen und bleibt es auch nach dem Zurückdrehen — aufziehen mit zwei
+Fingern stellt sie wieder her. In Safari tritt das nicht auf.
+
 **Warum lädt die Seite manchmal einmal von selbst neu?**
 Weil eine neue Fassung der App bereitsteht und übernommen wurde. Das passiert
 höchstens einmal pro Aktualisierung.

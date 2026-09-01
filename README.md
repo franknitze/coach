@@ -27,6 +27,10 @@ Hosting-Pakete. Keine Datenbank, keine Abhängigkeiten.
 HTTPS ist Pflicht: ohne verschlüsselte Verbindung legt kein Browser die App auf
 den Homescreen, und offline funktioniert sie dann auch nicht.
 
+Auf dem iPhone über **Safari** auf den Homescreen legen. Coach benutzt Apples
+Angaben für den Vollbildmodus, und die wertet nur Safari aus; über Chrome
+installiert verstellt sich die Anzeige beim Drehen ins Querformat.
+
 ## Passwort
 
 Die App ist passwortgeschützt. Beim ersten Aufruf im Browser legst du das

@@ -1227,6 +1227,27 @@ body {
     font-size: var(--s-zahl);
 }
 
+/*
+ * Auf der AUFGEKLAPPTEN Kachel wird die Nummer quadratisch und so groß wie
+ * das Foto darüber.
+ *
+ * Genau diese eine Übung steht man gerade an. Das Foto hat einen zweiten
+ * Job — man erkennt daran das Gerät —, aber wenn man davorsteht, sucht man
+ * nicht mehr, sondern gleicht ab: Stimmt die Nummer, ist es das richtige
+ * Gerät. Deshalb bekommt sie hier die volle Fläche und eine Schrift, die
+ * man auf Armlänge liest. Auf den zugeklappten Kacheln bleibt sie flach,
+ * sonst würde die Liste doppelt so lang.
+ *
+ * padding auf 0: Bei aspect-ratio zählt die Polsterung zur Höhe und machte
+ * den Kasten höher als breit.
+ */
+.kachel.ist-offen .plakette--unten {
+    aspect-ratio: 1;
+    padding: 0;
+    border-radius: 11px;
+    font-size: var(--s-gross);
+}
+
 .zeile .plakette--unten {
     padding: 1px 0;
     border-radius: 6px;

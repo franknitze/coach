@@ -327,6 +327,10 @@ Unter dem Bild und nicht darauf, weil daneben die Textspalte rund 130 Punkte hoc
 
 **Alle gelben Nummernfelder einer Liste sind gleich breit**, nämlich so breit wie das Foto daneben (76 auf der Kachel, 56 in der Zeile). Inhaltsbreite ergab eine ausgefranste linke Kante, weil „7" schmaler ist als „43". Die Regel hängt am direkten Kind (`.zeile > .plakette`, `.kachel__kopf > .plakette`); die Plakette unter einem Foto steckt in `.kachel__geraet` und holt ihre Breite von dort.
 
+**Auf der aufgeklappten Kachel wird die Nummer quadratisch und so groß wie das Foto** (76×76, Schrift `--s-gross`; Vorgabe von Frank, 26.08.2026). Diese eine Übung steht man gerade an, und dort sucht man das Gerät nicht mehr, sondern gleicht ab. Auf den zugeklappten Kacheln bleibt sie flach, sonst würde die Liste doppelt so lang. Bei `aspect-ratio` muss das `padding` auf 0, sonst zählt es zur Höhe und der Kasten wird höher als breit.
+
+**Auf dem iPhone gehört die App über Safari auf den Homescreen, nicht über Chrome** (26.08.2026). Über Chrome installiert verstellte sich beim Drehen ins Querformat der Seitenzoom und blieb auch nach dem Zurückdrehen verstellt — betroffen war nur das Studio, nicht die Startseite. Ursache ist der Container: `apple-mobile-web-app-capable` wertet nur Safari aus. In der App selbst war nichts zu finden (kein Überlauf, kein `resize`-Handler, keine gespeicherte Breite, `-webkit-text-size-adjust` gesetzt), und Playwrights WebKit bildet den Dreh-Zoom nicht nach. **`maximum-scale=1` wäre die falsche Abhilfe:** Es schaltet das Aufziehen mit zwei Fingern ab, und genau das ist im verstellten Zustand der einzige Ausweg.
+
 Ohne Foto bleibt es beim Alten: Dann steht die Nummer **an der Stelle** des Bildes (Frank, 22.08.2026). Die beiden Ansichten formen diesen Fall unterschiedlich — Quadrat auf der Kachel, Balken in der Zeile —, was bewusst so bleibt.
 
 **Die Pausenfarbe ist kein dritter Akzent.** `--ruhe` (dunkles Rot) tritt ausschließlich im Pausen-Panel auf und sagt dort „warte". Bewusst dunkel: die Pause dauert zwei Minuten, ein leuchtender Block über ein Drittel des Bildschirms blendet morgens um sieben. Gelb und Orange bleiben unangetastet.
