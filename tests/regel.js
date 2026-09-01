@@ -23,31 +23,40 @@ module.exports = function regel() {
 
     const s = (g, ...w) => w.map((r) => ({ weight: g, reps: r }));
 
-    // titel, Einheiten (neueste zuletzt), erwarteter Status
+    /*
+     * titel, Einheiten (neueste zuletzt), erwarteter Status, erwartete
+     * Ziel-Wiederholungen.
+     *
+     * target_reps befüllt seit dem 26.08.2026 den Wiederholungs-Regler im
+     * Studio, deshalb gehört jeder Zweig festgenagelt: Steigt das Gewicht,
+     * beginnt die Leiter unten wieder (rep_min 8); wird gehalten, ist das
+     * Ziel eine Wiederholung mehr als der beste Satz, gedeckelt bei
+     * rep_max 12.
+     */
     const faelle = [
-        ['gar keine Einheit',                    [],                                  'start'],
-        ['einmal sauber (zu wenig)',             [s(80, 12, 12, 12)],                 'halten'],
-        ['zweimal sauber an der Obergrenze',     [s(80, 12, 12, 12), s(80, 12, 12, 12)], 'steigern'],
-        ['zweimal, aber einmal nur 11 Wdh',      [s(80, 12, 12, 11), s(80, 12, 12, 12)], 'halten'],
+        ['gar keine Einheit',                    [],                                  'start',        8],
+        ['einmal sauber (zu wenig)',             [s(80, 12, 12, 12)],                 'halten',      12],
+        ['zweimal sauber an der Obergrenze',     [s(80, 12, 12, 12), s(80, 12, 12, 12)], 'steigern',  8],
+        ['zweimal, aber einmal nur 11 Wdh',      [s(80, 12, 12, 11), s(80, 12, 12, 12)], 'halten',   12],
         ['zweimal, ein Satz leichter',           [s(80, 12, 12, 12),
-                                                  [{ weight: 75, reps: 12 }, { weight: 80, reps: 12 }]], 'halten'],
-        ['alle Sätze unter rep_min',             [s(85, 7, 6, 5)],                    'zurueckholen'],
-        ['nur letzter Satz schwach (Ermüdung)',  [s(85, 10, 9, 7)],                   'halten'],
-        ['mitten im Bereich',                    [s(80, 10, 9, 9)],                   'halten'],
-        ['dreimal sauber (mehr als nötig)',      [s(80, 12, 12, 12), s(80, 12, 12, 12), s(80, 13, 12, 12)], 'steigern'],
+                                                  [{ weight: 75, reps: 12 }, { weight: 80, reps: 12 }]], 'halten', 12],
+        ['alle Sätze unter rep_min',             [s(85, 7, 6, 5)],                    'zurueckholen', 8],
+        ['nur letzter Satz schwach (Ermüdung)',  [s(85, 10, 9, 7)],                   'halten',      11],
+        ['mitten im Bereich',                    [s(80, 10, 9, 9)],                   'halten',      11],
+        ['dreimal sauber (mehr als nötig)',      [s(80, 12, 12, 12), s(80, 12, 12, 12), s(80, 13, 12, 12)], 'steigern', 8],
 
         // Abgebrochene Einheiten. Zwei Sätze auf der Obergrenze sind kein
         // Beleg dafür, dass vier gehen; wer früher aufhört, hat es nicht
         // gezeigt. Sonst schiebt ein Abbruch das Gewicht hoch.
-        ['zweimal sauber, aber nur 2 von 3 Sätzen', [s(80, 12, 12), s(80, 12, 12)],  'halten'],
-        ['einmal voll, einmal abgebrochen',       [s(80, 12, 12), s(80, 12, 12, 12)], 'halten'],
-        ['zweimal mit einem Satz zu viel',        [s(80, 12, 12, 12, 12), s(80, 12, 12, 12, 12)], 'steigern'],
+        ['zweimal sauber, aber nur 2 von 3 Sätzen', [s(80, 12, 12), s(80, 12, 12)],  'halten',      12],
+        ['einmal voll, einmal abgebrochen',       [s(80, 12, 12), s(80, 12, 12, 12)], 'halten',     12],
+        ['zweimal mit einem Satz zu viel',        [s(80, 12, 12, 12, 12), s(80, 12, 12, 12, 12)], 'steigern', 8],
     ];
 
     let bestanden = 0;
     let gescheitert = 0;
 
-    for (const [titel, einheiten, erwartet] of faelle) {
+    for (const [titel, einheiten, erwartet, zielWdh] of faelle) {
         const sessions = einheiten.map((sets, i) => ({
             date: '2026-08-' + String(1 + i * 2).padStart(2, '0') + 'T07:00:00+02:00',
             day: 'oberkoerper', rotation_index: 0,
@@ -59,17 +68,19 @@ module.exports = function regel() {
             require "${WURZEL}/lib/coach.php";
             $e = coach_empfehlung(['id' => 'test', 'rep_min' => 8, 'rep_max' => 12,
                                    'weight_step' => 2.5, 'target_sets' => 3]);
-            echo $e['status'], "\\t", $e['text'];
+            echo $e['status'], "\\t", $e['text'], "\\t", $e['target_reps'];
         `], { env: Object.assign({}, process.env, { COACH_DATA: ordner }) }).toString();
 
-        const [status, text] = ausgabe.split('\t');
+        const [status, text, reps] = ausgabe.split('\t');
 
-        if (status === erwartet) {
+        if (status === erwartet && Number(reps) === zielWdh) {
             bestanden++;
-            console.log('  ok   ' + titel.padEnd(36) + status.padEnd(13) + text);
+            console.log('  ok   ' + titel.padEnd(36) + status.padEnd(13)
+                + ('→ ' + reps + ' Wdh').padEnd(10) + text);
         } else {
             gescheitert++;
-            console.log('  FEHL ' + titel.padEnd(36) + 'erwartet ' + erwartet + ', bekam ' + status);
+            console.log('  FEHL ' + titel.padEnd(36) + 'erwartet ' + erwartet + ' / '
+                + zielWdh + ' Wdh, bekam ' + status + ' / ' + reps + ' Wdh');
         }
     }
 

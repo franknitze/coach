@@ -233,7 +233,7 @@
 - **Eingabe ausschließlich über große Plus/Minus-Buttons**, nie Tastatur:
   - Wiederholungen: 1er-Schritte.
   - Gewicht: Default 5 kg, pro Übung einstellbar (`weight_step`).
-- Felder sind mit dem letzten Wert **vorbefüllt** → gleiche Leistung = nur bestätigen, kein Ändern.
+- Felder sind mit dem **Tagesziel vorbefüllt**: Arbeitsgewicht und Ziel-Wiederholungen aus der Coach-Regel (`target_weight`, `target_reps`). Geändert am 26.08.2026; bis dahin stand dort der letzte Wert. Innerhalb einer Einheit wird der zuletzt bestätigte Satz wiederholt.
 - Ein großer Bestätigungs-Button pro Satz → danach läuft der **Pausen-Timer** (`rest_timer_seconds`), als Panel über dem unteren Bildschirmdrittel. Nach dem letzten Satz einer Einheit startet keine Pause: Sie dient dem nächsten Satz, und den gibt es dann nicht. Bei null verschwindet das Panel von selbst, es gibt keinen Zustand danach.
 - **Supersets:** Hat eine Übung einen `partner`, führt die App nach dem Satz dorthin und nimmt die kürzere Pause (`rest_pair_seconds`). Jeder Muskel bekommt trotzdem die volle Pause, weil er ruht, während der Gegenspieler arbeitet, und die Einheit wird rund ein Viertel kürzer.
 - Auf der offenen Kachel ein leiser Aufklapper **„Wie geht die Übung?"** mit Ausführungstext, Suchbegriff und Verweisen auf Video und Bildersuche. Dieselbe Auskunft steht in den Einstellungen, gebraucht wird sie aber hier: vor dem Gerät.
@@ -314,7 +314,7 @@ regel(uebung):
 - **Eine Einheit zählt nur mit ihrer Zielsatzzahl als sauber.** Zwei Sätze auf der Obergrenze sind kein Beleg dafür, dass vier gehen; ohne diese Bedingung schöbe ausgerechnet ein Abbruch das Gewicht hoch.
 - **„Eingebrochen" heißt: auch der beste Satz liegt unter `rep_min`.** Der letzte Satz fällt bei hartem Training regelmäßig ab, das ist Ermüdung und kein zu schweres Gewicht. Löste jeder schwache Satz die Warnung aus, stünde sie ständig da.
 - **An der Unterstützungsmaschine** (`assisted`) läuft die Regel andersherum: Arbeitsgewicht ist der Satz mit der geringsten Hilfe, Steigern heißt weniger Gewicht. Bei 0 kg Hilfe endet die Leiter, und die Ansage nennt den Wechsel auf Zusatzgewicht.
-- **Der Vorschlag befüllt die Eingabe nicht.** Vorbefüllt bleibt der letzte Wert (§5.2). Die App sagt, was fällig wäre; das Plus drückt Frank selbst, sonst bestätigt er im Halbschlaf eine Steigerung, die er nicht geschafft hat.
+- **Der Vorschlag befüllt die Eingabe** (seit 26.08.2026, vorher ausdrücklich nicht). `coach_empfehlung()` liefert dazu `target_weight` und `target_reps`; beim Steigern beginnen die Wiederholungen wieder bei `rep_min`. Umgekehrt auf Franks Wunsch: Im Feld soll stehen, was er erreichen soll. Der Preis ist der, den die alte Regel vermeiden wollte — ein unaufmerksames Bestätigen schreibt eine Wiederholung zu viel ins Protokoll.
 
 ### Ausbaustufe: KI-Coach (optional, später)
 - Zusätzliche Analyse per Sprachmodell-API für übergreifende Muster: Stagnation über mehrere Übungen, Vorschlag Erholungswoche, Balance zwischen Muskelgruppen.

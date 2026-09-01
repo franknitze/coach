@@ -67,9 +67,25 @@ module.exports = (port) => testlauf('Coach', port, async (t) => {
     ok((await schu.locator('.kachel__coach').innerText()).includes('zurück auf 8'),
        'Zurückholen nennt die untere Grenze');
 
-    // Der Coach entscheidet nicht für Frank
+    /* ---------- Die Regler stehen auf dem Tagesziel ----------
+     *
+     * Umgekehrte Festlegung: Bis zum 26.08.2026 blieb die Eingabe beim
+     * letzten Wert, damit niemand im Halbschlaf eine Steigerung bestätigt,
+     * die er nicht geschafft hat. Frank hat das umgedreht — im Feld soll
+     * stehen, was er erreichen soll.
+     *
+     * Anlass war eine widersprüchliche Kachel: Oben stand "130 kg halten",
+     * im Regler 80 kg, weil die Vorbelegung den Satz an derselben Position
+     * nahm und das ein Aufwärmsatz war.
+     *
+     * Bankdrücken steht hier zweimal sauber auf 80 kg × 10, der Coach
+     * steigert also auf 82,5 kg. Neues Gewicht heißt: die Wiederholungen
+     * beginnen unten wieder, also bei rep_min.
+     */
     await bank.locator('.kachel__text').click();
     await page.waitForSelector('.satz--dran');
-    ok(await bank.locator('.regler__wert').first().innerText() === '80 kg',
-       'Eingabe bleibt beim letzten Wert, nicht beim Coach-Vorschlag');
+    ok(await bank.locator('.regler__wert').first().innerText() === '82,5 kg',
+       'die Eingabe steht auf dem Coach-Vorschlag, nicht mehr beim letzten Wert');
+    ok(await bank.locator('.regler__wert').nth(1).innerText() === '6 Wdh',
+       'und die Wiederholungen beginnen beim neuen Gewicht unten wieder');
 });

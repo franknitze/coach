@@ -1239,14 +1239,45 @@
      */
     function vorbelegung(u) {
         const heute = u.today || [];
+
+        /*
+         * Mitten in der Übung: den Satz wiederholen, den man gerade gemacht
+         * hat. Innerhalb einer Einheit steigert man nicht von Satz zu Satz,
+         * sondern hält das Gewicht und zieht die Wiederholungen nach.
+         */
         if (heute.length > 0) {
-            return { weight: heute[heute.length - 1].weight, reps: heute[heute.length - 1].reps };
+            const l = heute[heute.length - 1];
+            return { weight: l.weight, reps: l.reps };
         }
-        const alt = (u.last && u.last.sets) || [];
-        if (alt.length > 0) {
-            const passend = alt[heute.length] || alt[alt.length - 1];
-            return { weight: passend.weight, reps: passend.reps };
+
+        /*
+         * Erster Satz: das, was heute ansteht — Arbeitsgewicht und
+         * Ziel-Wiederholungen aus der Coach-Regel.
+         *
+         * Bis zum 26.08.2026 stand hier der letzte Wert, und zwar der Satz
+         * an DERSELBEN Position. Das spielte eine Aufwärmleiter nach: Wer
+         * 80, 110, 130, 130 eingetragen hatte, bekam für Satz 1 wieder 80
+         * vorgelegt, während die Kachel darüber "130 kg halten" sagte. Zwei
+         * Zahlen für dieselbe Übung, die sich widersprechen.
+         *
+         * Die Umkehr ist Franks Entscheidung und kehrt die Festlegung vom
+         * 19.08. um ("Der Coach-Vorschlag befüllt die Eingabe nicht"). Der
+         * Preis: Ein unaufmerksames Bestätigen schreibt jetzt eine
+         * Wiederholung mehr ins Protokoll, als man gemacht hat. Dafür steht
+         * im Feld das, was man erreichen soll.
+         *
+         * Gerechnet wird auf dem Server. Die Progressionsregel lebt an einer
+         * Stelle; ein zweiter Rechenweg im Browser liefe irgendwann
+         * auseinander.
+         */
+        const c = u.coach || {};
+        if (c.target_weight !== null && c.target_weight !== undefined) {
+            return {
+                weight: c.target_weight,
+                reps: c.target_reps || u.rep_min,
+            };
         }
+
         return { weight: 0, reps: u.rep_min };
     }
 

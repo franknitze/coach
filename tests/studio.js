@@ -88,8 +88,17 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
 
     await bank.locator('.kachel__text').click();
     await page.waitForSelector('.satz--dran');
-    ok(await bank.locator('.regler__wert').first().innerText() === '80 kg', 'Gewicht vorbefüllt');
-    ok(await bank.locator('.regler__wert').nth(1).innerText() === '12 Wdh', 'Wiederholungen vorbefüllt');
+    /*
+     * Vorbefüllt wird seit dem 26.08.2026 das, was HEUTE ansteht, nicht mehr
+     * der letzte Wert. Bankdrücken stand zuletzt bei 80 kg × 12, 11, 10 —
+     * drei Sätze statt vier, also ist die Stufe nicht abgeschlossen. Der
+     * Coach sagt "80 kg halten, alle Sätze auf 10 bringen", und genau das
+     * steht in den Reglern: das Arbeitsgewicht und die obere Grenze.
+     */
+    ok(await bank.locator('.regler__wert').first().innerText() === '80 kg',
+       'Gewicht vorbefüllt: das Arbeitsgewicht');
+    ok(await bank.locator('.regler__wert').nth(1).innerText() === '10 Wdh',
+       'Wiederholungen vorbefüllt: das Ziel des Coaches, nicht die letzten 12');
 
     await bank.locator('[data-aendere$="weight:1"]').click();
     await page.waitForFunction(() =>
@@ -97,7 +106,7 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
     ok(true, 'Plus erhöht um die Schrittweite der Übung (2,5 kg)');
 
     await bank.locator('[data-aendere$="reps:-1"]').click();
-    ok(await bank.locator('.regler__wert').nth(1).innerText() === '11 Wdh', 'Minus senkt die Wiederholungen');
+    ok(await bank.locator('.regler__wert').nth(1).innerText() === '9 Wdh', 'Minus senkt die Wiederholungen');
 
     /*
      * Der Text allein genügt als Prüfung nicht. Die Knöpfe schreiben den
@@ -117,7 +126,7 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
 
     await bank.locator('[data-bestaetige]').click();
     await page.waitForSelector('.satz--fertig');
-    ok((await bank.locator('.satz--fertig').innerText()).includes('82,5 kg × 11'), 'Satz steht als erledigt da');
+    ok((await bank.locator('.satz--fertig').innerText()).includes('82,5 kg × 9'), 'Satz steht als erledigt da');
     ok(await bank.locator('.punkt.ist-voll').count() === 1, 'ein Punkt ist gefüllt');
     ok(await page.locator('#pause').isVisible(), 'Pausen-Timer läuft');
 

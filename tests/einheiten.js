@@ -10,26 +10,50 @@ module.exports = (port) => testlauf('Rückblick', port, async (t) => {
      * absichtlich unvollständig: Bankdrücken hat zwei von vier Sätzen,
      * Schulterdrücken fehlt ganz.
      */
+    /*
+     * Die Daten liegen im VORmonat, nicht in einem festen Monat.
+     *
+     * Vorher stand hier der August 2026 und der Lauf behauptete "Aug 2026",
+     * zwölf Trainingstage und fünf Leerfelder. Am 01.09.2026 fiel er
+     * deshalb um — richtig war er nur, solange gerade August war. Ein Test,
+     * der jeden Monatswechsel rot wird, sagt nichts mehr aus.
+     *
+     * Vormonat und nicht laufender Monat: Läge eine Einheit auf dem
+     * heutigen Tag, wäre sie "offen" statt "unvollständig", und die
+     * Prüfungen weiter unten kippten an genau einem Tag im Monat.
+     */
+    const WOCHENTAGE = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+    const MONATE = ['Jan', 'Feb', 'März', 'Apr', 'Mai', 'Juni',
+                    'Juli', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+    const marke = (d) => MONATE[d.getMonth()] + ' ' + d.getFullYear();
+    const schluessel = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    const tagIso = (d, tag) => schluessel(d) + '-' + String(tag).padStart(2, '0');
+
+    const heuteD  = new Date();
+    const jetzt   = new Date(heuteD.getFullYear(), heuteD.getMonth(), 1);
+    const vor1    = new Date(heuteD.getFullYear(), heuteD.getMonth() - 1, 1);
+    const vor2    = new Date(heuteD.getFullYear(), heuteD.getMonth() - 2, 1);
+
     const sessions = [];
     for (let i = 1; i <= 11; i++) {
-        sessions.push(einheit('2026-08-' + String(i).padStart(2, '0'), 'oberkoerper', 0, {
+        sessions.push(einheit(tagIso(vor1, i), 'oberkoerper', 0, {
             bankdruecken: saetze(70 + i, 8, 8, 8, 8),
             latzug: saetze(50 + i, 10, 10, 10, 10),
             schulterdruecken: saetze(30, 10, 10, 10),
         }));
     }
-    sessions.push(einheit('2026-08-12', 'oberkoerper', 0, {
+    sessions.push(einheit(tagIso(vor1, 12), 'oberkoerper', 0, {
         bankdruecken: saetze(85, 8, 7),
         latzug: saetze(62, 10, 10, 10, 10),
     }));
 
-    // Eine Einheit im Vormonat, damit der Kalender etwas zum Blättern hat.
-    t.training({
-        '2026-07': [einheit('2026-07-28', 'unterkoerper', 1, {
-            beinpresse: saetze(120, 10, 10, 10, 10),
-        })],
-        '2026-08': sessions,
-    });
+    // Eine Einheit im Monat davor, damit der Kalender etwas zum Blättern hat.
+    const training = {};
+    training[schluessel(vor2)] = [einheit(tagIso(vor2, 28), 'unterkoerper', 1, {
+        beinpresse: saetze(120, 10, 10, 10, 10),
+    })];
+    training[schluessel(vor1)] = sessions;
+    t.training(training);
     await t.anmelden();
 
     /* ---------- Die Liste auf der Startseite ---------- */
@@ -39,7 +63,10 @@ module.exports = (port) => testlauf('Rückblick', port, async (t) => {
        'höchstens zehn Einheiten, auch wenn zwölf da sind');
 
     const erste = await page.locator('.einheit').first().innerText();
-    ok(erste.includes('Mi, 12. Aug'), 'die jüngste steht oben: "' + erste.split('\n')[0] + '"');
+    const juengste = new Date(vor1.getFullYear(), vor1.getMonth(), 12);
+    const juengsteText = WOCHENTAGE[juengste.getDay()] + ', 12. ' + MONATE[juengste.getMonth()];
+    ok(erste.includes(juengsteText),
+       'die jüngste steht oben: "' + erste.split('\n')[0] + '"');
     ok(erste.includes('Oberkörper'), 'mit der Kategorie');
 
     const rest = await page.locator('.rueckblick .tag__zahl').innerText();
@@ -156,12 +183,8 @@ module.exports = (port) => testlauf('Rückblick', port, async (t) => {
     await page.locator('[data-gehe="kalender"]').click();
     await page.waitForSelector('.kal__tag');
 
-    ok(await page.locator('.titel').innerText() === 'Aug 2026',
-       'der Kalender öffnet im laufenden Monat');
-    ok(await page.locator('.kal__tag.ist-training').count() === 12,
-       'zwölf Trainingstage im August');
-    ok((await page.locator('.kal__zahl').innerText()) === '12 Einheiten',
-       'und die Zahl darüber sagt dasselbe');
+    ok(await page.locator('.titel').innerText() === marke(jetzt),
+       'der Kalender öffnet im laufenden Monat: ' + marke(jetzt));
 
     const wochenkopf = await page.locator('.kal__kopf').allInnerTexts();
     ok(wochenkopf.join(' ') === 'Mo Di Mi Do Fr Sa So',
@@ -169,24 +192,37 @@ module.exports = (port) => testlauf('Rückblick', port, async (t) => {
 
     ok(await page.locator('.kal__tag.ist-heute').count() === 1,
        'der heutige Tag ist gekennzeichnet');
-
-    // Der 1. August 2026 ist ein Samstag: davor müssen fünf leere Felder
-    // stehen, sonst rutscht der ganze Monat um einen Wochentag.
-    ok(await page.locator('.kal__leer').count() === 5,
-       'der Monat beginnt am richtigen Wochentag');
+    ok(await page.locator('[aria-label="Monat vor"]').isDisabled(),
+       'vorwärts über den laufenden Monat hinaus geht nicht');
 
     /* ---------- Blättern nur dorthin, wo etwas ist ---------- */
 
-    ok(await page.locator('[aria-label="Monat vor"]').isDisabled(),
-       'vorwärts über den laufenden Monat hinaus geht nicht');
     ok(!(await page.locator('[aria-label="Monat zurück"]').isDisabled()),
-       'zurück schon, im Juli steht eine Einheit');
+       'zurück geht, in den Vormonaten steht etwas');
 
     await page.locator('[aria-label="Monat zurück"]').click();
-    await page.waitForFunction(() =>
-        document.querySelector('.titel').innerText === 'Juli 2026');
+    await page.waitForFunction((t) =>
+        document.querySelector('.titel').innerText === t, marke(vor1));
+    ok(await page.locator('.kal__tag.ist-training').count() === 12,
+       'zwölf Trainingstage im Vormonat');
+    ok((await page.locator('.kal__zahl').innerText()) === '12 Einheiten',
+       'und die Zahl darüber sagt dasselbe');
+
+    /*
+     * Vor dem Ersten stehen so viele leere Felder, wie der Monat Wochentage
+     * nach Montag beginnt. Fällt der Erste auf einen Montag, sind es null.
+     * Ohne diese Prüfung rutscht der ganze Monat um einen Wochentag, ohne
+     * dass es auffällt.
+     */
+    const versatz = (vor1.getDay() + 6) % 7;
+    ok(await page.locator('.kal__leer').count() === versatz,
+       'der Monat beginnt am richtigen Wochentag: ' + versatz + ' leere Felder');
+
+    await page.locator('[aria-label="Monat zurück"]').click();
+    await page.waitForFunction((t) =>
+        document.querySelector('.titel').innerText === t, marke(vor2));
     ok(await page.locator('.kal__tag.ist-training').count() === 1,
-       'der Juli hat eine Einheit');
+       'der Monat davor hat eine Einheit');
     ok(await page.locator('[aria-label="Monat zurück"]').isDisabled(),
        'weiter zurück gibt es nichts mehr');
 
@@ -199,7 +235,7 @@ module.exports = (port) => testlauf('Rückblick', port, async (t) => {
 
     await page.locator('.kopfknopf', { hasText: 'Zurück' }).click();
     await page.waitForSelector('.kal__tag');
-    ok(await page.locator('.titel').innerText() === 'Juli 2026',
+    ok(await page.locator('.titel').innerText() === marke(vor2),
        '"Zurück" führt in den Kalendermonat, aus dem man kam');
 
     await page.locator('.kopfknopf', { hasText: 'Zurück' }).click();
@@ -238,13 +274,15 @@ module.exports = (port) => testlauf('Rückblick', port, async (t) => {
        'Datum und Gewicht stehen gleich hoch: '
        + hoehen.map(Math.round).join(' und ') + 'px');
 
-    await page.fill('#gewicht-form input[name="date"]', '2026-08-04');
+    await page.fill('#gewicht-form input[name="date"]', tagIso(vor1, 4));
     await page.fill('#gewicht-form input[name="kg"]', '84,5');
     await page.click('#gewicht-form button[type="submit"]');
     await page.waitForSelector('.zeile--schmal');
     ok((await page.locator('.zeile--schmal').innerText()).includes('84,5 kg'),
        'der Eintrag steht in der Liste');
-    ok((await page.locator('.zeile--schmal').innerText()).includes('Di, 4. Aug'),
+    const wiegetag = new Date(vor1.getFullYear(), vor1.getMonth(), 4);
+    ok((await page.locator('.zeile--schmal').innerText()).includes(
+       WOCHENTAGE[wiegetag.getDay()] + ', 4. ' + MONATE[wiegetag.getMonth()]),
        'mit seinem Datum, nicht mit heute');
 
     ok((await page.locator('.zeile--schmal').innerText()).includes('84,5'),

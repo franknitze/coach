@@ -55,9 +55,17 @@ function coach_last(float $gewicht, bool $unterstuetzt): string
 /**
  * Empfehlung für eine Übung.
  *
- * @return array{status: string, text: string, reason: string, target_weight: float|null}
+ * @return array{status: string, text: string, reason: string,
+ *               target_weight: float|null, target_reps: int}
  *         status ist einer von: start, steigern, zurueckholen, halten.
  *         text ist die Handlung, reason die Begründung darunter (oft leer).
+ *
+ *         target_weight und target_reps sind das, was heute ansteht. Sie
+ *         befüllen im Studio die beiden Regler (Frank, 26.08.2026). Bis
+ *         dahin stand dort der letzte Wert; die Umkehr ist bewusst, siehe
+ *         CLAUDE.md. Die Zahlen gehören hierher und nicht ins Frontend:
+ *         Die Progressionsregel lebt an einer Stelle, sonst rechnet der
+ *         Browser irgendwann etwas anderes als der Server.
  */
 function coach_empfehlung(array $uebung): array
 {
@@ -82,6 +90,7 @@ function coach_empfehlung(array $uebung): array
         return [
             'status'        => 'start',
             'target_weight' => null,
+            'target_reps'   => $repMin,
             'reason'        => '',
             'text'          => $unterstuetzt
                 ? 'Erste Einheit: Hilfe antasten'
@@ -118,6 +127,7 @@ function coach_empfehlung(array $uebung): array
             return [
                 'status'        => 'steigern',
                 'target_weight' => 0.0,
+                'target_reps'   => $repMin,
                 'text'          => 'Zusatzgewicht ist dran',
                 'reason'        => COACH_EINHEITEN . ' Einheiten ohne Hilfe × '
                                  . $repMax . '. Im Plan die Gewichtsrichtung auf '
@@ -130,6 +140,7 @@ function coach_empfehlung(array $uebung): array
             return [
                 'status'        => 'steigern',
                 'target_weight' => 0.0,
+                'target_reps'   => $repMin,
                 'text'          => 'Heute ohne Hilfe',
                 'reason'        => COACH_EINHEITEN . ' Einheiten sauber bei '
                                  . coach_zahl($aktGewicht) . ' kg Hilfe',
@@ -139,6 +150,8 @@ function coach_empfehlung(array $uebung): array
         return [
             'status'        => 'steigern',
             'target_weight' => $ziel,
+            // Neues Gewicht heißt: die Leiter beginnt unten wieder.
+            'target_reps'   => $repMin,
             // Erst die Handlung, dann die Begründung. Auf der Kachel steht
             // die Handlung vorn und hervorgehoben, die Begründung leise
             // darunter: gelesen wird im Studio nur die erste Zeile.
@@ -164,6 +177,7 @@ function coach_empfehlung(array $uebung): array
         return [
             'status'        => 'zurueckholen',
             'target_weight' => $aktGewicht,
+            'target_reps'   => $repMin,
             'reason'        => '',
             'text'          => $unterstuetzt
                 ? 'Mehr Hilfe, bis ' . $repMin . ' Wiederholungen wieder gehen.'
@@ -193,6 +207,7 @@ function coach_empfehlung(array $uebung): array
         return [
             'status'        => 'halten',
             'target_weight' => $aktGewicht,
+            'target_reps'   => $repMax,
             'reason'        => '',
             'text'          => 'Noch ' . ($fehlend === 1 ? 'eine saubere Einheit' : $fehlend
                              . ' saubere Einheiten') . ' ' . $womit
@@ -204,6 +219,7 @@ function coach_empfehlung(array $uebung): array
         return [
             'status'        => 'halten',
             'target_weight' => $aktGewicht,
+            'target_reps'   => $repMax,
             'reason'        => '',
             'text'          => $halten . ', alle Sätze auf ' . $repMax . ' bringen.',
         ];
@@ -212,6 +228,7 @@ function coach_empfehlung(array $uebung): array
     return [
         'status'        => 'halten',
         'target_weight' => $aktGewicht,
+        'target_reps'   => min($besteWdh + 1, $repMax),
         'reason'        => '',
         'text'          => $halten . ', Ziel '
                          . min($besteWdh + 1, $repMax) . ' Wiederholungen.',

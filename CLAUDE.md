@@ -78,7 +78,16 @@ Vier Festlegungen, die die Spezifikation offen lässt:
 - **`COACH_EINHEITEN = 2`.** §7 nennt „N = 2..3". Zwei ist der zügigere Wert; wer vorsichtiger steigern will, setzt die Konstante auf 3. Eine einzelne saubere Einheit reicht bewusst nicht, sonst schiebt ein guter Tag das Gewicht hoch, das am nächsten Termin wieder einbricht.
 - **„Eingebrochen" heißt: auch der beste Satz liegt unter `rep_min`.** Der letzte Satz fällt bei hartem Training regelmäßig ab, das ist Ermüdung und kein zu schweres Gewicht. Würde jeder einzelne schwache Satz die Warnung auslösen, stünde sie ständig da und niemand läse sie mehr.
 - **Eine Einheit zählt nur mit ihrer Zielsatzzahl als sauber.** `coach_einheit_sauber()` prüft nicht nur, ob alle erfassten Sätze auf dem Arbeitsgewicht bis `rep_max` durchgingen, sondern auch, ob es überhaupt genug waren. Ohne das schöbe ausgerechnet ein Abbruch das Gewicht hoch: zwei Sätze auf der Obergrenze sind kein Beleg dafür, dass vier gehen. Fehlt `target_sets` (0), greift die Bedingung nicht, dann lässt sich nicht beurteilen, was vollständig gewesen wäre. Zwei Aufrufstellen, nicht eine — auch die Ansage „Noch eine saubere Einheit, dann geht es hoch" muss dieselbe Zählung benutzen, sonst verspricht die Kachel eine Steigerung, die dann ausbleibt.
-- **Der Coach-Vorschlag befüllt die Eingabe nicht.** Vorbefüllt wird weiter der letzte Wert (§5.2: gleiche Leistung nur bestätigen). Die App sagt, was fällig wäre; das Plus drückt Frank selbst. Sonst bestätigt er im Halbschlaf eine Steigerung, die er nicht geschafft hat.
+- **Aufwärmsätze werden nicht mitprotokolliert** (Frank, 26.08.2026). `coach_einheit_sauber()` verlangt, dass **jeder** erfasste Satz auf dem Arbeitsgewicht liegt; ein leichterer lässt die Prüfung durchfallen. Das ist für den Einbruch mitten in der Einheit gedacht, trifft aber genauso eine Aufwärmleiter: Wer 80, 110, 130, 130 einträgt, bekommt nie eine Steigerung vorgeschlagen, auch wenn alle Arbeitssätze durchgehen. Nachgerechnet: dieselben vier Sätze auf 130 × 10 ergeben ohne Aufwärmzeilen „Heute 135 kg", mit ihnen „alle Sätze auf 10 bringen". Die Regel bleibt streng, **weil Frank sich entschieden hat, nur die Arbeitssätze einzutippen.** Wer das ändert, muss die Funktion mit ändern — Aufwärmen erkennt man daran, dass es **vor** dem ersten Satz auf Arbeitsgewicht liegt, ein Einbruch daran, dass er danach kommt.
+- **Der Coach-Vorschlag befüllt die Eingabe — seit dem 26.08.2026, vorher nicht.** Bis dahin stand im Regler der letzte Wert, damit niemand im Halbschlaf eine Steigerung bestätigt, die er nicht geschafft hat. **Frank hat das umgedreht:** Im Feld soll stehen, was er erreichen soll.
+
+  Anlass war eine widersprüchliche Kachel. `vorbelegung()` nahm den Satz an **derselben Position** wie der anstehende, und bei einer Aufwärmleiter war das der Aufwärmsatz: Oben stand „130 kg halten", im Regler 80 kg. Zwei Zahlen für dieselbe Übung, die sich widersprechen.
+
+  Jetzt liefert `coach_empfehlung()` neben `target_weight` auch **`target_reps`**, und beide füllen die Regler. Die Zahlen gehören in `lib/coach.php` und nicht ins Frontend: Die Progressionsregel lebt an einer Stelle, sonst rechnet der Browser irgendwann etwas anderes als der Server. Jeder der acht Rückgabezweige setzt `target_reps`, und `tests/regel.js` nagelt alle zwölf Fälle darauf fest.
+
+  Der Preis ist der, den die alte Regel vermeiden wollte: Ein unaufmerksames Bestätigen schreibt jetzt eine Wiederholung mehr ins Protokoll, als gemacht wurde. Das war Franks Abwägung.
+
+  **Innerhalb einer Einheit gilt das nicht.** Steht schon ein Satz, wird der wiederholt — man steigert nicht von Satz zu Satz, sondern hält das Gewicht und zieht die Wiederholungen nach.
 
 **`weight_step` gibt es zweimal:** global in `config.json` als Default (5), pro Übung in `exercises.json` als Überschreibung. Erlaubt sind 0,25, 0,5, 1, 1,25, 2,5 und 5. Jede Stelle, die Gewicht verändert, muss den Wert der Übung nehmen und auf den globalen zurückfallen.
 
@@ -231,6 +240,8 @@ node tests/lauf.js coach      # einzeln, Namen siehe tests/lauf.js
 ```
 
 Kein Test-Framework, wie in SPEC.md §2 vorgesehen. `tests/lauf.js` ist ein Skript, das die Läufe nacheinander startet und mit Exit-Code 1 endet, wenn etwas scheitert. Playwright steuert nur den Browser und läuft gegen das installierte Chrome, damit kein Browser nachgeladen wird. Fehlt Playwright, sagt die Fehlermeldung, was zu tun ist.
+
+**Kein Testlauf darf einen festen Monat behaupten.** `tests/einheiten.js` schrieb seine Daten in den August 2026 und prüfte dann auf „Aug 2026", zwölf Trainingstage und fünf Leerfelder vor dem Ersten. Am 01.09.2026 fiel der Lauf mit fünf Fehlern um — richtig war er nur, solange gerade August war. Die Daten liegen jetzt im **Vormonat**, alles Weitere wird daraus gerechnet (Monatsmarke, Wochentag des Ersten, Datum der jüngsten Einheit). Vormonat und nicht laufender Monat, weil eine Einheit am heutigen Tag „offen" statt „unvollständig" wäre und die Prüfungen an genau einem Tag im Monat kippten.
 
 **Jeder Lauf ist vollständig abgeschottet.** Er startet einen eigenen PHP-Server auf einem eigenen Port mit einem eigenen Datenverzeichnis im Temp-Ordner, gesetzt über `COACH_DATA`. Das ist keine Bequemlichkeit, sondern Notwehr: die Läufe löschen und schreiben Logdateien, und gegen `data/` ausgeführt kosteten sie die Trainingshistorie. Deshalb gilt:
 

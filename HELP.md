@@ -176,8 +176,13 @@ antippen und korrigieren.
 einer Hand und will nicht zielen müssen. Große Flächen für den Daumen sind
 das Einzige, was dort funktioniert.
 
-**Vorbefüllt mit dem letzten Wert**, damit gleiche Leistung nur bestätigt
-werden muss. Das ist der häufigste Fall und soll ein einziger Tipp sein.
+**Vorbefüllt mit dem Tagesziel.** Im Feld steht, was heute ansteht — das
+Arbeitsgewicht und die Wiederholungszahl, die der Coach nennt. Schaffst du
+sie, bestätigst du nur. Schaffst du sie nicht, drückst du einmal Minus.
+
+Früher stand dort dein letztes Ergebnis. Das führte zu einer Kachel, die sich
+selbst widersprach: oben „130 kg halten", im Feld 80 kg — weil das dein
+Aufwärmsatz war und das Feld den Satz an derselben Stelle wiederholte.
 
 **Halten beschleunigt**, weil die erste Einheit sonst unbedienbar wäre: von
 0 auf 80 kg in 2,5er-Schritten wären 32 Antipper.
@@ -188,6 +193,13 @@ weil jeder Satz seine Position kennt, überschreibt ein Doppeltipp denselben
 Satz, statt ihn ein zweites Mal anzuhängen.
 
 ### Häufige Nutzerfragen
+
+**Warum steht im Feld eine Wiederholung mehr, als ich letztes Mal geschafft
+habe?**
+Weil dort das Tagesziel steht, nicht dein letztes Ergebnis. Der Coach sagt
+eine Zeile darüber dasselbe: „130 kg halten, Ziel 7 Wiederholungen." Schaffst
+du nur 6, drückst du einmal Minus — trag ein, was du wirklich gemacht hast,
+sonst rechnet der Coach mit falschen Zahlen weiter.
 
 **Was bedeutet „zuletzt 60 kg × 11"?**
 Das ist dein letztes Ergebnis an diesem Gerät: 60 Kilogramm bei 11
