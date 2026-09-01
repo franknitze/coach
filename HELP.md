@@ -225,10 +225,12 @@ Ein Vertipper von letzter Woche bleibt stehen.
 Nein. Du kannst jede Kachel jederzeit aufklappen, in jeder Reihenfolge.
 
 **Wo finde ich, wie eine Übung überhaupt geht?**
-Tippe auf das Foto des Geräts oder auf die Zeile „Wie geht die Übung?" unter
-dem Kachelkopf. Beides öffnet dieselbe Großansicht: das Bild groß, die
-Gerätenummer, der Name, die Ausführung und Verweise auf Video- und
-Bildersuche. Ein Tipp irgendwo schließt sie wieder.
+Tippe auf das Foto des Geräts. Es geht groß auf, und darunter stehen der
+Name, die Gerätenummer, die Ausführung und Verweise auf Video- und
+Bildersuche. Ein Tipp irgendwo schließt es wieder.
+
+Hat eine Übung kein Foto, steht dafür eine Zeile „Wie geht die Übung?" unter
+dem Kachelkopf — dann gäbe es sonst keinen Weg dorthin.
 
 Früher klappte der Text auf der Kachel auf und schob die Regler nach unten —
 also genau das weg, wofür du die Kachel geöffnet hattest. Jetzt steht er da,

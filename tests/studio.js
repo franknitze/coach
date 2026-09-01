@@ -249,6 +249,40 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
        'und eine Übung ohne Ausführung zeigt auch keine fremde');
     await page.click('#lupe');
 
+    /* ---------- Mit Foto verschwindet die Zeile ----------
+     *
+     * Sie wäre ein zweiter Weg zum selben Ort und säße zwischen Kachelkopf
+     * und Reglern, also da, wo man eintippt. Ohne Foto bleibt sie stehen,
+     * sonst wäre die Ausführung überhaupt nicht mehr erreichbar — dieser
+     * Fall steht oben bei Bankdrücken.
+     */
+    await page.evaluate(async () => {
+        const alle = (await (await fetch('api/exercises.php')).json()).exercises;
+        await fetch('api/exercises.php', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(Object.assign({}, alle.latzug, {
+                execution: 'Brust raus, Stange zur oberen Brust ziehen.',
+            })),
+        });
+    });
+    // Nach dem Neuladen steht man auf der Startseite; heute stehen schon
+    // Sätze, der Knopf unten führt also zurück ins Studio.
+    await page.reload();
+    await page.waitForSelector('.fussleiste .knopf');
+    await page.locator('.fussleiste .knopf').click();
+    await page.waitForSelector('.kachel');
+    const mitFoto = page.locator('.kachel', { hasText: 'Latzug' });
+    await mitFoto.locator('.kachel__text').click();
+    await page.waitForTimeout(200);
+    ok(await mitFoto.locator('button.anleitung').count() === 0,
+       'mit Foto steht keine eigene Zeile mehr auf der Kachel');
+
+    await mitFoto.locator('.kachel__foto').click();
+    await page.waitForSelector('#lupe .ausfuehrung');
+    ok((await page.locator('#lupe .ausfuehrung__text').innerText()).includes('Brust raus'),
+       'die Ausführung ist trotzdem da, über das Foto');
+    await page.click('#lupe');
+
     /* ---------- Bei null verschwindet die Pause von selbst ----------
      *
      * Dort stand einmal ein grüner Zustand mit "Weiter". Der sagte nur,

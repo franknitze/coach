@@ -1234,17 +1234,24 @@
      * bevor man weitermachen kann, und mit Pausen-Timer und Bildlupe
      * liegen schon zwei davon übereinander.
      */
+    /**
+     * Der Verweis auf die Ausführung — nur noch als Notausgang.
+     *
+     * Mit Foto führt ein Tipp aufs Bild in die Großansicht, und dort steht
+     * die Ausführung. Eine eigene Zeile wäre ein zweiter Weg zum selben Ort
+     * und säße ausgerechnet zwischen Kachelkopf und Reglern, also da, wo man
+     * eintippt (Frank, 26.08.2026).
+     *
+     * OHNE Foto bleibt sie stehen: Dann gibt es keinen anderen Weg zur
+     * Anleitung, denn der Platzhalter mit der Gerätenummer klappt die Kachel
+     * auf und öffnet keine Großansicht. Im mitgelieferten Plan hat jede
+     * Übung ein Bild, aber angelegte Übungen müssen keins haben.
+     */
     function zeichneAnleitung(u) {
-        if (!u.execution && !u.search) {
+        if (u.photo || (!u.execution && !u.search)) {
             return '';
         }
 
-        /*
-         * Kein Aufklapper mehr, sondern ein Auslöser: Die Ausführung steht
-         * in der Großansicht neben dem Foto des Geräts. Auf der Kachel
-         * schob sie die Regler nach unten, also genau das weg, wofür man
-         * die Kachel geöffnet hat.
-         */
         return '<button class="anleitung" type="button" '
              + 'data-anleitung="' + esc(u.id) + '">'
              + '<span class="anleitung__pfeil" aria-hidden="true"></span>'

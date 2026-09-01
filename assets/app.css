@@ -1800,8 +1800,6 @@ body.hat-pause .inhalt { padding-bottom: calc(env(safe-area-inset-bottom) + 290p
     cursor: pointer;
 }
 
-.anleitung.ist-auf { color: var(--schrift); }
-
 /* Winkel aus zwei Rändern statt einem Zeichen: ein Glyph säße je nach
    Schrift anders auf der Grundlinie und ließe sich nicht sauber drehen. */
 .anleitung__pfeil {
@@ -1813,7 +1811,6 @@ body.hat-pause .inhalt { padding-bottom: calc(env(safe-area-inset-bottom) + 290p
     transition: transform .15s ease;
 }
 
-.anleitung.ist-auf .anleitung__pfeil { transform: rotate(45deg); }
 
 @media (prefers-reduced-motion: reduce) {
     .anleitung__pfeil { transition: none; }
