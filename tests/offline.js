@@ -200,4 +200,80 @@ module.exports = (port) => testlauf('Offline-Puffer', port, async (t) => {
     ok(grenzen.zukunft === 422, 'ein Zeitpunkt in der Zukunft wird abgelehnt');
     ok(grenzen.uralt === 422, 'ein Zeitpunkt vor Monaten wird abgelehnt');
     ok(grenzen.unfug === 422, 'unlesbare Zeitangaben werden abgelehnt');
+
+    /* ---------- Eine Antwort ohne JSON ist ein Netzfehler ----------
+     *
+     * Am 07.09.2026 im Studio passiert: Der Server hatte den Satz schon
+     * geschrieben, die Antwort kam aber nicht als JSON zurück. Der Browser
+     * las das als endgültige Ablehnung und legte den Satz zur Seite.
+     * Dahinter steckt keine Ablehnung, sondern eine abgeschnittene Antwort
+     * oder eine Fehlerseite des Hosters — beim nächsten Versuch geht das
+     * durch, und wiederholen ist wegen set_index gefahrlos.
+     */
+
+    const eintrag = (index) => ({
+        day: 'oberkoerper', rotation_index: 0, exercise_id: 'bankdruecken',
+        set_index: index, weight: 82.5, reps: 10,
+        performed_at: new Date().toISOString(),
+    });
+
+    await page.context().route('**/api/session.php', function (route) {
+        return route.fulfill({
+            status: 200, contentType: 'text/html', body: '<html>Wartung</html>',
+        });
+    });
+
+    await page.evaluate((e) => {
+        localStorage.setItem('coach.warteschlange', JSON.stringify([e]));
+        dispatchEvent(new Event('online'));
+    }, eintrag(7));
+    await page.waitForTimeout(1500);
+
+    ok((await page.evaluate(() =>
+        JSON.parse(localStorage.getItem('coach.warteschlange') || '[]').length)) === 1,
+       'eine Antwort ohne JSON lässt den Satz in der Warteschlange liegen');
+    ok((await page.evaluate(() =>
+        JSON.parse(localStorage.getItem('coach.gescheitert') || '[]').length)) === 0,
+       'und schiebt ihn nicht als endgültig abgelehnt zur Seite');
+
+    /* ---------- Eine echte Ablehnung nennt den Satz und geht von selbst ---------- */
+
+    await page.context().unroute('**/api/session.php');
+    await page.context().route('**/api/session.php', function (route) {
+        return route.fulfill({
+            status: 422, contentType: 'application/json',
+            body: JSON.stringify({ error: 'Unbekannte Übung.' }),
+        });
+    });
+
+    await page.evaluate((e) => {
+        localStorage.setItem('coach.warteschlange', JSON.stringify([e]));
+        dispatchEvent(new Event('online'));
+    }, eintrag(8));
+
+    await page.waitForFunction(() =>
+        JSON.parse(localStorage.getItem('coach.gescheitert') || '[]').length === 1,
+        null, { timeout: 15000 });
+
+    const abgelehnt = await page.locator('#status').innerText();
+    ok(abgelehnt.includes('Bankdrücken') && abgelehnt.includes('82,5 kg × 10'),
+       'die Meldung benennt den Satz statt eines technischen Grundes: "' + abgelehnt + '"');
+    ok(!/nochmal|erneut|versuch|tippe/i.test(abgelehnt),
+       'und verlangt nichts, was der Benutzer ohnehin nicht tun kann');
+
+    // Sie darf nicht stehen bleiben. Bis zum 09.09.2026 tat sie genau das:
+    // gescheitert.leeren() gab es, aber keine Zeile rief es auf.
+    await page.waitForFunction(() =>
+        document.getElementById('status').hidden, null, { timeout: 15000 });
+    ok(true, 'die Meldung verschwindet nach wenigen Sekunden von selbst');
+    ok((await page.evaluate(() =>
+        JSON.parse(localStorage.getItem('coach.gescheitert') || '[]').length)) === 0,
+       'und lässt nichts zurück, das sie beim nächsten Laden wiederbringt');
+
+    await page.reload();
+    await page.waitForSelector('.heute__tag');
+    ok(await page.locator('#status').isHidden(),
+       'nach dem Neuladen ist sie weg und kommt nicht wieder');
+
+    await page.context().unroute('**/api/session.php');
 });

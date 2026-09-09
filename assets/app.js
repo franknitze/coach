@@ -36,11 +36,22 @@
             throw fehler;
         }
 
+        // Eine Antwort, die kein JSON ist, gilt als Netzfehler und damit als
+        // wiederholbar. Sie sieht nur aus wie ein Serverfehler: im Studio
+        // steckt dahinter eine abgeschnittene Antwort, eine HTML-Fehlerseite
+        // des Hosters oder eine Zwischenseite des Mobilfunknetzes, und all
+        // das geht beim naechsten Versuch durch. Am 07.09.2026 hat genau
+        // dieser Fall einen Satz in den Papierkorb geschoben, obwohl PHP ihn
+        // laengst geschrieben hatte. Wiederholen ist wegen set_index
+        // gefahrlos: derselbe Satz ueberschreibt sich, statt sich zu
+        // verdoppeln.
         let inhalt = {};
         try {
             inhalt = await antwort.json();
         } catch (e) {
-            throw new Error('Server antwortet nicht wie erwartet.');
+            const fehler = new Error('Server antwortet nicht wie erwartet.');
+            fehler.netz = true;
+            throw fehler;
         }
 
         // 401 heißt im angemeldeten Bereich "Sitzung abgelaufen", dort ist
@@ -362,6 +373,45 @@
     const statusBox = document.getElementById('status');
     let sendetGerade = false;
 
+    /*
+     * Wie lange eine Ablehnung stehen bleibt, bevor sie von selbst geht.
+     *
+     * Sie blieb bis zum 09.09.2026 fuer immer stehen: gescheitert.leeren()
+     * gab es, aber keine Zeile rief es auf. Auf Franks Handy hing die
+     * Meldung dadurch zwei Tage lang, ohne dass ein Neuladen half.
+     *
+     * Ein Knopf zum Wegwischen waere die falsche Abhilfe, denn er verlangte
+     * einen Handgriff fuer etwas, das der Benutzer ohnehin nicht aendern
+     * kann: Der Satz ist entweder auf der Platte oder verloren, und beides
+     * entscheidet sich ohne sein Zutun (Vorgabe von Frank, 09.09.2026).
+     * Also kurz zeigen, was passiert ist, und dann verschwinden.
+     */
+    const KAPUTT_SEKUNDEN = 8;
+    let kaputtTimer = null;
+
+    /**
+     * "Beinpresse 130 kg x 7" - damit die Meldung den Satz benennt.
+     *
+     * Der Name kommt zuerst aus dem geladenen Trainingstag und erst danach
+     * aus der Uebungsbibliothek. Der Grund ist genau der Fall, um den es
+     * hier geht: Wer im Funkloch geladen hat, bei dem ist die Bibliothek
+     * leer geblieben, weil api/exercises.php nicht geantwortet hat. Der
+     * gemerkte Studio-Plan traegt die Namen dagegen mit. Ohne diese
+     * Reihenfolge staende in der Meldung die Kennung ("bankdruecken").
+     */
+    function satzNennen(eintrag) {
+        if (!eintrag) {
+            return 'Ein Satz';
+        }
+        const imTag = (zustand.studio && (zustand.studio.exercises || [])
+            .find(function (u) { return u.id === eintrag.exercise_id; })) || null;
+        const inBibliothek = zustand.uebungen
+            ? zustand.uebungen[eintrag.exercise_id] : null;
+        const name = (imTag && imTag.name) || (inBibliothek && inBibliothek.name)
+            || eintrag.exercise_id || 'Ein Satz';
+        return name + ' ' + zahl(eintrag.weight) + ' kg × ' + eintrag.reps;
+    }
+
     function statusZeichnen() {
         if (!statusBox) {
             return;
@@ -376,8 +426,17 @@
 
         if (kaputt.length) {
             art = 'ist-kaputt';
-            text = kaputt.length + (kaputt.length === 1 ? ' Satz wurde' : ' Sätze wurden')
-                 + ' abgelehnt: ' + kaputt[0].grund;
+            text = kaputt.length === 1
+                ? satzNennen(kaputt[0].eintrag) + ' ließ sich nicht sichern.'
+                : kaputt.length + ' Sätze ließen sich nicht sichern.';
+
+            if (kaputtTimer === null) {
+                kaputtTimer = setTimeout(function () {
+                    kaputtTimer = null;
+                    gescheitert.leeren();
+                    statusZeichnen();
+                }, KAPUTT_SEKUNDEN * 1000);
+            }
         } else if (ohneNetz && offen) {
             art = 'ist-offline';
             text = 'Ohne Netz · ' + offen + (offen === 1 ? ' Satz' : ' Sätze')
@@ -2908,6 +2967,11 @@
             ]);
             zustand.plan = einstellungen.plan || {};
             zustand.uebungen = uebungen.exercises || {};
+
+            // Jetzt erst steht der Uebungsname zur Verfuegung. Ohne das
+            // naechte die Statusleiste einen abgelehnten Satz mit seiner
+            // Kennung statt mit seinem Namen.
+            statusZeichnen();
 
             // Die Fotoliste im Hintergrund holen, sie wird erst im
             // Verwaltungsbereich gebraucht und soll den Start nicht bremsen.
