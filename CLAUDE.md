@@ -14,7 +14,7 @@ Die Phasen 0 bis 5 aus §10 sind gebaut und laufen live auf dem Server. Der Trai
 | `api/`: `login`, `logout`, `exercises`, `settings`, `plan`, `session`, `history`, `coach`, `einheiten`, `gewicht`, `export`, `setup`, `passwort`, `fotos`, `foto-upload`, `foto-loeschen` | Phase 6 (KI-Coach), ausdrücklich optional |
 | `index.php`, `assets/`: Start mit Rückblick und Fortschrittskurve, Studio, Einstellungen, Übungsdetail mit Verlauf, abgeschlossene Einheit, Kalender, Coach-Ansage | |
 | `manifest.json`, `service-worker.js`, `assets/icons/`, Offline-Puffer | |
-| `.htaccess`, `bin/` (init-config, plan-anlegen, fotos, deploy, icons), `tests/` (377 Prüfungen) | |
+| `.htaccess`, `bin/` (init-config, plan-anlegen, fotos, deploy, icons), `tests/` (385 Prüfungen) | |
 
 Der flüchtige Arbeitsstand steht in `STATE.md`. Die Datei ist **nicht versioniert** (siehe `.gitignore`): Sie handelt nur von dieser einen Installation und liegt ausschließlich auf Franks Rechner. Wer das Repo frisch klont, hat sie nicht, und das ist Absicht.
 
@@ -215,6 +215,14 @@ Drei Eigenschaften tragen das:
 `localStorage` statt IndexedDB: es geht um wenige Kilobyte, und die synchrone Schnittstelle spart eine ganze Klasse von Wettläufen. Zu wissen: iOS räumt den Speicher einer PWA nach sieben Tagen ohne Benutzung ab. Bei drei Einheiten pro Woche kein Thema, und der Puffer soll ohnehin binnen Stunden leer sein.
 
 **Die Statusleiste ist Teil des Versprechens, kein Schmuck.** Ein stiller Puffer wäre schlimmer als gar keiner: man verließe sich darauf, ohne zu wissen, ob er noch voll ist. Sie nennt immer Zahl und Lage. Lehnt der Server einen Satz ab (4xx), wandert er sichtbar zur Seite statt endlos wiederholt zu werden; ein Netzfehler dagegen behält die Reihenfolge und macht beim nächsten Versuch an derselben Stelle weiter.
+
+**Eine Meldung, gegen die der Benutzer nichts tun kann, verschwindet von selbst** (Vorgabe von Frank, 09.09.2026). Die Ablehnung eines Satzes steht acht Sekunden (`KAPUTT_SEKUNDEN` in `assets/app.js`), dann räumt ein Timer den Eintrag weg. Ein Knopf zum Wegwischen wäre die falsche Abhilfe: Er verlangte einen Handgriff für etwas, das der Benutzer ohnehin nicht ändern kann — der Satz ist entweder auf der Platte oder verloren, und beides entscheidet sich ohne sein Zutun.
+
+Bis dahin blieb sie für immer stehen. `gescheitert.leeren()` gab es, aber keine Zeile rief es auf; auf Franks Handy hing die Meldung dadurch zwei Tage, und kein Neuladen half. Das Löschen der Website-Daten ist als Ausweg nichts wert: Die App liegt über Chrome auf dem Homescreen, und dort lassen sich Daten nicht je Website löschen.
+
+**Die Meldung nennt den Satz, nicht den technischen Grund.** „Langhantel-Bankdrücken flach 82,5 kg × 10 ließ sich nicht sichern" statt „Server antwortet nicht wie erwartet". Den Namen holt `satzNennen()` zuerst aus dem geladenen Trainingstag und erst danach aus der Übungsbibliothek — wer im Funkloch geladen hat, bei dem ist die Bibliothek leer geblieben, weil `api/exercises.php` nicht geantwortet hat, und dann stünde dort die Kennung. Aus demselben Grund zeichnet `laden()` die Statusleiste neu, sobald die Übungen da sind.
+
+**Eine Antwort, die kein JSON ist, gilt als Netzfehler und damit als wiederholbar.** Sie sieht nur aus wie ein Serverfehler: Dahinter steckt eine abgeschnittene Antwort, eine HTML-Fehlerseite des Hosters oder eine Zwischenseite des Mobilfunknetzes. Am 07.09.2026 hat dieser Fall einen Satz zur Seite geschoben, obwohl PHP ihn längst geschrieben hatte — der Server war beim Antworten gescheitert, nicht beim Speichern. Wiederholen ist wegen `set_index` gefahrlos. Wer die Fehlerbehandlung in `api()` anfasst, muss diese Einordnung mitdenken: Ohne das Merkmal `netz` gilt ein Fehler als endgültig.
 
 Was **nicht** offline geht: der Verwaltungsbereich (wird zu Hause bedient, der Verweis darauf verschwindet ohne Netz), die Verlaufskurven, und die Coach-Ansage bleibt auf dem Stand des letzten Ladens. Letzteres ist Absicht: die Regel lebt an einer Stelle, und die liegt auf dem Server.
 
@@ -426,4 +434,4 @@ Der leere Fall („Hier ist noch kein Plan") steht jetzt **innerhalb** des Übun
 - Charts über eine schlanke Bibliothek per CDN (uPlot oder Chart.js), erst in Phase 3.
 - `config.json` enthält den Passwort-Hash und den API-Key und gehört niemals in ein Repo.
 - **`HELP.md`** ist die Endnutzer-Hilfe: Verhalten plus Begründung, in der Sprache dessen, der die App benutzt. Nicht mit dieser Datei verwechseln — hier steht, warum der Code so ist, dort, warum die App sich so verhält. Gepflegt über den `save-help`-Skill. Was in der Oberfläche nicht existiert, kommt dort auch nicht vor.
-- Übergeordnete Regeln und die Landkarte: `/Users/frank/AI-OS/CLAUDE.md`. Flüchtiger Arbeitsstand gehört in die (nicht versionierte) `STATE.md` (Skills `save-state` / `read-state`), nicht hierher.
+- Übergeordnete Regeln und die Landkarte: `/Users/frank/ai-os/CLAUDE.md`. Flüchtiger Arbeitsstand gehört in die (nicht versionierte) `STATE.md` (Skills `save-state` / `read-state`), nicht hierher.
