@@ -132,9 +132,9 @@
           <div><svg class="sym" aria-hidden="true"><use href="#ph-chart-line-up"/></svg><h3>Fortschritt in einer Zahl</h3><p>Jede Einheit bekommt einen Wert, verglichen mit deinem Start. Abgebrochene Einheiten drücken ihn nicht.</p></div>
           <img src="assets/img/startseite/start.jpg" alt="Fortschrittskurve auf der Startseite" loading="lazy">
         </div>
-        <div class="feld"><svg class="sym" aria-hidden="true"><use href="#ph-barbell"/></svg><h3>Fertiger Plan für Muskelaufbau</h3><p>Nach der Installation ist ein Plan angelegt, der gezielt auf Muskelaufbau ausgerichtet ist: drei Trainingstage im Wechsel, 25 Übungen mit Bild. Du kannst sofort loslegen.</p></div>
-        <div class="feld"><svg class="sym" aria-hidden="true"><use href="#ph-camera"/></svg><h3>Findet das Gerät</h3><p>Foto und die Nummer, die am Gerät klebt.</p></div>
-        <div class="feld"><svg class="sym" aria-hidden="true"><use href="#ph-calendar-blank"/></svg><h3>Kalender</h3><p>Jeder Monat auf einen Blick, auch die Lücken.</p></div>
+        <div class="feld"><svg class="sym" aria-hidden="true"><use href="#ph-barbell"/></svg><h3>Fertiger Plan für Muskelaufbau</h3><p>Nach der Installation ist ein Plan angelegt, der gezielt auf Muskelaufbau ausgerichtet ist: drei Trainingstage im Wechsel.</p><p>Oberkörper, Ganzkörper, Unterkörper</p><p>25 Übungen mit Bild. Du kannst sofort loslegen.</p></div>
+        <div class="feld"><svg class="sym" aria-hidden="true"><use href="#ph-camera"/></svg><h3>Finde das nächste Gym-Gerät für deine Übung</h3><p>Füge einfach ein Foto des Geräts oder seine Nummer hinzu.</p></div>
+        <div class="feld"><svg class="sym" aria-hidden="true"><use href="#ph-calendar-blank"/></svg><h3>Kalender</h3><p>Du siehst deine Trainingseinheiten im Monat auf einen Blick, auch die Lücken.</p></div>
         <div class="feld"><svg class="sym" aria-hidden="true"><use href="#ph-hard-drives"/></svg><h3>Deine Daten bleiben bei dir</h3><p>Coach läuft auf deinem eigenen Webspace. Kein Konto bei einem Anbieter, keine Werbung.</p></div>
       </div>
     </div>
