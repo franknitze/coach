@@ -31,7 +31,7 @@
 
 <header class="kopf">
   <div class="innen">
-    <a class="marke" href="#">COACH</a>
+    <a class="marke" href="#"><img src="assets/icons/logo.svg" alt="" width="30" height="30">COACH</a>
     <nav>
       <a class="knopf" href="https://github.com/franknitze/coach"><svg class="sym" aria-hidden="true"><use href="#ph-github-logo"/></svg><span>GitHub</span></a>
       <a class="knopf knopf--gelb" href="https://tidycal.com/cato-services/erstgespraech"><svg class="sym" aria-hidden="true"><use href="#ph-calendar-check"/></svg><span>Erstgespräch buchen</span></a>

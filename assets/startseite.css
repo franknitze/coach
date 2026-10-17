@@ -26,7 +26,8 @@ img { display: block; max-width: 100%; }
 /* Kopf */
 .kopf { position: sticky; top: 0; z-index: 10; background: rgb(27 30 36 / .88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--linie); }
 .kopf .innen { display: flex; align-items: center; justify-content: space-between; height: 64px; }
-.marke { font: 700 15px var(--mono); letter-spacing: .32em; text-decoration: none; }
+.marke { display: inline-flex; align-items: center; gap: 12px; font: 700 15px var(--mono); letter-spacing: .32em; text-decoration: none; }
+.marke img { width: 30px; height: 30px; flex: none; }
 .kopf nav { display: flex; gap: 10px; }
 
 /* Knöpfe */

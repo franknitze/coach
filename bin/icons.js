@@ -1,50 +1,64 @@
 /*
- * Erzeugt die PWA-Icons in assets/icons/.
+ * Erzeugt Logo, Favicon und PWA-Icons in assets/icons/ sowie favicon.ico
+ * im Hauptverzeichnis.
  *
  *   node bin/icons.js
  *
- * Einmalig nötig und danach nur, wenn sich das Symbol ändert. Die
- * erzeugten PNG liegen im Repo, damit auf dem Server nichts gebaut
- * werden muss.
+ * Nur nötig, wenn sich das Zeichen ändert. Die erzeugten Dateien liegen im
+ * Repo, damit auf dem Server nichts gebaut werden muss.
  *
- * Gezeichnet wird die gelbe Geräteplakette auf dem dunklen Grundton der
- * App: dasselbe Zeichen, das im Studio an den Geräten klebt und in der
- * Oberfläche jede Übung markiert.
+ * Das Zeichen ist die gelbe Geräteplakette mit einem gezeichneten C
+ * (Entwurf B, Frank, 17.10.2026; Entwürfe in docs/logo/entwuerfe.html).
+ * Das C ist ein Pfad und keine Schrift: Ein Buchstabe aus der Systemschrift
+ * sähe auf jedem Rechner anders aus.
  *
- * Der Hintergrund läuft randlos durch, ohne eigene Rundung. Android
- * schneidet das Icon selbst zu (maskable), iOS rundet es ohnehin. Eine
- * mitgezeichnete Rundung ergäbe doppelte Ecken. Die Plakette bleibt
- * deshalb in der mittleren Zone, die beim Zuschneiden sicher übrig
- * bleibt.
+ * Die App-Icons laufen randlos gelb durch, ohne eigene Rundung. Android
+ * schneidet sie selbst zu (maskable), iOS rundet ohnehin; eine
+ * mitgezeichnete Rundung ergäbe doppelte Ecken. Das C liegt in der
+ * mittleren Zone, die beim Zuschneiden sicher übrig bleibt.
  */
 
 const fs = require('fs');
 const path = require('path');
 
-const ZIEL = path.resolve(__dirname, '../assets/icons');
-const GROESSEN = [180, 192, 512];
+const WURZEL = path.resolve(__dirname, '..');
+const ZIEL = path.join(WURZEL, 'assets/icons');
+const GROESSEN = [32, 180, 192, 512];
 
-function seite(kante) {
-    const plakette = Math.round(kante * 0.52);
-    const radius = Math.round(plakette * 0.16);
-    const schrift = Math.round(plakette * 0.62);
+const GELB = '#f2b705';
+const RAUM = '#1b1e24';
+const C = `<path d="M44.3 23.4 A15 15 0 1 0 44.3 40.6" fill="none" stroke="${RAUM}" stroke-width="9"/>`;
 
+/** Plakette mit Rundung, für Kopfzeile und Browser-Tab. */
+const LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">`
+    + `<rect width="64" height="64" rx="14" fill="${GELB}"/>${C}</svg>\n`;
+
+/** Randlos, für die App-Icons. */
+const RANDLOS = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">`
+    + `<rect width="64" height="64" fill="${GELB}"/>${C}</svg>`;
+
+function seite(kante, svg) {
     return `<!doctype html><meta charset="utf-8"><style>
-        html, body { margin: 0; width: ${kante}px; height: ${kante}px; }
-        body {
-            display: grid; place-items: center;
-            background: #1b1e24;
-        }
-        .plakette {
-            display: grid; place-items: center;
-            width: ${plakette}px; height: ${plakette}px;
-            border-radius: ${radius}px;
-            background: #f2b705;
-            color: #1b1e24;
-            font: 700 ${schrift}px/1 ui-monospace, "SF Mono", Menlo, monospace;
-            padding-bottom: ${Math.round(schrift * 0.04)}px;
-        }
-    </style><div class="plakette">C</div>`;
+        html, body { margin: 0; width: ${kante}px; height: ${kante}px; background: transparent; }
+        img { display: block; width: ${kante}px; height: ${kante}px; }
+    </style><img src="data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}">`;
+}
+
+/** favicon.ico mit einem eingebetteten PNG, das lesen alle Browser. */
+function ico(png, kante) {
+    const kopf = Buffer.alloc(6 + 16);
+    kopf.writeUInt16LE(0, 0);
+    kopf.writeUInt16LE(1, 2);
+    kopf.writeUInt16LE(1, 4);
+    kopf.writeUInt8(kante, 6);
+    kopf.writeUInt8(kante, 7);
+    kopf.writeUInt8(0, 8);
+    kopf.writeUInt8(0, 9);
+    kopf.writeUInt16LE(1, 10);
+    kopf.writeUInt16LE(32, 12);
+    kopf.writeUInt32LE(png.length, 14);
+    kopf.writeUInt32LE(22, 18);
+    return Buffer.concat([kopf, png]);
 }
 
 function playwright() {
@@ -66,6 +80,8 @@ function playwright() {
 
 (async function () {
     fs.mkdirSync(ZIEL, { recursive: true });
+    fs.writeFileSync(path.join(ZIEL, 'logo.svg'), LOGO);
+    console.log('  assets/icons/logo.svg');
 
     const { chromium } = playwright();
     const browser = await chromium.launch({ channel: 'chrome' });
@@ -75,13 +91,16 @@ function playwright() {
             viewport: { width: kante, height: kante },
             deviceScaleFactor: 1,
         });
-        await page.setContent(seite(kante));
+        // Das kleine Favicon mit Rundung wie im Tab, die App-Icons randlos.
+        await page.setContent(seite(kante, kante === 32 ? LOGO : RANDLOS));
         const datei = path.join(ZIEL, 'icon-' + kante + '.png');
-        await page.screenshot({ path: datei, omitBackground: false });
+        await page.screenshot({ path: datei, omitBackground: true });
         await page.close();
-        console.log('  ' + path.relative(path.resolve(__dirname, '..'), datei)
-            + ' (' + fs.statSync(datei).size + ' Byte)');
+        console.log('  ' + path.relative(WURZEL, datei) + ' (' + fs.statSync(datei).size + ' Byte)');
     }
 
     await browser.close();
+
+    fs.writeFileSync(path.join(WURZEL, 'favicon.ico'), ico(fs.readFileSync(path.join(ZIEL, 'icon-32.png')), 32));
+    console.log('  favicon.ico');
 })();

@@ -71,6 +71,8 @@ function version(string $pfad): string
 <meta name="apple-mobile-web-app-title" content="Coach">
 <title><?= $startseite ? 'Coach · Die Trainings-App, die auch offline weiterarbeitet' : 'Coach' ?></title>
 <link rel="manifest" href="manifest.json">
+<link rel="icon" href="assets/icons/logo.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icons/icon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
 <link rel="stylesheet" href="<?= h(version($startseite ? 'assets/startseite.css' : 'assets/app.css')) ?>">
 </head>
@@ -84,7 +86,7 @@ function version(string $pfad): string
 
     <main class="tor">
         <header class="kopf">
-            <span class="wortmarke">Coach</span>
+            <span class="wortmarke"><img class="wortmarke__zeichen" src="assets/icons/logo.svg" alt="" width="24" height="24">Coach</span>
         </header>
 
         <div class="tor__mitte">
@@ -135,7 +137,7 @@ function version(string $pfad): string
 <?php else: ?>
 
     <header class="kopf">
-        <span class="wortmarke">Coach</span>
+        <span class="wortmarke"><img class="wortmarke__zeichen" src="assets/icons/logo.svg" alt="" width="24" height="24">Coach</span>
     </header>
 
     <!-- Sagt, ob Sätze noch im lokalen Puffer liegen. Steht außerhalb von

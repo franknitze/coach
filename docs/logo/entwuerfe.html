@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coach · Logo und Favicon, drei Entwürfe</title>
+<style>
+:root { --raum: #1b1e24; --flaeche: #23272f; --linie: #343a45; --text: #ece8df; --leise: #a6a39b; --tag: #f2b705;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace; --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #14161a; color: var(--text); font: 16px/1.5 var(--sans); padding: 40px 24px 60px; }
+h1 { margin: 0 auto 32px; max-width: 1280px; font-size: 28px; }
+.reihe { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.entwurf { background: var(--raum); border: 1px solid var(--linie); border-radius: 20px; padding: 28px; }
+.entwurf h2 { margin: 0 0 4px; font-size: 22px; }
+.entwurf .idee { margin: 0 0 24px; color: var(--leise); }
+.gross { display: grid; place-items: center; height: 220px; background: #14161a; border-radius: 16px; margin-bottom: 20px; }
+.gross svg { width: 160px; height: 160px; }
+.kopfzeile { display: flex; align-items: center; gap: 12px; height: 64px; padding: 0 18px; background: rgb(27 30 36); border: 1px solid var(--linie); border-radius: 12px; margin-bottom: 20px; }
+.kopfzeile svg { width: 32px; height: 32px; }
+.wort { font: 700 15px var(--mono); letter-spacing: .32em; }
+.klein { display: flex; align-items: flex-end; gap: 22px; margin-bottom: 20px; }
+.klein figure { margin: 0; text-align: center; font: 12px var(--mono); color: var(--leise); }
+.klein figcaption { margin-top: 6px; }
+.lupe16 { image-rendering: pixelated; width: 64px; height: 64px; display: block; }
+.reiter { display: flex; align-items: center; gap: 8px; width: 210px; padding: 8px 12px; background: #2b2f37; border-radius: 10px 10px 0 0; font-size: 13px; margin-bottom: 20px; }
+.reiter canvas { width: 16px; height: 16px; }
+.reiter.hell { background: #e9e9ec; color: #222; }
+.homescreen { display: flex; gap: 18px; padding: 18px; border-radius: 16px; background: linear-gradient(160deg, #4a5a78, #2c3448); }
+.homescreen figure { margin: 0; text-align: center; font-size: 12px; color: #fff; }
+.homescreen .app { width: 60px; height: 60px; border-radius: 14px; overflow: hidden; display: block; }
+@media (max-width: 1000px) { .reihe { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<h1>Coach · Logo und Favicon, drei Entwürfe</h1>
+<div class="reihe" id="reihe"></div>
+
+<script>
+// Jeder Entwurf: Zeichen auf 64 × 64. "voll" ist das Favicon und App-Icon mit Fläche bis zum Rand.
+const GELB = '#f2b705', RAUM = '#1b1e24';
+
+const entwuerfe = [
+  {
+    name: 'A · Stufen',
+    idee: 'Drei Balken, die ansteigen: mehr Wiederholungen, dann mehr Gewicht.',
+    zeichen: (grund) => `
+      ${grund ? `<rect width="64" height="64" rx="14" fill="${RAUM}"/>` : ''}
+      <rect x="12" y="34" width="11" height="18" rx="2.5" fill="${GELB}" opacity=".45"/>
+      <rect x="26.5" y="24" width="11" height="28" rx="2.5" fill="${GELB}" opacity=".72"/>
+      <rect x="41" y="12" width="11" height="40" rx="2.5" fill="${GELB}"/>`,
+  },
+  {
+    name: 'B · Plakette',
+    idee: 'Das gelbe Nummernschild der Geräte mit einem gezeichneten C.',
+    zeichen: (grund) => `
+      <rect x="${grund ? 0 : 4}" y="${grund ? 0 : 4}" width="${grund ? 64 : 56}" height="${grund ? 64 : 56}" rx="${grund ? 14 : 12}" fill="${GELB}"/>
+      <path d="M44.3 23.4 A15 15 0 1 0 44.3 40.6" fill="none" stroke="${RAUM}" stroke-width="9"/>`,
+  },
+  {
+    name: 'C · Hantelscheibe',
+    idee: 'Eine Hantelscheibe, deren Öffnung das C bildet.',
+    zeichen: (grund) => `
+      ${grund ? `<rect width="64" height="64" rx="14" fill="${RAUM}"/>` : ''}
+      <path d="M46.75 21.68 A18 18 0 1 0 46.75 42.32" fill="none" stroke="${GELB}" stroke-width="10"/>
+      <circle cx="32" cy="32" r="4.5" fill="${GELB}"/>`,
+  },
+];
+
+const svg = (inhalt, gross) => `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"${gross ? '' : ''}>${inhalt}</svg>`;
+
+// Rastert ein SVG in echter Pixelgröße, so wie der Browser ein 16er-Favicon zeigt.
+function raster(inhalt, px, canvas) {
+  const bild = new Image();
+  bild.onload = () => { canvas.width = px; canvas.height = px; canvas.getContext('2d').drawImage(bild, 0, 0, px, px); };
+  bild.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg(inhalt));
+}
+
+const reihe = document.getElementById('reihe');
+entwuerfe.forEach((e, i) => {
+  const voll = e.zeichen(true), frei = e.zeichen(false);
+  const el = document.createElement('section');
+  el.className = 'entwurf';
+  el.innerHTML = `
+    <h2>${e.name}</h2>
+    <p class="idee">${e.idee}</p>
+    <div class="gross">${svg(voll)}</div>
+    <div class="kopfzeile">${svg(i === 1 ? frei : voll)}<span class="wort">COACH</span></div>
+    <div class="klein">
+      <figure><canvas data-px="16"></canvas><figcaption>16 px</figcaption></figure>
+      <figure><canvas data-px="32"></canvas><figcaption>32 px</figcaption></figure>
+      <figure><canvas class="lupe16" data-px="16"></canvas><figcaption>16 px vergrößert</figcaption></figure>
+    </div>
+    <div class="reiter"><canvas data-px="32"></canvas>Coach · Trainings-App</div>
+    <div class="reiter hell"><canvas data-px="32"></canvas>Coach · Trainings-App</div>
+    <div class="homescreen">
+      <figure><span class="app">${svg(voll.replace('rx="14"', 'rx="0"'))}</span>Coach</figure>
+    </div>`;
+  reihe.appendChild(el);
+  el.querySelectorAll('canvas').forEach((c) => raster(voll, +c.dataset.px, c));
+});
+</script>
+</body>
+</html>

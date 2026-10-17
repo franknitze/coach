@@ -109,10 +109,19 @@ body {
 }
 
 .wortmarke {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
     font: 600 var(--s-neben)/1 var(--mono);
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--schrift);
+}
+
+.wortmarke__zeichen {
+    width: 24px;
+    height: 24px;
+    flex: none;
 }
 
 .kopf {

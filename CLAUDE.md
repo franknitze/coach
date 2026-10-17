@@ -258,7 +258,9 @@ Zwei Dinge, die man leicht übersieht:
 - **`CACHE` in `service-worker.js` hochzählen**, sobald sich die Liste der gecachten Dateien ändert. Sonst behalten bereits installierte Geräte den alten Stand.
 - CSS und JS tragen die **Dateizeit als Version** (`version()` in `index.php`). Ein festes `?v=1` wäre wirkungslos gewesen: nach einem Deployment hätte der Browser die alte Datei behalten, und mit Service Worker zusätzlich aus dem Cache bedient.
 
-Icons neu erzeugen: `node bin/icons.js`. Die PNG liegen im Repo, auf dem Server wird nichts gebaut.
+Logo, Favicon und Icons neu erzeugen: `node bin/icons.js`. Das Zeichen ist die gelbe Plakette mit einem **gezeichneten** C (Entwurf B vom 17.10.2026, `docs/logo/entwuerfe.html`), kein Buchstabe aus der Systemschrift. Das Skript schreibt `assets/icons/logo.svg` (Kopfzeile und Favicon), die PNG in 32, 180, 192 und 512 Pixeln und `favicon.ico` ins Hauptverzeichnis; ohne die Datei fragt jeder Browser `/favicon.ico` an und bekam bis dahin 404. Alles liegt im Repo, auf dem Server wird nichts gebaut.
+
+Ein Test darf eine ausgelieferte Datei nicht nur am Status 200 prüfen: Der eingebaute PHP-Server antwortet auf einen fehlenden Pfad mit `index.php` und 200. `tests/startseite.js` prüft deshalb die ersten Bytes.
 
 ## Der n8n-Backup-Workflow
 

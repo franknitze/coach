@@ -24,12 +24,28 @@ module.exports = (port) => testlauf('Startseite', port, async (t) => {
     ok(await page.locator('meta[name="robots"][content="noindex, nofollow"]').count() === 1,
        'ohne Schalter bleibt die Seite aus Suchmaschinen heraus');
 
+    // Favicon und Logo, auf beiden Anmeldeseiten
+    // Am Inhalt geprüft, nicht am Status: Der eingebaute PHP-Server liefert
+    // für eine fehlende Datei index.php mit 200 aus.
+    const anfang = async (datei) => Buffer.from(await (await fetch(basis + datei)).arrayBuffer()).subarray(0, 8);
+    ok((await anfang('/favicon.ico')).subarray(0, 4).equals(Buffer.from([0, 0, 1, 0])), '/favicon.ico ist ein Icon');
+    ok((await anfang('/assets/icons/logo.svg')).toString().startsWith('<svg'), 'logo.svg ist ein SVG');
+    ok((await anfang('/assets/icons/icon-32.png')).subarray(1, 4).toString() === 'PNG', 'icon-32.png ist ein PNG');
+    ok(await page.locator('link[rel="icon"][href="assets/icons/logo.svg"]').count() === 1,
+       'die schlichte Anmeldung verweist auf das Favicon');
+    ok(await page.locator('.wortmarke img[src="assets/icons/logo.svg"]').count() === 1,
+       'und zeigt das Logo im Kopf');
+
     // Mit Schalter
     schalter(true);
     await page.goto(basis + '/');
     ok(await page.locator('.einstieg').count() === 1, 'mit Schalter erscheint die Startseite');
     ok((await page.locator('h1').innerText()) === 'Die Trainings-App, die auch offline weiterarbeitet',
        'die Überschrift steht da');
+    ok(await page.locator('link[rel="icon"][href="assets/icons/logo.svg"]').count() === 1,
+       'die Startseite verweist auf das Favicon');
+    ok(await page.locator('.marke img[src="assets/icons/logo.svg"]').count() === 1,
+       'und zeigt das Logo im Kopf');
     ok(await page.locator('meta[name="robots"][content="index, follow"]').count() === 1,
        'die Startseite darf in Suchmaschinen');
     ok(await page.locator('a[href="https://github.com/franknitze/coach"]').count() >= 2,
