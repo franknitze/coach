@@ -106,6 +106,7 @@
     <div class="innen">
       <h2 class="gross">Beispielübung</h2>
       <p class="text">3 Sätze, Bereich 6 bis 10 Wiederholungen, Startgewicht 50 kg.</p>
+      <p class="text">Die Anzahl der Sätze, der Bereich der Wiederholungen und die Gewichtsstufe sind für jede Übung individuell einstellbar. Das Startgewicht wählst du beim ersten Training selbst.</p>
       <div class="tabelle-rahmen">
         <table class="tabelle">
           <thead><tr><th>Training</th><th>Gewicht</th><th>Ziel</th><th>Geschafft</th><th>Ergebnis</th></tr></thead>

@@ -75,6 +75,7 @@ h2.gross { margin: 0 0 14px; font-size: clamp(30px, 4vw, 48px); line-height: 1.0
 .punkte span { color: var(--leise); font-size: 16px; }
 
 /* Beispieltabelle */
+#beispiel .text + .text { margin-top: 10px; }
 .tabelle-rahmen { margin-top: 32px; overflow-x: auto; border: 1px solid var(--linie); border-radius: 20px; }
 .tabelle { width: 100%; border-collapse: collapse; font: 16px var(--mono); }
 .tabelle th { text-align: left; padding: 16px 20px; font: 600 13px var(--mono); color: var(--leise); background: var(--flaeche); border-bottom: 1px solid var(--linie); }
