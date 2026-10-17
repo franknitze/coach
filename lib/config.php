@@ -114,6 +114,10 @@ function config(): array
             // kommt: er ruht, während der Gegenspieler arbeitet.
             'rest_pair_seconds'     => 90,
             'session_lifetime_days' => 30,
+            // Startseite mit Vorstellung der App statt der schlichten
+            // Anmeldung (lib/startseite.php). Aus, damit eine Installation
+            // aus dem Repo keine Werbeseite für Cato Services zeigt.
+            'startseite'            => false,
         ];
     }
 

@@ -25,6 +25,7 @@ const laeufe = {
     pwa:        { port: 8795, modul: './pwa' },
     offline:    { port: 8796, modul: './offline' },
     einheiten:  { port: 8797, modul: './einheiten' },
+    startseite: { port: 8798, modul: './startseite' },
 };
 
 (async function () {

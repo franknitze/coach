@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Coach · Die Trainings-App, die auch offline weiterarbeitet</title>
+<meta name="description" content="Coach führt dich durch jede Einheit im Studio, speichert jeden Satz sofort und sagt dir, wann das Gewicht hochgeht.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#1b1e24">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
+<style>
+/* Entwurf A „Plakette“: nah an der App. Grund und Gelb kommen aus assets/app.css. */
+:root {
+  --raum: #1b1e24;
+  --flaeche: #23272f;
+  --linie: #343a45;
+  --text: #ece8df;
+  --leise: #a6a39b;
+  --tag: #f2b705;
+  --auf-tag: #1b1e24;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --r: 14px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--raum); color: var(--text); font: 17px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+img { display: block; max-width: 100%; }
+.innen { width: min(1180px, 100% - 40px); margin-inline: auto; }
+:focus-visible { outline: 3px solid var(--tag); outline-offset: 3px; }
+
+/* Kopf */
+.kopf { position: sticky; top: 0; z-index: 10; background: rgb(27 30 36 / .88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--linie); }
+.kopf .innen { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.marke { font: 700 15px var(--mono); letter-spacing: .32em; text-decoration: none; }
+.kopf nav { display: flex; gap: 10px; }
+
+/* Knöpfe */
+.knopf { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 0 22px; border-radius: var(--r); font: 600 16px var(--sans); text-decoration: none; border: 1px solid var(--linie); background: transparent; color: var(--text); cursor: pointer; white-space: nowrap; transition: transform .15s, background .15s, border-color .15s; }
+.knopf:hover { border-color: var(--leise); }
+.knopf:active { transform: translateY(1px) scale(.99); }
+.knopf--gelb { background: var(--tag); border-color: var(--tag); color: var(--auf-tag); }
+.knopf--gelb:hover { background: #ffc61a; border-color: #ffc61a; }
+.knopf i { font-size: 20px; }
+.kopf .knopf { min-height: 40px; padding: 0 16px; font-size: 15px; }
+
+/* Einstieg */
+.einstieg { padding: 56px 0 40px; text-align: center; }
+.anmeldung { width: min(400px, 100%); margin: 0 auto 48px; padding: 24px; background: var(--flaeche); border: 1px solid var(--linie); border-radius: 20px; text-align: left; }
+.anmeldung h2 { margin: 0 0 4px; font-size: 20px; }
+.anmeldung p { margin: 0 0 18px; color: var(--leise); font: 14px var(--mono); }
+.anmeldung label { display: block; margin-bottom: 8px; font: 600 12px var(--mono); letter-spacing: .12em; color: var(--leise); }
+.anmeldung .zeile { display: flex; gap: 10px; }
+.anmeldung input { flex: 1; min-width: 0; padding: 13px 14px; border-radius: 12px; border: 1px solid var(--linie); background: var(--raum); color: var(--text); font: 17px var(--sans); }
+.anmeldung input:focus { outline: none; border-color: var(--tag); box-shadow: 0 0 0 3px rgb(242 183 5 / .25); }
+h1 { margin: 0 auto; max-width: 19ch; font-size: clamp(40px, 6.4vw, 76px); line-height: 1.02; letter-spacing: -.035em; font-weight: 750; }
+.unter { margin: 22px auto 18px; max-width: 46ch; font-size: 19px; color: var(--leise); }
+.voraussetzung { display: inline-flex; align-items: center; gap: 10px; margin: 0 auto 30px; padding: 8px 16px; border: 1px solid var(--linie); border-radius: 999px; font: 15px var(--mono); color: var(--text); }
+.voraussetzung i { font-size: 18px; color: var(--tag); }
+.aktionen { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+/* Bildschirmleiste */
+.leiste { padding: 40px 0 80px; }
+.leiste__spur { display: grid; grid-auto-flow: column; grid-auto-columns: 250px; gap: 22px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 10px max(20px, (100% - 1180px) / 2) 24px; scrollbar-width: thin; scrollbar-color: var(--linie) transparent; }
+.handy { margin: 0; scroll-snap-align: center; }
+.handy__rahmen { padding: 9px; border-radius: 40px; background: #0d0f12; border: 1px solid #3a404b; box-shadow: 0 30px 60px rgb(5 6 8 / .55); }
+.handy__rahmen img { border-radius: 31px; aspect-ratio: 390 / 844; object-fit: cover; width: 100%; }
+.handy figcaption { margin-top: 14px; font-size: 14px; line-height: 1.45; color: var(--leise); }
+.handy figcaption b { display: block; color: var(--text); font-size: 15px; margin-bottom: 2px; }
+
+/* Vorteile */
+.abschnitt { padding: 96px 0; border-top: 1px solid var(--linie); }
+h2.gross { margin: 0 0 14px; font-size: clamp(30px, 4vw, 48px); line-height: 1.08; letter-spacing: -.025em; max-width: 20ch; }
+.text { color: var(--leise); max-width: 58ch; margin: 0; }
+.paar { display: grid; grid-template-columns: 1fr 300px; gap: 64px; align-items: center; }
+.paar--links { grid-template-columns: 300px 1fr; }
+.paar + .paar { margin-top: 96px; }
+.punkte { list-style: none; margin: 28px 0 0; padding: 0; display: grid; gap: 18px; }
+.punkte li { display: grid; grid-template-columns: 40px 1fr; gap: 14px; }
+.punkte i { font-size: 26px; color: var(--tag); padding-top: 2px; }
+.punkte b { display: block; }
+.punkte span { color: var(--leise); font-size: 16px; }
+
+/* Raster */
+.raster { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-top: 44px; }
+.feld { grid-column: span 2; padding: 26px; background: var(--flaeche); border: 1px solid var(--linie); border-radius: 20px; }
+.feld--breit { grid-column: span 4; display: grid; grid-template-columns: 1fr 160px; gap: 24px; align-items: end; overflow: hidden; }
+.feld--breit img { border-radius: 16px 16px 0 0; margin-bottom: -26px; }
+.feld i { font-size: 28px; color: var(--tag); }
+.feld h3 { margin: 14px 0 6px; font-size: 20px; letter-spacing: -.01em; }
+.feld p { margin: 0; color: var(--leise); font-size: 16px; }
+
+/* Zahlen */
+.zahlen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 44px; border: 1px solid var(--linie); border-radius: 20px; overflow: hidden; }
+.zahl { padding: 32px 28px; }
+.zahl + .zahl { border-left: 1px solid var(--linie); }
+.zahl strong { display: inline-block; font: 700 clamp(40px, 5vw, 60px)/1 var(--mono); letter-spacing: -.04em; background: var(--tag); color: var(--auf-tag); padding: 8px 14px 6px; border-radius: 10px; }
+.zahl p { margin: 16px 0 0; color: var(--leise); }
+.fuss-notiz { margin-top: 14px; font: 13px var(--mono); color: var(--leise); }
+
+/* Schritte */
+.schritte { list-style: none; counter-reset: s; margin: 44px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+.schritte li { counter-increment: s; border-top: 2px solid var(--tag); padding-top: 18px; }
+.schritte li::before { content: counter(s); font: 700 15px var(--mono); color: var(--tag); }
+.schritte h3 { margin: 8px 0 6px; font-size: 20px; }
+.schritte p { margin: 0; color: var(--leise); font-size: 16px; }
+
+/* Für wen */
+.wen { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 40px; }
+.wen > div { padding: 28px; border-radius: 20px; border: 1px solid var(--linie); }
+.wen h3 { margin: 0 0 14px; font-size: 19px; display: flex; gap: 10px; align-items: center; }
+.wen ul { margin: 0; padding-left: 20px; color: var(--leise); }
+.wen li + li { margin-top: 8px; }
+.wen .ja h3 i { color: var(--tag); }
+
+/* Fragen */
+.fragen { margin-top: 36px; max-width: 760px; }
+details { border-bottom: 1px solid var(--linie); }
+summary { cursor: pointer; list-style: none; padding: 22px 0; font-size: 19px; font-weight: 600; display: flex; justify-content: space-between; gap: 20px; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "+"; font: 400 26px/1 var(--mono); color: var(--tag); }
+details[open] summary::after { content: "−"; }
+details p { margin: 0 0 22px; color: var(--leise); max-width: 62ch; }
+
+/* Schluss */
+.schluss { text-align: center; padding: 110px 0; border-top: 1px solid var(--linie); }
+.schluss h2 { margin: 0 auto 16px; max-width: 18ch; }
+.schluss .text { margin: 0 auto 30px; }
+
+.fuss { border-top: 1px solid var(--linie); padding: 28px 0 calc(28px + env(safe-area-inset-bottom)); font-size: 14px; color: var(--leise); }
+.fuss .innen { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.fuss nav { display: flex; gap: 22px; }
+.fuss a { text-decoration: none; }
+.fuss a:hover { color: var(--text); }
+
+@media (max-width: 520px) { .voraussetzung { font-size: 13px; padding: 8px 14px; } }
+@media (max-width: 880px) {
+  .paar, .paar--links { grid-template-columns: 1fr; gap: 36px; }
+  .paar .handy, .paar--links .handy { width: 260px; margin-inline: auto; }
+  .paar--links .handy { order: 2; }
+  .raster { grid-template-columns: 1fr; }
+  .feld, .feld--breit { grid-column: auto; }
+  .feld--breit { grid-template-columns: 1fr; }
+  .feld--breit img { width: 180px; margin-inline: auto; }
+  .zahlen, .schritte, .wen { grid-template-columns: 1fr; }
+  .zahl + .zahl { border-left: 0; border-top: 1px solid var(--linie); }
+  .kopf .knopf span { display: none; }
+  .abschnitt { padding: 72px 0; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .knopf { transition: none; } }
+</style>
+</head>
+<body>
+
+<header class="kopf">
+  <div class="innen">
+    <a class="marke" href="#">COACH</a>
+    <nav>
+      <a class="knopf" href="https://github.com/franknitze/coach"><i class="ph ph-github-logo"></i><span>GitHub</span></a>
+      <a class="knopf knopf--gelb" href="https://tidycal.com/cato-services/erstgespraech"><i class="ph ph-calendar-check"></i><span>Erstgespräch buchen</span></a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="einstieg">
+    <div class="innen">
+      <form class="anmeldung" action="#" novalidate>
+        <h2>Anmelden</h2>
+        <p>Danach 30 Tage angemeldet.</p>
+        <label for="pw">PASSWORT</label>
+        <div class="zeile">
+          <input id="pw" type="password" autocomplete="current-password">
+          <button class="knopf knopf--gelb" type="submit">Anmelden</button>
+        </div>
+      </form>
+      <h1>Die Trainings-App, die auch offline weiterarbeitet</h1>
+      <p class="unter">Coach führt dich durch jede Einheit im Studio, speichert jeden Satz sofort und sagt dir, wann das Gewicht hochgeht.</p>
+      <p class="voraussetzung"><i class="ph ph-hard-drives"></i>Einzige Systemvoraussetzung: ein Webserver mit ≥ PHP 8.0 und HTTPS</p>
+      <div class="aktionen">
+        <a class="knopf knopf--gelb" href="https://tidycal.com/cato-services/erstgespraech"><i class="ph ph-calendar-check"></i>Erstgespräch buchen</a>
+        <a class="knopf" href="https://github.com/franknitze/coach"><i class="ph ph-github-logo"></i>Code auf GitHub</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="leiste" aria-label="Alle Bildschirme der App">
+    <div class="leiste__spur">
+      <figure class="handy"><div class="handy__rahmen"><img src="screenshots/02-start.png" alt="Startseite mit dem heutigen Trainingstag, Fortschrittskurve und den letzten Einheiten" loading="eager"></div><figcaption><b>Startseite</b>Heute dran ist der nächste Tag im Wechsel.</figcaption></figure>
+      <figure class="handy"><div class="handy__rahmen"><img src="screenshots/03-studio.png" alt="Studio-Ansicht mit Reglern für Gewicht und Wiederholungen" loading="lazy"></div><figcaption><b>Studio</b>Die Regler stehen schon auf deinem Ziel.</figcaption></figure>
+      <figure class="handy"><div class="handy__rahmen"><img src="screenshots/04-pause.png" alt="Pausen-Anzeige mit ablaufender Zeit" loading="lazy"></div><figcaption><b>Pause</b>Läuft nach jedem Satz von selbst ab.</figcaption></figure>
+      <figure class="handy"><div class="handy__rahmen"><img src="screenshots/05-lupe.png" alt="Großansicht eines Geräts mit Gerätenummer und Ausführung" loading="lazy"></div><figcaption><b>Gerät und Ausführung</b>Foto, Nummer am Gerät und wie die Übung geht.</figcaption></figure>
+      <figure class="handy"><div class="handy__rahmen"><img src="screenshots/06-einheit.png" alt="Abgeschlossene Einheit mit allen Sätzen" loading="lazy"></div><figcaption><b>Einheit</b>Jeder Satz jeder Übung, nachlesbar.</figcaption></figure>
+      <figure class="handy"><div class="handy__rahmen"><img src="screenshots/07-kalender.png" alt="Monatskalender mit Trainingstagen" loading="lazy"></div><figcaption><b>Kalender</b>Wie regelmäßig du trainierst.</figcaption></figure>
+      <figure class="handy"><div class="handy__rahmen"><img src="screenshots/09-verlauf.png" alt="Verlauf einer Übung mit Diagrammen für Gewicht und Volumen" loading="lazy"></div><figcaption><b>Verlauf</b>Schwerstes Gewicht und Volumen je Übung.</figcaption></figure>
+      <figure class="handy"><div class="handy__rahmen"><img src="screenshots/10-verlauf-unten.png" alt="Formular zum Anpassen einer Übung" loading="lazy"></div><figcaption><b>Übung anpassen</b>Gerätenummer, Tag, Sätze, Wiederholungen.</figcaption></figure>
+      <figure class="handy"><div class="handy__rahmen"><img src="screenshots/08-einstellungen.png" alt="Liste aller Übungen in den Einstellungen" loading="lazy"></div><figcaption><b>Übungen</b>25 Übungen für Muskelaufbau, schon angelegt.</figcaption></figure>
+      <figure class="handy"><div class="handy__rahmen"><img src="screenshots/11-allgemein.png" alt="Einstellungen für Körpergewicht und Passwort" loading="lazy"></div><figcaption><b>Allgemein</b>Körpergewicht mit Datum, Passwort.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="abschnitt">
+    <div class="innen">
+      <div class="paar">
+        <div>
+          <h2 class="gross">Gebaut für das Studio, nicht für das Sofa.</h2>
+          <p class="text">Im Studio hast du schlechten Empfang, verschwitzte Finger und zwei Minuten Pause. Darauf ist jede Ansicht ausgelegt.</p>
+          <ul class="punkte">
+            <li><i class="ph ph-wifi-slash"></i><div><b>Läuft ohne Netz</b><span>Jeder Satz liegt zuerst auf dem Handy und geht zum Server, sobald wieder Empfang da ist.</span></div></li>
+            <li><i class="ph ph-hand-tap"></i><div><b>Bedienung mit dem Daumen</b><span>Große Plus- und Minusknöpfe. Eine Tastatur brauchst du nie.</span></div></li>
+            <li><i class="ph ph-timer"></i><div><b>Pause läuft von selbst</b><span>Nach jedem Satz zählt die Pause herunter und verschwindet bei null.</span></div></li>
+          </ul>
+        </div>
+        <figure class="handy"><div class="handy__rahmen"><img src="screenshots/04-pause.png" alt="Pause nach einem bestätigten Satz" loading="lazy"></div></figure>
+      </div>
+      <div class="paar paar--links">
+        <figure class="handy"><div class="handy__rahmen"><img src="screenshots/03-studio.png" alt="Regler mit dem Ziel für den nächsten Satz" loading="lazy"></div></figure>
+        <div>
+          <h2 class="gross">Du siehst nur noch, was du heute schaffen sollst.</h2>
+          <p class="text">Coach rechnet nach doppelter Progression: erst die Wiederholungen bis zur Obergrenze, nach zwei sauberen Einheiten mehr Gewicht. Das Ziel steht schon im Feld. Schaffst du es, tippst du nur auf „Satz bestätigen“.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="abschnitt">
+    <div class="innen">
+      <h2 class="gross">Alles, was ein Trainingsprotokoll braucht. Mehr nicht.</h2>
+      <div class="raster">
+        <div class="feld feld--breit">
+          <div><i class="ph ph-chart-line-up"></i><h3>Fortschritt in einer Zahl</h3><p>Jede Einheit bekommt einen Wert, verglichen mit deinem Start. Abgebrochene Einheiten drücken ihn nicht.</p></div>
+          <img src="screenshots/02-start.png" alt="Fortschrittskurve auf der Startseite" loading="lazy">
+        </div>
+        <div class="feld"><i class="ph ph-barbell"></i><h3>Fertiger Plan für Muskelaufbau</h3><p>Nach der Installation ist ein Plan angelegt, der gezielt auf Muskelaufbau ausgerichtet ist: drei Trainingstage im Wechsel, 25 Übungen mit Bild. Du kannst sofort loslegen.</p></div>
+        <div class="feld"><i class="ph ph-camera"></i><h3>Findet das Gerät</h3><p>Foto und die Nummer, die am Gerät klebt.</p></div>
+        <div class="feld"><i class="ph ph-calendar-blank"></i><h3>Kalender</h3><p>Jeder Monat auf einen Blick, auch die Lücken.</p></div>
+        <div class="feld"><i class="ph ph-hard-drives"></i><h3>Deine Daten bleiben bei dir</h3><p>Coach läuft auf deinem eigenen Webspace. Kein Konto bei einem Anbieter, keine Werbung.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="abschnitt">
+    <div class="innen">
+      <h2 class="gross">Seit August im echten Einsatz.</h2>
+      <p class="text">Coach entstand für ein eigenes Training und ist seitdem im Studio dabei. Die Zahlen stammen aus diesem Einsatz.</p>
+      <div class="zahlen">
+        <div class="zahl"><strong>22</strong><p>Einheiten seit dem 19. August</p></div>
+        <div class="zahl"><strong>120,9</strong><p>Höchster Fortschrittswert, gestartet bei 100</p></div>
+        <div class="zahl"><strong>25</strong><p>Übungen, jede mit Bild</p></div>
+      </div>
+      <p class="fuss-notiz">Stand 17.10.2026, aus der laufenden Installation.</p>
+    </div>
+  </section>
+
+  <section class="abschnitt">
+    <div class="innen">
+      <h2 class="gross">In drei Schritten auf deinem Handy.</h2>
+      <ol class="schritte">
+        <li><h3>Code laden</h3><p>Den Inhalt des Repos von GitHub herunterladen.</p></li>
+        <li><h3>Hochladen</h3><p>Auf einen Webspace mit PHP 8 und HTTPS. Eine Datenbank brauchst du nicht.</p></li>
+        <li><h3>Passwort setzen</h3><p>Adresse öffnen, Passwort festlegen, über Safari auf den Homescreen legen.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="abschnitt">
+    <div class="innen">
+      <h2 class="gross">Passt Coach zu dir?</h2>
+      <div class="wen">
+        <div class="ja"><h3><i class="ph ph-check-circle"></i>Für dich, wenn du</h3><ul><li>regelmäßig an Geräten und Hanteln trainierst</li><li>Muskeln aufbauen willst</li><li>wissen willst, wann du steigern kannst</li><li>deine Daten nicht bei einem Anbieter lassen willst</li></ul></div>
+        <div><h3><i class="ph ph-x-circle"></i>Nicht für dich, wenn du</h3><ul><li>Läufe, Kurse oder Ernährung erfassen willst</li><li>einen Trainer in einer App suchst, der mit dir spricht</li><li>mehrere Personen in einer Installation verwalten willst</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="abschnitt">
+    <div class="innen">
+      <h2 class="gross">Häufige Fragen</h2>
+      <div class="fragen">
+        <details><summary>Kostet Coach etwas?</summary><p>Nein. Der Code liegt offen auf GitHub. Du brauchst nur einen Webspace mit PHP und HTTPS.</p></details>
+        <details><summary>Brauche ich eine Datenbank?</summary><p>Nein. Coach speichert alles in JSON-Dateien auf deinem Webspace. Hochladen genügt.</p></details>
+        <details><summary>Läuft Coach auf dem iPhone?</summary><p>Ja. Leg die Seite über Safari auf den Homescreen. Dann öffnet sie sich wie eine App, auch ohne Netz.</p></details>
+        <details><summary>Was passiert, wenn im Studio kein Empfang ist?</summary><p>Du trainierst weiter wie immer. Jeder bestätigte Satz liegt zuerst auf dem Handy und geht zum Server, sobald wieder Netz da ist.</p></details>
+        <details><summary>Kann ich den Plan ändern?</summary><p>Ja. Übungen anlegen, ändern und löschen geht in den Einstellungen, mit Sätzen, Wiederholungsbereich, Schrittweite und Gerätenummer.</p></details>
+        <details><summary>Wer hilft mir beim Einrichten?</summary><p>Buch ein Erstgespräch. Dort klären wir, ob Coach zu dir passt und wie es auf deinen Server kommt.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="schluss">
+    <div class="innen">
+      <h2 class="gross">Du willst Coach bei dir einrichten?</h2>
+      <p class="text">Oder du hast eine eigene Idee für eine Anwendung, die genau so zu deinem Alltag passen soll. Lass uns darüber sprechen.</p>
+      <div class="aktionen">
+        <a class="knopf knopf--gelb" href="https://tidycal.com/cato-services/erstgespraech"><i class="ph ph-calendar-check"></i>Erstgespräch buchen</a>
+        <a class="knopf" href="https://github.com/franknitze/coach"><i class="ph ph-github-logo"></i>Code auf GitHub</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="fuss">
+  <div class="innen">
+    <span>Coach, eine Anwendung von Cato Services</span>
+    <nav><a href="https://cato-services.de/impressum.html">Impressum</a><a href="https://cato-services.de/datenschutz.html">Datenschutz</a><a href="https://github.com/franknitze/coach">GitHub</a></nav>
+  </div>
+</footer>
+</body>
+</html>

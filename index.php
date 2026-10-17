@@ -5,6 +5,8 @@ declare(strict_types=1);
  * App-Shell und Session-Gate.
  *
  * Wer nicht angemeldet ist, sieht die Anmeldung, sonst die Startseite.
+ * Mit "startseite": true in config.json sieht er statt der schlichten
+ * Anmeldung die Vorstellung der App samt Anmeldeformular.
  * Der Studio-Modus aus SPEC.md §5.2 kommt in Phase 2 dazu und löst die
  * Übersicht hier unten ab.
  */
@@ -14,6 +16,7 @@ require_once __DIR__ . '/lib/auth.php';
 $angemeldet   = auth_is_logged_in();
 $eingerichtet = is_configured();
 $uebungen     = $angemeldet ? (array) json_read(EXERCISES_FILE, []) : [];
+$startseite   = !$angemeldet && $eingerichtet && config()['startseite'] === true;
 
 /*
  * Der Service Worker legt nur die angemeldete Hülle in den Cache. Ohne
@@ -57,18 +60,27 @@ function version(string $pfad): string
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1b1e24">
+<?php if ($startseite): ?>
+<meta name="robots" content="index, follow">
+<meta name="description" content="Coach führt dich durch jede Einheit im Studio, speichert jeden Satz sofort und sagt dir, wann das Gewicht hochgeht.">
+<?php else: ?>
 <meta name="robots" content="noindex, nofollow">
+<?php endif; ?>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Coach">
-<title>Coach</title>
+<title><?= $startseite ? 'Coach · Die Trainings-App, die auch offline weiterarbeitet' : 'Coach' ?></title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
-<link rel="stylesheet" href="<?= h(version('assets/app.css')) ?>">
+<link rel="stylesheet" href="<?= h(version($startseite ? 'assets/startseite.css' : 'assets/app.css')) ?>">
 </head>
 <body>
 
-<?php if (!$angemeldet): ?>
+<?php if ($startseite): ?>
+
+    <?php require __DIR__ . '/lib/startseite.php'; ?>
+
+<?php elseif (!$angemeldet): ?>
 
     <main class="tor">
         <header class="kopf">

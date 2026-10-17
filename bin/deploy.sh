@@ -67,7 +67,7 @@ echo "── Nichts Übergroßes dabei? ──"
 GRENZE=409600
 zuviel=$(find . -type f -size +${GRENZE}c \
     ! -path './.git/*' ! -path './fotos/*' ! -path './images/*' \
-    ! -path './data/*' ! -path './tests/*' ! -name '*.md' 2>/dev/null)
+    ! -path './data/*' ! -path './tests/*' ! -path './docs/*' ! -name '*.md' 2>/dev/null)
 if [ -n "$zuviel" ]; then
     echo "  Abbruch. Diese Dateien sind über 400 KB und gehören nicht auf den Server:"
     echo "$zuviel" | sed 's/^/    /'
@@ -96,7 +96,7 @@ rsync -az --delete $TROCKEN -e "$SSH" \
     --include='data/' --include='data/.htaccess' --exclude='data/**' \
     --exclude 'assets/img/exercises/' \
     --exclude 'sessions/' \
-    --exclude 'tests/' --exclude 'images/' --exclude 'fotos/' --exclude '.git/' \
+    --exclude 'tests/' --exclude 'docs/' --exclude 'images/' --exclude 'fotos/' --exclude '.git/' \
     --exclude '.DS_Store' --exclude 'bin/icons.js' --exclude 'bin/deploy.sh' \
     --exclude 'bin/ziel.conf*' \
     --exclude '.claude/' --exclude '.vscode/' --exclude '.idea/' \

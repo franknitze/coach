@@ -163,6 +163,18 @@ Die Zählung übernimmt die **Punktreihe** im Kachelkopf, und die ist dafür von
 
 Ausbaustufen (KI-Coach über eine Sprachmodell-API, Dashboard-Widgets) sind in §7 und §10 bewusst als andockbar beschrieben. Sie sind kein Teil des MVP und rechtfertigen keine zusätzliche Abstraktion vorab; die Logs sind als sauberes JSON schon API-tauglich.
 
+## Startseite für Besucher
+
+Wer nicht angemeldet ist, sieht auf coach.nitze.de eine Vorstellung der App mit dem Anmeldeformular darin (`lib/startseite.php`, `assets/startseite.css`, Bilder in `assets/img/startseite/`). **Sie hängt an einem Schalter:** `"startseite": true` in `data/config.json`, Vorgabe `false`. Ohne den Schalter zeigt `index.php` die schlichte Anmeldung. Grund: Das Repo ist öffentlich, und wer Coach daraus installiert, soll keine Werbeseite für Cato Services bekommen. Der Schalter steht in `data/` und reist deshalb nie mit einem Deploy.
+
+Ist noch kein Passwort gesetzt, gewinnt die Einrichtung, auch mit Schalter.
+
+Das Formular trägt dieselben Kennungen wie die schlichte Anmeldung (`#anmeldung`, `#passwort`, `#anmelden`, `#fehler`). `assets/app.js` bedient beide, ohne zu wissen, welche gerade dasteht; `t.anmelden()` in den Tests ebenso. Wer eine der Kennungen umbenennt, bricht beide Wege.
+
+Die Seite lädt nichts von fremden Servern: keine Webfonts, Symbole aus Phosphor Icons (MIT) als Sprite direkt in der Seite. Ein Test prüft das. Mit Schalter steht sie auf `index, follow`, ohne bleibt es bei `noindex`.
+
+Die Screenshots sind echte Aufnahmen der Live-App (Werkzeug und Rohbilder in `docs/leadpage/`, Entwürfe dort ebenfalls). `bin/deploy.sh` schließt `docs/` aus.
+
 ## Befehle
 
 Es gibt keinen Build, keinen Linter und kein Test-Framework, und laut Spezifikation soll das so bleiben.

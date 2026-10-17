@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Coach · Jeder Satz zählt. Auch ohne Netz.</title>
+<meta name="description" content="Coach führt dich durch jede Einheit im Studio, speichert jeden Satz sofort und sagt dir, wann das Gewicht hochgeht.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#101317">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
+<style>
+/* Entwurf B „Protokoll“: ein Trainingslog ist eine Zahlentabelle. Monospace trägt die Seite,
+   das Orange kommt vom Bankpolster aus dem Studio (--vinyl in der App). */
+:root {
+  --grund: #101317;
+  --ebene: #171b21;
+  --linie: #2a3038;
+  --text: #e9e7e2;
+  --leise: #9a9a96;
+  --akzent: #e06a35;
+  --auf-akzent: #14100d;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--grund); color: var(--text); font: 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+img { display: block; max-width: 100%; }
+.innen { width: min(1200px, 100% - 40px); margin-inline: auto; }
+:focus-visible { outline: 2px solid var(--akzent); outline-offset: 3px; }
+h1, h2, h3 { font-family: var(--mono); font-weight: 700; letter-spacing: -.03em; }
+
+.knopf { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 50px; padding: 0 22px; border-radius: 6px; font: 600 15px var(--mono); text-decoration: none; border: 1px solid var(--linie); background: var(--ebene); color: var(--text); cursor: pointer; white-space: nowrap; transition: transform .15s, border-color .15s, background .15s; }
+.knopf:hover { border-color: var(--leise); }
+.knopf:active { transform: translateY(1px); }
+.knopf--voll { background: var(--akzent); border-color: var(--akzent); color: var(--auf-akzent); }
+.knopf--voll:hover { background: #ec7a46; border-color: #ec7a46; }
+.knopf i { font-size: 19px; }
+
+/* Anmeldeleiste oben mittig */
+.oben { border-bottom: 1px solid var(--linie); background: var(--ebene); }
+.oben .innen { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px; min-height: 76px; }
+.marke { font: 700 16px var(--mono); letter-spacing: .3em; text-decoration: none; }
+.anmeldung { display: flex; align-items: center; gap: 10px; }
+.anmeldung label { font: 13px var(--mono); color: var(--leise); }
+.anmeldung input { width: 220px; padding: 11px 12px; border-radius: 6px; border: 1px solid var(--linie); background: var(--grund); color: var(--text); font: 16px var(--sans); }
+.anmeldung input:focus { outline: none; border-color: var(--akzent); }
+.anmeldung .knopf { min-height: 44px; }
+.oben nav { justify-self: end; display: flex; gap: 8px; }
+.oben nav .knopf { min-height: 44px; padding: 0 14px; }
+
+/* Einstieg */
+.einstieg { padding: 72px 0 0; overflow: hidden; }
+.einstieg .innen { display: grid; grid-template-columns: 1.05fr .95fr; gap: 40px; align-items: center; }
+h1 { margin: 0; font-size: clamp(36px, 4.6vw, 60px); line-height: 1.04; }
+.unter { margin: 24px 0 32px; max-width: 44ch; font-size: 19px; color: var(--leise); }
+.aktionen { display: flex; gap: 12px; flex-wrap: wrap; }
+.facher { position: relative; height: 640px; }
+.facher figure { position: absolute; margin: 0; width: 270px; top: 40px; }
+.facher figure:nth-child(1) { left: 0; transform: rotate(-7deg) translateY(50px); }
+.facher figure:nth-child(2) { left: 50%; margin-left: -135px; z-index: 2; top: 0; }
+.facher figure:nth-child(3) { right: 0; transform: rotate(7deg) translateY(50px); }
+.rahmen { padding: 8px; border-radius: 38px; background: #07080a; border: 1px solid #343a44; box-shadow: 0 40px 80px rgb(0 0 0 / .5); }
+.rahmen img { border-radius: 30px; width: 100%; aspect-ratio: 390 / 844; object-fit: cover; }
+
+/* Protokollzeile mit echten Werten */
+.protokoll { border-block: 1px solid var(--linie); background: var(--ebene); }
+.protokoll .innen { display: grid; grid-template-columns: repeat(4, 1fr); }
+.wert { padding: 30px 24px; font-family: var(--mono); }
+.wert + .wert { border-left: 1px solid var(--linie); }
+.wert strong { display: block; font-size: clamp(32px, 4vw, 48px); line-height: 1; letter-spacing: -.04em; }
+.wert strong em { font-style: normal; color: var(--akzent); }
+.wert span { display: block; margin-top: 10px; font-size: 13px; color: var(--leise); }
+
+/* Geschichte: Handy steht, Text läuft */
+.geschichte { padding: 120px 0; }
+.geschichte .innen { display: grid; grid-template-columns: 1fr 340px; gap: 80px; }
+.geschichte__handy { position: sticky; top: 60px; align-self: start; height: calc(100dvh - 120px); max-height: 760px; display: flex; align-items: center; }
+.geschichte__handy .rahmen { width: 100%; position: relative; }
+.geschichte__handy img { transition: opacity .35s ease; }
+.geschichte__handy img + img { position: absolute; inset: 8px; width: calc(100% - 16px); }
+.geschichte__handy img:not(.ist-an) { opacity: 0; }
+.kapitel { min-height: 78vh; display: flex; flex-direction: column; justify-content: center; border-left: 2px solid var(--linie); padding-left: 32px; transition: border-color .3s; }
+.kapitel.ist-an { border-left-color: var(--akzent); }
+.kapitel h2 { margin: 0 0 16px; font-size: clamp(28px, 3.4vw, 42px); line-height: 1.1; max-width: 18ch; }
+.kapitel p { margin: 0; color: var(--leise); max-width: 50ch; font-size: 18px; }
+.kapitel .klein { display: block; margin-bottom: 14px; font: 13px var(--mono); color: var(--akzent); }
+.kapitel-bild { display: none; }
+
+/* Liste der Eigenschaften als Tabelle mit zwei Spalten */
+.liste { padding: 110px 0; border-top: 1px solid var(--linie); }
+.liste h2 { margin: 0 0 48px; font-size: clamp(28px, 3.6vw, 44px); max-width: 22ch; line-height: 1.1; }
+.tabelle { display: grid; grid-template-columns: 1fr 1fr; gap: 0 64px; }
+.tabelle > div { display: grid; grid-template-columns: 34px 1fr; gap: 16px; padding: 26px 0; border-top: 1px solid var(--linie); }
+.tabelle i { font-size: 24px; color: var(--akzent); padding-top: 3px; }
+.tabelle h3 { margin: 0 0 4px; font-size: 18px; letter-spacing: -.01em; }
+.tabelle p { margin: 0; color: var(--leise); font-size: 16px; }
+
+/* Einrichten als Terminal-nahe Abfolge */
+.einrichten { padding: 110px 0; border-top: 1px solid var(--linie); }
+.einrichten .innen { display: grid; grid-template-columns: .9fr 1.1fr; gap: 64px; align-items: start; }
+.einrichten h2 { margin: 0 0 16px; font-size: clamp(28px, 3.6vw, 44px); line-height: 1.1; }
+.einrichten > .innen > div > p { color: var(--leise); margin: 0 0 28px; max-width: 46ch; }
+.ablauf { margin: 0; padding: 0; list-style: none; border: 1px solid var(--linie); border-radius: 10px; background: var(--ebene); font-family: var(--mono); }
+.ablauf li { display: grid; grid-template-columns: 56px 1fr; padding: 22px 22px 22px 0; }
+.ablauf li + li { border-top: 1px solid var(--linie); }
+.ablauf b { color: var(--akzent); text-align: center; font-size: 15px; }
+.ablauf span { font-size: 15px; }
+.ablauf small { display: block; color: var(--leise); font-size: 13px; margin-top: 4px; font-family: var(--sans); }
+
+/* Fragen und Schluss */
+.fragen { padding: 110px 0; border-top: 1px solid var(--linie); }
+.fragen .innen { display: grid; grid-template-columns: .8fr 1.2fr; gap: 64px; }
+.fragen h2 { margin: 0; font-size: clamp(28px, 3.6vw, 44px); line-height: 1.1; }
+details { border-top: 1px solid var(--linie); }
+details:last-child { border-bottom: 1px solid var(--linie); }
+summary { cursor: pointer; list-style: none; padding: 20px 0; font: 600 17px var(--sans); display: flex; justify-content: space-between; gap: 20px; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "+"; font: 400 22px/1 var(--mono); color: var(--akzent); }
+details[open] summary::after { content: "−"; }
+details p { margin: 0 0 20px; color: var(--leise); max-width: 60ch; }
+
+.schluss { border-top: 1px solid var(--linie); background: var(--ebene); }
+.schluss .innen { display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: center; padding: 80px 0; }
+.schluss h2 { margin: 0 0 10px; font-size: clamp(28px, 3.6vw, 44px); line-height: 1.1; }
+.schluss p { margin: 0; color: var(--leise); max-width: 52ch; }
+
+.fuss { padding: 26px 0 calc(26px + env(safe-area-inset-bottom)); font: 13px var(--mono); color: var(--leise); }
+.fuss .innen { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.fuss nav { display: flex; gap: 22px; }
+.fuss a { text-decoration: none; }
+.fuss a:hover { color: var(--text); }
+
+@media (max-width: 960px) {
+  .oben .innen { grid-template-columns: 1fr; justify-items: center; padding: 14px 0; }
+  .oben nav { justify-self: center; }
+  .anmeldung input { width: 100%; }
+  .anmeldung { width: 100%; }
+  .anmeldung label { display: none; }
+  .einstieg .innen, .einrichten .innen, .fragen .innen, .schluss .innen { grid-template-columns: 1fr; }
+  .facher { height: 470px; }
+  .facher figure { width: 200px; }
+  .facher figure:nth-child(2) { margin-left: -100px; }
+  .protokoll .innen { grid-template-columns: 1fr 1fr; }
+  .wert:nth-child(3) { border-left: 0; }
+  .wert:nth-child(n+3) { border-top: 1px solid var(--linie); }
+  .geschichte .innen { grid-template-columns: 1fr; }
+  .geschichte__handy { display: none; }
+  .kapitel { min-height: 0; padding: 0 0 48px 24px; }
+  .kapitel-bild { display: block; width: 240px; margin-top: 28px; }
+  .tabelle { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) { .facher figure:nth-child(1), .facher figure:nth-child(3) { width: 160px; } .wert { padding: 22px 16px; } }
+@media (prefers-reduced-motion: reduce) { .geschichte__handy img, .kapitel, .knopf { transition: none; } }
+</style>
+</head>
+<body>
+
+<header class="oben">
+  <div class="innen">
+    <a class="marke" href="#">COACH</a>
+    <form class="anmeldung" action="#" novalidate>
+      <label for="pw">Passwort</label>
+      <input id="pw" type="password" autocomplete="current-password" aria-label="Passwort">
+      <button class="knopf knopf--voll" type="submit">Anmelden</button>
+    </form>
+    <nav>
+      <a class="knopf" href="https://github.com/franknitze/coach" aria-label="Code auf GitHub"><i class="ph ph-github-logo"></i></a>
+      <a class="knopf" href="https://tidycal.com/cato-services/erstgespraech" aria-label="Erstgespräch buchen"><i class="ph ph-calendar-check"></i></a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="einstieg">
+    <div class="innen">
+      <div>
+        <h1>Jeder Satz zählt. Auch ohne Netz.</h1>
+        <p class="unter">Coach führt dich durch jede Einheit im Studio, speichert jeden Satz sofort und sagt dir, wann das Gewicht hochgeht.</p>
+        <div class="aktionen">
+          <a class="knopf knopf--voll" href="https://tidycal.com/cato-services/erstgespraech"><i class="ph ph-calendar-check"></i>Erstgespräch buchen</a>
+          <a class="knopf" href="https://github.com/franknitze/coach"><i class="ph ph-github-logo"></i>Code auf GitHub</a>
+        </div>
+      </div>
+      <div class="facher" aria-hidden="true">
+        <figure><div class="rahmen"><img src="screenshots/06-einheit.png" alt=""></div></figure>
+        <figure><div class="rahmen"><img src="screenshots/03-studio.png" alt=""></div></figure>
+        <figure><div class="rahmen"><img src="screenshots/09-verlauf.png" alt=""></div></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="protokoll" aria-label="Zahlen aus dem echten Einsatz">
+    <div class="innen">
+      <div class="wert"><strong>22</strong><span>Einheiten seit 19.08.</span></div>
+      <div class="wert"><strong>100<em>›</em>120,9</strong><span>Fortschritt, Start bis Höchstwert</span></div>
+      <div class="wert"><strong>25</strong><span>Übungen mit Bild</span></div>
+      <div class="wert"><strong>0</strong><span>Datenbanken, Abos, Werbebanner</span></div>
+    </div>
+  </section>
+
+  <section class="geschichte">
+    <div class="innen">
+      <div>
+        <article class="kapitel" data-bild="0">
+          <span class="klein">Startseite</span>
+          <h2>Du weißt sofort, was heute dran ist.</h2>
+          <p>Coach wechselt Oberkörper, Ganzkörper und Unterkörper von selbst. Darunter siehst du deinen Fortschritt und die letzten Einheiten.</p>
+          <img class="kapitel-bild" src="screenshots/02-start.png" alt="Startseite mit Trainingstag und Fortschrittskurve" loading="lazy">
+        </article>
+        <article class="kapitel" data-bild="1">
+          <span class="klein">Studio</span>
+          <h2>Das Ziel steht schon im Feld.</h2>
+          <p>Gewicht und Wiederholungen sind auf das gesetzt, was du heute schaffen sollst. Klappt es, tippst du nur auf „Satz bestätigen“. Große Knöpfe, keine Tastatur.</p>
+          <img class="kapitel-bild" src="screenshots/03-studio.png" alt="Studio mit Reglern" loading="lazy">
+        </article>
+        <article class="kapitel" data-bild="2">
+          <span class="klein">Pause</span>
+          <h2>Die Pause läuft, du musst nichts tun.</h2>
+          <p>Nach jedem Satz zählt sie herunter und verschwindet bei null von selbst.</p>
+          <img class="kapitel-bild" src="screenshots/04-pause.png" alt="Pausenanzeige" loading="lazy">
+        </article>
+        <article class="kapitel" data-bild="3">
+          <span class="klein">Gerät</span>
+          <h2>Das richtige Gerät, auch im vollen Studio.</h2>
+          <p>Ein Foto und die Nummer, die am Gerät klebt. Ein Tipp aufs Bild zeigt, wie die Übung geht.</p>
+          <img class="kapitel-bild" src="screenshots/05-lupe.png" alt="Großansicht eines Geräts" loading="lazy">
+        </article>
+        <article class="kapitel" data-bild="4">
+          <span class="klein">Verlauf</span>
+          <h2>Ob es vorangeht, siehst du an der Kurve.</h2>
+          <p>Je Übung das schwerste Gewicht und das Volumen über die Zeit. Lange Pausen bleiben als Lücke sichtbar.</p>
+          <img class="kapitel-bild" src="screenshots/09-verlauf.png" alt="Verlauf einer Übung" loading="lazy">
+        </article>
+        <article class="kapitel" data-bild="5">
+          <span class="klein">Kalender</span>
+          <h2>Regelmäßigkeit auf einen Blick.</h2>
+          <p>Jeder Monat als Raster. Trainingstage sind markiert, die Lücken auch.</p>
+          <img class="kapitel-bild" src="screenshots/07-kalender.png" alt="Monatskalender" loading="lazy">
+        </article>
+      </div>
+      <div class="geschichte__handy" aria-hidden="true">
+        <div class="rahmen">
+          <img class="ist-an" src="screenshots/02-start.png" alt="">
+          <img src="screenshots/03-studio.png" alt="">
+          <img src="screenshots/04-pause.png" alt="">
+          <img src="screenshots/05-lupe.png" alt="">
+          <img src="screenshots/09-verlauf.png" alt="">
+          <img src="screenshots/07-kalender.png" alt="">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="liste">
+    <div class="innen">
+      <h2>Was Coach anders macht als eine App aus dem Store.</h2>
+      <div class="tabelle">
+        <div><i class="ph ph-wifi-slash"></i><div><h3>Funkloch egal</h3><p>Jeder Satz liegt zuerst auf dem Handy und geht zum Server, sobald wieder Empfang da ist.</p></div></div>
+        <div><i class="ph ph-trend-up"></i><div><h3>Sagt dir, wann es hochgeht</h3><p>Doppelte Progression: erst die Wiederholungen, nach zwei sauberen Einheiten das Gewicht.</p></div></div>
+        <div><i class="ph ph-hard-drives"></i><div><h3>Läuft auf deinem Webspace</h3><p>PHP und JSON-Dateien. Kein Konto bei einem Anbieter, keine Datenbank.</p></div></div>
+        <div><i class="ph ph-barbell"></i><div><h3>Plan ist schon drin</h3><p>Drei Tage im Wechsel, 25 Übungen mit Bild. Anpassen kannst du alles in den Einstellungen.</p></div></div>
+        <div><i class="ph ph-device-mobile"></i><div><h3>Wie eine App auf dem Homescreen</h3><p>Über Safari hinzufügen, dann öffnet Coach im Vollbild und auch ohne Netz.</p></div></div>
+        <div><i class="ph ph-github-logo"></i><div><h3>Offener Code</h3><p>Alles liegt auf GitHub. Du siehst genau, was mit deinen Daten passiert.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="einrichten">
+    <div class="innen">
+      <div>
+        <h2>Hochladen, Passwort setzen, loslegen.</h2>
+        <p>Du brauchst einen Webspace mit PHP 8 und HTTPS, wie ihn die üblichen Hosting-Pakete haben. Wenn du das nicht selbst machen willst, richten wir es mit dir ein.</p>
+        <a class="knopf knopf--voll" href="https://tidycal.com/cato-services/erstgespraech"><i class="ph ph-calendar-check"></i>Erstgespräch buchen</a>
+      </div>
+      <ol class="ablauf">
+        <li><b>1</b><span>Code von GitHub laden<small>github.com/franknitze/coach</small></span></li>
+        <li><b>2</b><span>Ins Web-Root hochladen<small>Keine Datenbank, kein Build-Schritt</small></span></li>
+        <li><b>3</b><span>Adresse öffnen, Passwort setzen<small>Der Plan mit 25 Übungen wird dabei angelegt</small></span></li>
+        <li><b>4</b><span>Über Safari auf den Homescreen<small>Fertig für das erste Training</small></span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="fragen">
+    <div class="innen">
+      <h2>Fragen, die oft kommen</h2>
+      <div>
+        <details><summary>Kostet Coach etwas?</summary><p>Nein. Der Code liegt offen auf GitHub. Du brauchst nur einen Webspace mit PHP und HTTPS.</p></details>
+        <details><summary>Läuft Coach auf dem iPhone?</summary><p>Ja. Leg die Seite über Safari auf den Homescreen. Dann öffnet sie sich wie eine App, auch ohne Netz.</p></details>
+        <details><summary>Was passiert, wenn im Studio kein Empfang ist?</summary><p>Du trainierst weiter wie immer. Jeder bestätigte Satz liegt zuerst auf dem Handy und geht zum Server, sobald wieder Netz da ist.</p></details>
+        <details><summary>Ist das etwas für Anfänger?</summary><p>Coach ist für Krafttraining an Geräten und Hanteln gemacht. Die erste Einheit ist die Eichung, danach schlägt Coach die Steigerung vor.</p></details>
+        <details><summary>Können mehrere Personen eine Installation nutzen?</summary><p>Nein. Eine Installation ist für eine Person. Für eine zweite Person legst du Coach ein zweites Mal an.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="schluss">
+    <div class="innen">
+      <div>
+        <h2>Lass uns über dein Training sprechen.</h2>
+        <p>Ob du Coach bei dir einrichten willst oder eine eigene Anwendung im Kopf hast: Im Erstgespräch klären wir, was du brauchst.</p>
+      </div>
+      <a class="knopf knopf--voll" href="https://tidycal.com/cato-services/erstgespraech"><i class="ph ph-calendar-check"></i>Erstgespräch buchen</a>
+    </div>
+  </section>
+</main>
+
+<footer class="fuss">
+  <div class="innen">
+    <span>Coach · Cato Services</span>
+    <nav><a href="https://cato-services.de/impressum.html">Impressum</a><a href="https://cato-services.de/datenschutz.html">Datenschutz</a><a href="https://github.com/franknitze/coach">GitHub</a></nav>
+  </div>
+</footer>
+
+<script>
+// Wechselt das Bild im stehenden Handy, sobald ein Kapitel in die Mitte kommt.
+(function () {
+  var bilder = document.querySelectorAll('.geschichte__handy img');
+  var kapitel = document.querySelectorAll('.kapitel');
+  var beobachter = new IntersectionObserver(function (eintraege) {
+    eintraege.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      var n = +e.target.dataset.bild;
+      kapitel.forEach(function (k) { k.classList.toggle('ist-an', k === e.target); });
+      bilder.forEach(function (b, i) { b.classList.toggle('ist-an', i === n); });
+    });
+  }, { rootMargin: '-45% 0px -45% 0px' });
+  kapitel.forEach(function (k) { beobachter.observe(k); });
+})();
+</script>
+</body>
+</html>
