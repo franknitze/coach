@@ -92,14 +92,14 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
     await page.waitForSelector('.satz--dran');
     /*
      * Vorbefüllt wird seit dem 26.08.2026 das, was HEUTE ansteht, nicht mehr
-     * der letzte Wert. Bankdrücken stand zuletzt bei 80 kg × 12, 11, 10 —
-     * drei Sätze statt vier, also ist die Stufe nicht abgeschlossen. Der
-     * Coach sagt "80 kg halten, alle Sätze auf 10 bringen", und genau das
-     * steht in den Reglern: das Arbeitsgewicht und die obere Grenze.
+     * der letzte Wert. Bankdrücken stand zuletzt bei 80 kg × 12, 11, 10:
+     * drei Sätze statt vier, also nicht geschafft. Seit dem 17.10.2026 bleibt
+     * dann das Ziel stehen, und das war noch die Mindestzahl 6, denn auch die
+     * Einheit davor (75 kg, ein Satz) war unvollständig.
      */
     ok(await bank.locator('.regler__wert').first().innerText() === '80 kg',
        'Gewicht vorbefüllt: das Arbeitsgewicht');
-    ok(await bank.locator('.regler__wert').nth(1).innerText() === '10 Wdh',
+    ok(await bank.locator('.regler__wert').nth(1).innerText() === '6 Wdh',
        'Wiederholungen vorbefüllt: das Ziel des Coaches, nicht die letzten 12');
 
     await bank.locator('[data-aendere$="weight:1"]').click();
@@ -108,7 +108,7 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
     ok(true, 'Plus erhöht um die Schrittweite der Übung (2,5 kg)');
 
     await bank.locator('[data-aendere$="reps:-1"]').click();
-    ok(await bank.locator('.regler__wert').nth(1).innerText() === '9 Wdh', 'Minus senkt die Wiederholungen');
+    ok(await bank.locator('.regler__wert').nth(1).innerText() === '5 Wdh', 'Minus senkt die Wiederholungen');
 
     /*
      * Der Text allein genügt als Prüfung nicht. Die Knöpfe schreiben den

@@ -6,8 +6,21 @@ require_once __DIR__ . '/training.php';
 /**
  * Regelbasierte progressive Überlastung, doppelte Progression (SPEC.md §7).
  *
- * Erst die Wiederholungen bis rep_max hochklettern, dann das Gewicht um
- * weight_step anheben und die Wiederholungen Richtung rep_min zurücksetzen.
+ * Die Regel (Frank, 17.10.2026):
+ * - Eine Wiederholung mehr gibt es nur, wenn ALLE Sätze das Ziel geschafft
+ *   haben. Fehlt auch nur einem Satz etwas, wird das Ziel wiederholt.
+ * - Schaffen alle Sätze die Obergrenze, steigt das Gewicht sofort um
+ *   weight_step, und es geht wieder bei rep_min los.
+ *
+ * Bis zum 17.10.2026 richtete sich das Ziel nach dem BESTEN Satz, und das
+ * Gewicht stieg erst nach zwei sauberen Einheiten hintereinander. Nach 8, 8, 6
+ * kam so 9 statt 8, und nach 10, 10, 10 musste man die 10 ein zweites Mal
+ * schaffen. Beides hat Frank verworfen.
+ *
+ * Das Ziel einer Einheit wird nicht gespeichert. Es entsteht, indem die
+ * Regel über den ganzen Verlauf der Übung von der ersten Einheit an
+ * nachgespielt wird (coach_nachspielen()). Nur so lässt sich sagen, ob
+ * 8, 8, 6 ein verfehltes Ziel 8 war oder ein geschafftes Ziel 6.
  *
  * Die Regel steht hier und nicht in einem Endpunkt: api/coach.php gibt sie
  * einzeln aus, api/plan.php hängt sie an jede Kachel, damit der Studio-
@@ -17,13 +30,6 @@ require_once __DIR__ . '/training.php';
  * Deterministisch und ohne Sprachmodell. Der KI-Coach aus §7 wäre eine
  * zusätzliche Schicht darüber, kein Ersatz.
  */
-
-/**
- * Wie viele Einheiten müssen sauber sein, bevor gesteigert wird.
- * SPEC.md §7 nennt 2 bis 3. Zwei ist der zügigere Wert; wer vorsichtiger
- * steigern will, setzt hier 3.
- */
-const COACH_EINHEITEN = 2;
 
 /** Gewichte sind Kommazahlen, deshalb nie auf Gleichheit prüfen. */
 function coach_gleich(float $a, float $b): bool
@@ -61,11 +67,10 @@ function coach_last(float $gewicht, bool $unterstuetzt): string
  *         text ist die Handlung, reason die Begründung darunter (oft leer).
  *
  *         target_weight und target_reps sind das, was heute ansteht. Sie
- *         befüllen im Studio die beiden Regler (Frank, 26.08.2026). Bis
- *         dahin stand dort der letzte Wert; die Umkehr ist bewusst, siehe
- *         CLAUDE.md. Die Zahlen gehören hierher und nicht ins Frontend:
- *         Die Progressionsregel lebt an einer Stelle, sonst rechnet der
- *         Browser irgendwann etwas anderes als der Server.
+ *         befüllen im Studio die beiden Regler (Frank, 26.08.2026). Die
+ *         Zahlen gehören hierher und nicht ins Frontend: Die Regel lebt an
+ *         einer Stelle, sonst rechnet der Browser irgendwann etwas anderes
+ *         als der Server.
  */
 function coach_empfehlung(array $uebung): array
 {
@@ -81,12 +86,10 @@ function coach_empfehlung(array $uebung): array
      */
     $unterstuetzt = !empty($uebung['assisted']);
 
-    $einheiten = training_letzte_einheiten((string) $uebung['id'], COACH_EINHEITEN);
+    // Neueste zuerst geliefert, nachgespielt wird von der ältesten an.
+    $einheiten = array_reverse(training_letzte_einheiten((string) $uebung['id'], PHP_INT_MAX));
 
     if ($einheiten === []) {
-        // Kurz halten. Der Wiederholungsbereich steht auf der Kachel schon
-        // eine Zeile darüber, und beim ersten Training trägt jede Kachel
-        // diesen Hinweis. Ein ganzer Satz wäre dort achtmal dieselbe Tapete.
         return [
             'status'        => 'start',
             'target_weight' => null,
@@ -98,197 +101,152 @@ function coach_empfehlung(array $uebung): array
         ];
     }
 
-    $letzte = $einheiten[0];
-    $gewichte = array_map(
-        static fn (array $satz): float => (float) ($satz['weight'] ?? 0),
-        $letzte['sets']
-    );
-    // Das Arbeitsgewicht ist der schwerste Satz, an der
-    // Unterstützungsmaschine also der mit der GERINGSTEN Hilfe.
-    $aktGewicht = $unterstuetzt ? min($gewichte) : max($gewichte);
+    $stand = coach_nachspielen($einheiten, $repMin, $repMax, $schritt, $zielSaetze, $unterstuetzt);
+    $gewicht = $stand['gewicht'];
+    $ziel = $stand['ziel'];
+    $vorher = $stand['vorher'];
 
-    // Zweig 1: steigern.
-    // Verlangt werden volle COACH_EINHEITEN. Eine einzelne saubere Einheit
-    // reicht nicht, sonst schiebt ein guter Tag das Gewicht hoch, das am
-    // nächsten Termin wieder einbricht.
-    if (coach_sauber($einheiten, $aktGewicht, $repMax, $zielSaetze)) {
-        $ziel = $unterstuetzt
-            ? max(0.0, $aktGewicht - $schritt)
-            : $aktGewicht + $schritt;
-
+    if ($stand['ereignis'] === 'zusatz') {
         /*
          * Ende der Leiter. Die Hilfe steht schon auf 0, es lässt sich nichts
          * mehr wegnehmen; weiter geht es nur noch mit Zusatzgewicht, und
-         * dafür ist die Übung umzustellen. Ohne diesen Zweig stünde hier
-         * für immer "Heute ohne Unterstützung", ein Vorschlag, der nichts
-         * mehr vorschlägt.
+         * dafür ist die Übung umzustellen.
          */
-        if ($unterstuetzt && $aktGewicht <= 0.0) {
-            return [
-                'status'        => 'steigern',
-                'target_weight' => 0.0,
-                'target_reps'   => $repMin,
-                'text'          => 'Zusatzgewicht ist dran',
-                'reason'        => COACH_EINHEITEN . ' Einheiten ohne Hilfe × '
-                                 . $repMax . '. Im Plan die Gewichtsrichtung auf '
-                                 . '"mehr Gewicht ist schwerer" stellen, dann zählt '
-                                 . 'die App wieder nach oben.',
-            ];
-        }
-
-        if ($unterstuetzt && $ziel <= 0.0) {
-            return [
-                'status'        => 'steigern',
-                'target_weight' => 0.0,
-                'target_reps'   => $repMin,
-                'text'          => 'Heute ohne Hilfe',
-                'reason'        => COACH_EINHEITEN . ' Einheiten sauber bei '
-                                 . coach_zahl($aktGewicht) . ' kg Hilfe',
-            ];
-        }
-
         return [
             'status'        => 'steigern',
-            'target_weight' => $ziel,
-            // Neues Gewicht heißt: die Leiter beginnt unten wieder.
+            'target_weight' => 0.0,
             'target_reps'   => $repMin,
-            // Erst die Handlung, dann die Begründung. Auf der Kachel steht
-            // die Handlung vorn und hervorgehoben, die Begründung leise
-            // darunter: gelesen wird im Studio nur die erste Zeile.
-            'text'          => $unterstuetzt
-                ? 'Heute ' . coach_zahl($ziel) . ' kg Hilfe, ' . coach_zahl($schritt) . ' weniger'
-                : 'Heute ' . coach_zahl($ziel) . ' kg',
-            'reason'        => COACH_EINHEITEN . ' Einheiten sauber, '
-                             . coach_last($aktGewicht, $unterstuetzt) . ' × ' . $repMax,
+            'text'          => 'Zusatzgewicht ist dran',
+            'reason'        => 'Alle Sätze ohne Hilfe × ' . $repMax . '. Im Plan die '
+                             . 'Gewichtsrichtung auf "mehr Gewicht ist schwerer" stellen, '
+                             . 'dann zählt die App wieder nach oben.',
         ];
     }
 
-    // Zweig 2: eingebrochen.
-    // Geprüft wird der beste Satz der letzten Einheit, nicht irgendeiner:
-    // der letzte Satz fällt bei hartem Training regelmäßig ab, das ist
-    // normale Ermüdung und kein zu schweres Gewicht. Erst wenn auch der
-    // beste Satz unter rep_min bleibt, stimmt das Gewicht nicht mehr.
-    $besteWdh = max(array_map(
-        static fn (array $satz): int => (int) ($satz['reps'] ?? 0),
-        $letzte['sets']
-    ));
+    if ($stand['ereignis'] === 'steigern') {
+        $text = !$unterstuetzt
+            ? 'Heute ' . coach_zahl($gewicht) . ' kg'
+            : ($gewicht <= 0.0
+                ? 'Heute ohne Hilfe'
+                : 'Heute ' . coach_zahl($gewicht) . ' kg Hilfe, ' . coach_zahl($schritt) . ' weniger');
+        return [
+            'status'        => 'steigern',
+            'target_weight' => $gewicht,
+            'target_reps'   => $repMin,
+            'text'          => $text,
+            'reason'        => 'Alle Sätze ' . coach_last($vorher, $unterstuetzt) . ' × ' . $repMax,
+        ];
+    }
 
-    if ($besteWdh < $repMin) {
+    if ($stand['ereignis'] === 'zurueckholen') {
         return [
             'status'        => 'zurueckholen',
-            'target_weight' => $aktGewicht,
-            'target_reps'   => $repMin,
+            'target_weight' => $gewicht,
+            'target_reps'   => $ziel,
             'reason'        => '',
             'text'          => $unterstuetzt
                 ? 'Mehr Hilfe, bis ' . $repMin . ' Wiederholungen wieder gehen.'
-                : coach_zahl($aktGewicht) . ' kg halten, Wiederholungen zurück auf '
-                  . $repMin . '.',
+                : coach_zahl($gewicht) . ' kg halten, Wiederholungen zurück auf ' . $repMin . '.',
         ];
     }
-
-    // Zweig 3: halten. Was genau noch fehlt, hängt davon ab, wie nah die
-    // letzte Einheit an der Obergrenze war. "Eine Wiederholung mehr" wäre
-    // falsch, sobald rep_max schon erreicht ist: dann fehlt keine
-    // Wiederholung mehr, sondern eine zweite saubere Einheit.
-    $letzteSauber = coach_einheit_sauber($letzte, $aktGewicht, $repMax, $zielSaetze);
 
     // Ohne Hilfe gibt es nichts mehr zu halten, dort steht nur noch das
     // eigene Gewicht auf der Stange. "0 kg halten" wäre eine leere Ansage.
-    $last = coach_last($aktGewicht, $unterstuetzt);
-    $halten = $unterstuetzt && $aktGewicht <= 0.0 ? 'Ohne Hilfe' : $last . ' halten';
-
-    if ($letzteSauber) {
-        $fehlend = COACH_EINHEITEN - 1;
-        $danach = !$unterstuetzt        ? 'geht es hoch.'
-                : ($aktGewicht <= 0.0   ? 'kommt Zusatzgewicht.'
-                                        : 'geht die Hilfe runter.');
-        // "mit ohne Hilfe" wäre kein Deutsch.
-        $womit = $unterstuetzt && $aktGewicht <= 0.0 ? 'ohne Hilfe' : 'mit ' . $last;
-        return [
-            'status'        => 'halten',
-            'target_weight' => $aktGewicht,
-            'target_reps'   => $repMax,
-            'reason'        => '',
-            'text'          => 'Noch ' . ($fehlend === 1 ? 'eine saubere Einheit' : $fehlend
-                             . ' saubere Einheiten') . ' ' . $womit
-                             . ' × ' . $repMax . ', dann ' . $danach,
-        ];
-    }
-
-    if ($besteWdh >= $repMax) {
-        return [
-            'status'        => 'halten',
-            'target_weight' => $aktGewicht,
-            'target_reps'   => $repMax,
-            'reason'        => '',
-            'text'          => $halten . ', alle Sätze auf ' . $repMax . ' bringen.',
-        ];
-    }
+    $halten = $unterstuetzt && $gewicht <= 0.0
+        ? 'Ohne Hilfe'
+        : coach_last($gewicht, $unterstuetzt) . ' halten';
 
     return [
         'status'        => 'halten',
-        'target_weight' => $aktGewicht,
-        'target_reps'   => min($besteWdh + 1, $repMax),
+        'target_weight' => $gewicht,
+        'target_reps'   => $ziel,
         'reason'        => '',
-        'text'          => $halten . ', Ziel '
-                         . min($besteWdh + 1, $repMax) . ' Wiederholungen.',
+        'text'          => $ziel >= $repMax
+            ? $halten . ', alle Sätze auf ' . $repMax . ' bringen.'
+            : $halten . ', Ziel ' . $ziel . ' Wiederholungen.',
     ];
 }
 
 /**
- * Sind alle Arbeitssätze der letzten Einheiten beim aktuellen Gewicht
- * bis rep_max durchgegangen?
+ * Spielt die Regel über alle Einheiten einer Übung nach, älteste zuerst.
  *
- * Ein Satz mit abweichendem Gewicht lässt die Prüfung durchfallen. Das ist
- * gewollt: wer zwischendurch leichter geworden ist, hat die Stufe nicht
- * sauber abgeschlossen.
+ * Zustand: das Gewicht, das ansteht, und das Ziel an Wiederholungen. Die
+ * erste Einheit legt das Gewicht fest (es gibt keine Startgewichte), das
+ * Ziel beginnt bei rep_min. Danach je Einheit:
+ *
+ * - Geschafft heißt: so viele Sätze wie verlangt, alle auf dem Gewicht, und
+ *   jeder einzelne mindestens beim Ziel. Dann steigt das Ziel auf die
+ *   schwächste Wiederholungszahl plus eins. Liegt auch der schwächste Satz an
+ *   der Obergrenze, steigt stattdessen das Gewicht und das Ziel fällt auf
+ *   rep_min.
+ * - Nicht geschafft: das Ziel bleibt. Bleibt sogar der beste Satz unter
+ *   rep_min, geht das Ziel auf rep_min zurück.
+ *
+ * Weicht das Gewicht einer Einheit vom anstehenden ab (eigene Wahl im
+ * Studio), gilt ab da das tatsächlich gehobene. Das Ziel bleibt dabei.
+ *
+ * Aufwärmsätze werden nicht eingetragen (Frank, 26.08.2026). Ein leichterer
+ * Satz lässt die Einheit als nicht geschafft zählen.
+ *
+ * @return array{gewicht: float, ziel: int, vorher: float, ereignis: string}
+ *         ereignis der letzten Einheit: weiter, halten, zurueckholen,
+ *         steigern oder zusatz. vorher ist das Gewicht vor einer Steigerung.
  */
-function coach_sauber(array $einheiten, float $aktGewicht, int $repMax, int $zielSaetze): bool
+function coach_nachspielen(array $einheiten, int $repMin, int $repMax, float $schritt,
+                           int $zielSaetze, bool $unterstuetzt): array
 {
-    if (count($einheiten) < COACH_EINHEITEN) {
-        return false;
-    }
+    $gewicht = null;
+    $ziel = $repMin;
+    $vorher = 0.0;
+    $ereignis = 'halten';
 
     foreach ($einheiten as $einheit) {
-        if (!coach_einheit_sauber($einheit, $aktGewicht, $repMax, $zielSaetze)) {
-            return false;
+        $saetze = (array) ($einheit['sets'] ?? []);
+        if ($saetze === []) {
+            continue;
+        }
+
+        $gewichte = array_map(static fn (array $satz): float => (float) ($satz['weight'] ?? 0), $saetze);
+        $wdh = array_map(static fn (array $satz): int => (int) ($satz['reps'] ?? 0), $saetze);
+
+        // Das Arbeitsgewicht ist der schwerste Satz, an der
+        // Unterstützungsmaschine der mit der GERINGSTEN Hilfe.
+        $gehoben = $unterstuetzt ? min($gewichte) : max($gewichte);
+        if ($gewicht === null || !coach_gleich($gehoben, $gewicht)) {
+            $gewicht = $gehoben;
+        }
+
+        $vollstaendig = $zielSaetze <= 0 || count($saetze) >= $zielSaetze;
+        $alleAufGewicht = true;
+        foreach ($gewichte as $g) {
+            if (!coach_gleich($g, $gewicht)) {
+                $alleAufGewicht = false;
+            }
+        }
+        $schwaechster = min($wdh);
+        $bester = max($wdh);
+
+        if ($vollstaendig && $alleAufGewicht && $schwaechster >= $ziel) {
+            if ($schwaechster >= $repMax) {
+                $vorher = $gewicht;
+                if ($unterstuetzt && $gewicht <= 0.0) {
+                    $ereignis = 'zusatz';
+                } else {
+                    $gewicht = $unterstuetzt ? max(0.0, $gewicht - $schritt) : $gewicht + $schritt;
+                    $ereignis = 'steigern';
+                }
+                $ziel = $repMin;
+            } else {
+                $ziel = min($schwaechster + 1, $repMax);
+                $ereignis = 'weiter';
+            }
+        } elseif ($bester < $repMin) {
+            $ziel = $repMin;
+            $ereignis = 'zurueckholen';
+        } else {
+            $ereignis = 'halten';
         }
     }
 
-    return true;
-}
-
-/**
- * Eine einzelne Einheit: die Zielsatzzahl erreicht, alle Sätze beim Gewicht
- * und bis rep_max durch.
- *
- * Die Zielsatzzahl gehört dazu, weil eine Einheit auch abgebrochen werden
- * kann: früher weg vom Training, Gerät besetzt, keine Kraft mehr. Zwei
- * Sätze auf der Obergrenze sind kein Beleg dafür, dass vier gehen. Ohne
- * diese Bedingung würde ausgerechnet ein Abbruch das Gewicht hochschieben.
- *
- * Mehr Sätze als verlangt sind unschädlich, geprüft wird die Untergrenze.
- * Fehlt die Angabe (0), greift die Bedingung nicht: dann lässt sich nicht
- * beurteilen, was vollständig gewesen wäre.
- */
-function coach_einheit_sauber(array $einheit, float $aktGewicht, int $repMax, int $zielSaetze): bool
-{
-    if (empty($einheit['sets'])) {
-        return false;
-    }
-
-    if (count($einheit['sets']) < $zielSaetze) {
-        return false;
-    }
-
-    foreach ($einheit['sets'] as $satz) {
-        if (!coach_gleich((float) ($satz['weight'] ?? 0), $aktGewicht)) {
-            return false;
-        }
-        if ((int) ($satz['reps'] ?? 0) < $repMax) {
-            return false;
-        }
-    }
-
-    return true;
+    return ['gewicht' => (float) $gewicht, 'ziel' => $ziel, 'vorher' => $vorher, 'ereignis' => $ereignis];
 }

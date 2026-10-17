@@ -113,7 +113,7 @@ Bei 30 Sätzen landet eine Einheit damit bei etwa 85 bis 95 Minuten inklusive Au
 
 ## Steigerung
 
-Doppelte Progression. Erst innerhalb des Wiederholungsbereichs nach oben arbeiten, dann das Gewicht anheben und die Wiederholungen wieder an den unteren Rand fallen lassen. Zwei Einheiten in Folge sauber an der Obergrenze aller Sätze, dann geht das Gewicht hoch. Genau diese Regel steckt in der App.
+Doppelte Progression. Erst innerhalb des Wiederholungsbereichs nach oben arbeiten, dann das Gewicht anheben und die Wiederholungen wieder an den unteren Rand fallen lassen. Eine Wiederholung mehr gibt es, wenn alle Sätze das Ziel geschafft haben. Schaffen alle Sätze die Obergrenze, geht das Gewicht hoch. Genau diese Regel steckt in der App.
 
 Startgewichte gibt es keine. Die erste Einheit ist die Eichung: das Gewicht so wählen, dass der angegebene Bereich sauber und nah ans Versagen geht.
 

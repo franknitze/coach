@@ -288,33 +288,36 @@
 
 **Modell: Doppelte Progression.** Erst Wiederholungen hochklettern, dann Gewicht rauf und Wdh zurücksetzen.
 
-Pseudocode pro Übung (Grundlage: letzte Sessions bei aktuellem Gewicht):
+Regel (Frank, 17.10.2026), nachgespielt über alle Sessions der Übung, älteste zuerst:
 
 ```
 regel(uebung):
-  letzte = letzte N Sessions dieser Übung   # z.B. N = 2..3
-  akt_gewicht = Gewicht der letzten Session
-
-  wenn in ALLEN Arbeitssätzen der letzten N Sessions
-     die Wiederholungen >= rep_max erreicht wurden bei akt_gewicht:
-        -> Empfehlung: "Steigern auf akt_gewicht + weight_step,
-                        Wdh zurück Richtung rep_min"
-
-  sonst wenn Wiederholungen unter rep_min eingebrochen sind:
-        -> Empfehlung: "Gewicht halten, Wiederholungen zurückholen"
-
-  sonst:
-        -> Empfehlung: "Gewicht halten, eine Wdh mehr anpeilen"
+  gewicht = Arbeitsgewicht der ersten Session, ziel = rep_min
+  für jede Session:
+    geschafft = Zielsatzzahl erreicht
+                und alle Sätze bei gewicht
+                und jeder Satz >= ziel Wiederholungen
+    wenn geschafft und schwächster Satz >= rep_max:
+        -> gewicht + weight_step, ziel = rep_min
+    sonst wenn geschafft:
+        -> ziel = schwächster Satz + 1
+    sonst wenn bester Satz < rep_min:
+        -> ziel = rep_min
+    sonst:
+        -> ziel bleibt (wiederholen)
 ```
 
+Beispiel, 3 Sätze, 6 bis 10 Wdh, Stufe 5 kg: 6,6,6 → 7 · 7,7,7 → 8 · 8,8,6 → 8 · 8,8,8 → 9 · 9,9,9 → 10 · 10,10,10 → 55 kg × 6.
+
 - Diese Regel ist kostenlos, deterministisch und deckt den Großteil des Nutzens ab.
-- Ausgabe erscheint als konkrete Ansage auf der Übungskachel (z.B. „3 Einheiten sauber 80 kg × 12 → heute 85 kg").
+- Das Ziel einer Einheit wird nicht gespeichert, sondern aus dem Verlauf nachgespielt (`coach_nachspielen()` in `lib/coach.php`). Nur so ist 8, 8, 6 als verfehltes Ziel 8 erkennbar.
 
 **Festgelegt bei der Umsetzung**, wo die Regel oben offen bleibt:
 
-- **N = 2.** Der zügigere Wert; wer vorsichtiger steigern will, setzt `COACH_EINHEITEN` in `lib/coach.php` auf 3. Eine einzelne saubere Einheit reicht bewusst nicht, sonst schiebt ein guter Tag das Gewicht hoch, das am nächsten Termin wieder einbricht.
-- **Eine Einheit zählt nur mit ihrer Zielsatzzahl als sauber.** Zwei Sätze auf der Obergrenze sind kein Beleg dafür, dass vier gehen; ohne diese Bedingung schöbe ausgerechnet ein Abbruch das Gewicht hoch.
-- **„Eingebrochen" heißt: auch der beste Satz liegt unter `rep_min`.** Der letzte Satz fällt bei hartem Training regelmäßig ab, das ist Ermüdung und kein zu schweres Gewicht. Löste jeder schwache Satz die Warnung aus, stünde sie ständig da.
+- **Eine Wiederholung mehr nur, wenn alle Sätze das Ziel geschafft haben.** Bis zum 17.10.2026 zählte der beste Satz, und nach 8, 8, 6 kam 9. Frank hat das verworfen.
+- **Einmal alle Sätze an der Obergrenze genügt.** Bis zum 17.10.2026 waren es zwei saubere Einheiten hintereinander (`COACH_EINHEITEN = 2`). Frank hat das verworfen: Geschafft ist geschafft.
+- **Die Zielsatzzahl gehört zu „geschafft“.** Zwei Sätze auf der Obergrenze sind kein Beleg dafür, dass drei gehen; ohne diese Bedingung schöbe ausgerechnet ein Abbruch das Gewicht hoch.
+- **„Eingebrochen“ heißt: auch der beste Satz liegt unter `rep_min`.** Dann geht das Ziel auf `rep_min` zurück, das Gewicht bleibt.
 - **An der Unterstützungsmaschine** (`assisted`) läuft die Regel andersherum: Arbeitsgewicht ist der Satz mit der geringsten Hilfe, Steigern heißt weniger Gewicht. Bei 0 kg Hilfe endet die Leiter, und die Ansage nennt den Wechsel auf Zusatzgewicht.
 - **Der Vorschlag befüllt die Eingabe** (seit 26.08.2026, vorher ausdrücklich nicht). `coach_empfehlung()` liefert dazu `target_weight` und `target_reps`; beim Steigern beginnen die Wiederholungen wieder bei `rep_min`. Umgekehrt auf Franks Wunsch: Im Feld soll stehen, was er erreichen soll. Der Preis ist der, den die alte Regel vermeiden wollte — ein unaufmerksames Bestätigen schreibt eine Wiederholung zu viel ins Protokoll.
 

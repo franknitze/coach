@@ -24,33 +24,29 @@ module.exports = function regel() {
     const s = (g, ...w) => w.map((r) => ({ weight: g, reps: r }));
 
     /*
-     * titel, Einheiten (neueste zuletzt), erwarteter Status, erwartete
-     * Ziel-Wiederholungen.
+     * titel, Einheiten (älteste zuerst), erwarteter Status, erwartete
+     * Ziel-Wiederholungen. Übung: 3 Sätze, 8 bis 12 Wiederholungen.
      *
-     * target_reps befüllt seit dem 26.08.2026 den Wiederholungs-Regler im
-     * Studio, deshalb gehört jeder Zweig festgenagelt: Steigt das Gewicht,
-     * beginnt die Leiter unten wieder (rep_min 8); wird gehalten, ist das
-     * Ziel eine Wiederholung mehr als der beste Satz, gedeckelt bei
-     * rep_max 12.
+     * Die Regel (Frank, 17.10.2026): Eine Wiederholung mehr gibt es nur,
+     * wenn ALLE Sätze das Ziel geschafft haben, sonst wird das Ziel
+     * wiederholt. Schaffen alle Sätze die Obergrenze, steigt das Gewicht
+     * sofort, beim ersten Mal, und es geht wieder bei rep_min los.
      */
     const faelle = [
         ['gar keine Einheit',                    [],                                  'start',        8],
-        ['einmal sauber (zu wenig)',             [s(80, 12, 12, 12)],                 'halten',      12],
-        ['zweimal sauber an der Obergrenze',     [s(80, 12, 12, 12), s(80, 12, 12, 12)], 'steigern',  8],
-        ['zweimal, aber einmal nur 11 Wdh',      [s(80, 12, 12, 11), s(80, 12, 12, 12)], 'halten',   12],
-        ['zweimal, ein Satz leichter',           [s(80, 12, 12, 12),
-                                                  [{ weight: 75, reps: 12 }, { weight: 80, reps: 12 }]], 'halten', 12],
+        ['einmal alle an der Obergrenze',        [s(80, 12, 12, 12)],                 'steigern',     8],
+        ['alle geschafft, mitten im Bereich',    [s(80, 9, 9, 9)],                    'halten',      10],
+        ['ein Satz verfehlt das Ziel',           [s(80, 9, 9, 9), s(80, 10, 10, 8)],  'halten',      10],
+        ['nur letzter Satz schwach',             [s(80, 9, 9, 9), s(80, 12, 12, 9)],  'halten',      10],
+        ['zweimal, aber einmal nur 11 Wdh',      [s(80, 11, 11, 11), s(80, 12, 12, 11)], 'halten',   12],
+        ['ein Satz leichter',                    [[{ weight: 75, reps: 12 }, { weight: 80, reps: 12 },
+                                                   { weight: 80, reps: 12 }]],        'halten',       8],
         ['alle Sätze unter rep_min',             [s(85, 7, 6, 5)],                    'zurueckholen', 8],
-        ['nur letzter Satz schwach (Ermüdung)',  [s(85, 10, 9, 7)],                   'halten',      11],
-        ['mitten im Bereich',                    [s(80, 10, 9, 9)],                   'halten',      11],
-        ['dreimal sauber (mehr als nötig)',      [s(80, 12, 12, 12), s(80, 12, 12, 12), s(80, 13, 12, 12)], 'steigern', 8],
 
-        // Abgebrochene Einheiten. Zwei Sätze auf der Obergrenze sind kein
-        // Beleg dafür, dass vier gehen; wer früher aufhört, hat es nicht
-        // gezeigt. Sonst schiebt ein Abbruch das Gewicht hoch.
-        ['zweimal sauber, aber nur 2 von 3 Sätzen', [s(80, 12, 12), s(80, 12, 12)],  'halten',      12],
-        ['einmal voll, einmal abgebrochen',       [s(80, 12, 12), s(80, 12, 12, 12)], 'halten',     12],
-        ['zweimal mit einem Satz zu viel',        [s(80, 12, 12, 12, 12), s(80, 12, 12, 12, 12)], 'steigern', 8],
+        // Abgebrochen: Zwei Sätze auf der Obergrenze sind kein Beleg dafür,
+        // dass drei gehen. Sonst schiebt ein Abbruch das Gewicht hoch.
+        ['nur 2 von 3 Sätzen',                   [s(80, 12, 12)],                     'halten',       8],
+        ['mit einem Satz zu viel',               [s(80, 12, 12, 12, 12)],             'steigern',     8],
     ];
 
     let bestanden = 0;
@@ -84,6 +80,49 @@ module.exports = function regel() {
         }
     }
 
+    /* ---------- Die Beispieltabelle der Startseite, Zeile für Zeile ----------
+     * 3 Sätze, 6 bis 10 Wiederholungen, Stufe 5 kg, Start 50 kg. Nach jeder
+     * Zeile muss die App genau das Ziel der nächsten Zeile vorschlagen.
+     */
+    const tabelle = [
+        [s(50, 6, 6, 6),    50, 7],
+        [s(50, 7, 7, 7),    50, 8],
+        [s(50, 8, 8, 6),    50, 8],
+        [s(50, 8, 8, 8),    50, 9],
+        [s(50, 9, 9, 9),    50, 10],
+        [s(50, 10, 10, 10), 55, 6],
+        [s(55, 6, 6, 6),    55, 7],
+    ];
+
+    for (let n = 1; n <= tabelle.length; n++) {
+        const sessions = tabelle.slice(0, n).map(([sets], i) => ({
+            date: '2026-08-' + String(1 + i * 2).padStart(2, '0') + 'T07:00:00+02:00',
+            day: 'oberkoerper', rotation_index: 0,
+            exercises: [{ exercise_id: 'test', sets: sets }],
+        }));
+        fs.writeFileSync(path.join(ordner, 'training', '2026-08.json'), JSON.stringify(sessions));
+
+        const ausgabe = execFileSync('php', ['-r', `
+            require "${WURZEL}/lib/coach.php";
+            $e = coach_empfehlung(['id' => 'test', 'rep_min' => 6, 'rep_max' => 10,
+                                   'weight_step' => 5, 'target_sets' => 3]);
+            echo $e['target_weight'], "\t", $e['target_reps'];
+        `], { env: Object.assign({}, process.env, { COACH_DATA: ordner }) }).toString();
+
+        const [gewicht, wdh] = ausgabe.split('\t').map(Number);
+        const [, sollGewicht, sollWdh] = tabelle[n - 1];
+        const satz = tabelle[n - 1][0].map((x) => x.reps).join(', ');
+
+        if (gewicht === sollGewicht && wdh === sollWdh) {
+            bestanden++;
+            console.log('  ok   Tabelle Zeile ' + n + ': nach ' + satz + ' kommt ' + sollGewicht + ' kg × ' + sollWdh);
+        } else {
+            gescheitert++;
+            console.log('  FEHL Tabelle Zeile ' + n + ': nach ' + satz + ' erwartet ' + sollGewicht + ' kg × '
+                + sollWdh + ', bekam ' + gewicht + ' kg × ' + wdh);
+        }
+    }
+
     // Die Texte dürfen nie über rep_max hinaus zielen
     fs.writeFileSync(path.join(ordner, 'training', '2026-08.json'), JSON.stringify([{
         date: '2026-08-01T07:00:00+02:00', day: 'oberkoerper', rotation_index: 0,
@@ -109,16 +148,13 @@ module.exports = function regel() {
     // Ohne den letzten Fall stünde dort für immer "Heute ohne Hilfe".
     const hilfeFaelle = [
         ['keine Einheit',                 [],                    'start',        'Hilfe antasten'],
-        ['zweimal sauber bei 30 kg Hilfe', [s(30, 12, 12, 12), s(30, 12, 12, 12)],
-                                                                 'steigern',     '27,5 kg Hilfe, 2,5 weniger'],
-        ['sauber bei genau einem Schritt', [s(2.5, 12, 12, 12), s(2.5, 12, 12, 12)],
-                                                                 'steigern',     'Heute ohne Hilfe'],
-        ['zweimal sauber ohne Hilfe',      [s(0, 12, 12, 12), s(0, 12, 12, 12)],
-                                                                 'steigern',     'Zusatzgewicht ist dran'],
-        ['einmal sauber ohne Hilfe',       [s(0, 12, 12, 12)],   'halten',       'dann kommt Zusatzgewicht'],
-        ['ohne Hilfe eingebrochen',        [s(0, 7, 6, 5)],      'zurueckholen', 'Mehr Hilfe'],
-        ['ohne Hilfe mitten im Bereich',   [s(0, 10, 9, 9)],     'halten',       'Ohne Hilfe, Ziel 11'],
-        ['ohne Hilfe, nur der beste oben', [s(0, 12, 12, 9)],    'halten',       'Ohne Hilfe, alle Sätze auf 12'],
+        ['alle oben bei 30 kg Hilfe',     [s(30, 12, 12, 12)],   'steigern',     '27,5 kg Hilfe, 2,5 weniger'],
+        ['oben bei genau einem Schritt',  [s(2.5, 12, 12, 12)],  'steigern',     'Heute ohne Hilfe'],
+        ['alle oben ohne Hilfe',          [s(0, 12, 12, 12)],    'steigern',     'Zusatzgewicht ist dran'],
+        ['ohne Hilfe eingebrochen',       [s(0, 7, 6, 5)],       'zurueckholen', 'Mehr Hilfe'],
+        ['ohne Hilfe mitten im Bereich',  [s(0, 9, 9, 9)],       'halten',       'Ohne Hilfe, Ziel 10'],
+        ['ohne Hilfe, ein Satz verfehlt', [s(0, 10, 10, 10), s(0, 11, 11, 9)],
+                                                                 'halten',       'Ohne Hilfe, Ziel 11'],
     ];
 
     for (const [titel, einheiten, erwartet, teil] of hilfeFaelle) {

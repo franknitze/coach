@@ -21,7 +21,7 @@ Sektionen sind in sich abgeschlossen und einzeln lesbar.
 3. [Sätze eintragen im Studio](#3-sätze-eintragen-im-studio)
 4. [Die Pause zwischen den Sätzen](#4-die-pause-zwischen-den-sätzen)
 5. [Gepaarte Übungen (Supersets)](#5-gepaarte-übungen-supersets)
-6. [Die Coach-Ansage: wann das Gewicht hochgeht](#6-die-coach-ansage-wann-das-gewicht-hochgeht)
+6. [Wann die Wiederholungen und wann das Gewicht steigen](#6-wann-die-wiederholungen-und-wann-das-gewicht-steigen)
 7. [Training ohne Empfang](#7-training-ohne-empfang)
 8. [Einheit beenden und Rückblick](#8-einheit-beenden-und-rückblick)
 9. [Der Kalender](#9-der-kalender)
@@ -318,51 +318,39 @@ währenddessen, die volle Pause bekommt er trotzdem.
 
 ---
 
-## 6. Die Coach-Ansage: wann das Gewicht hochgeht
+## 6. Wann die Wiederholungen und wann das Gewicht steigen
 
 ### Verhalten
 
-Auf der Übungskachel steht eine kurze Ansage, was heute fällig wäre. Zum
-Beispiel:
+Jede Übung hat eine Zahl von Sätzen und einen Bereich für die
+Wiederholungen. Im Studio steht beim ersten Satz schon das Ziel im Feld.
 
-- **„Erste Einheit: Gewicht antasten"** — für diese Übung gibt es noch keine
-  Historie.
-- **„80 kg halten, Ziel 11 Wiederholungen."** — der Normalfall.
-- **„80 kg halten, alle Sätze auf 12 bringen."** — dein bester Satz war schon
-  oben, die schwächeren fehlen noch.
-- **„Noch eine saubere Einheit mit 80 kg × 12, dann geht es hoch."** — eine
-  liegt vor, eine fehlt.
-- **„Heute 85 kg"** — in Orange, wenn zwei saubere Einheiten hintereinander
-  stehen. Klein darunter der Grund: „2 Einheiten sauber, 80 kg × 12".
-- **„80 kg halten, Wiederholungen zurück auf 8."** — die Wiederholungen sind
-  eingebrochen.
+- **Erstes Training einer Übung:** Ziel ist die Mindestzahl, das Gewicht
+  wählst du selbst.
+- **Alle Sätze haben das Ziel geschafft:** Beim nächsten Training gilt
+  dasselbe Gewicht mit einer Wiederholung mehr.
+- **Ein Satz hat das Ziel nicht geschafft:** Das Ziel bleibt, du machst es
+  beim nächsten Training noch einmal.
+- **Alle Sätze haben die Höchstzahl geschafft:** Das Gewicht steigt um eine
+  Stufe, und das Ziel fällt zurück auf die Mindestzahl.
+- **Selbst der beste Satz bleibt unter der Mindestzahl:** Das Gewicht bleibt,
+  das Ziel geht auf die Mindestzahl zurück.
 
-An einer Unterstützungsmaschine heißen dieselben Ansagen anders herum:
-„Heute 15 kg Hilfe, 5 weniger", „Mehr Hilfe, bis 8 Wiederholungen wieder
-gehen.", bei 0 kg „Zusatzgewicht ist dran".
+Beispiel, 3 Sätze, 6 bis 10 Wiederholungen, 50 kg: 6, 6, 6 → Ziel 7.
+7, 7, 7 → Ziel 8. 8, 8, 6 → Ziel bleibt 8. 8, 8, 8 → Ziel 9. 9, 9, 9 →
+Ziel 10. 10, 10, 10 → 55 kg, Ziel 6.
 
-Coach folgt der **doppelten Progression**: erst die Wiederholungen bis zur
-oberen Grenze hochklettern, dann das Gewicht um eine Stufe rauf und die
-Wiederholungen zurück Richtung untere Grenze.
+An einer Unterstützungsmaschine läuft es andersherum: Statt mehr Gewicht
+gibt es weniger Hilfe, bei 0 kg Hilfe ist Zusatzgewicht dran.
 
 ### Begründung
 
-**Zwei saubere Einheiten, nicht eine.** Eine einzelne gute Einheit reicht
-bewusst nicht, sonst schiebt ein guter Tag das Gewicht hoch, das am nächsten
-Termin wieder einbricht.
+**Geschafft heißt: alle Zielsätze durchgezogen.** Zwei Sätze auf der
+Obergrenze sind kein Beleg dafür, dass drei gehen. Ohne diese Bedingung
+schöbe ausgerechnet ein Abbruch das Gewicht hoch.
 
-**Sauber heißt: alle Zielsätze durchgezogen.** Zwei Sätze auf der Obergrenze
-sind kein Beleg dafür, dass vier gehen. Ohne diese Bedingung schöbe
-ausgerechnet ein Abbruch das Gewicht hoch.
-
-**„Eingebrochen" heißt: auch der beste Satz liegt unter der unteren Grenze.**
-Der letzte Satz fällt bei hartem Training regelmäßig ab, das ist Ermüdung und
-kein zu schweres Gewicht. Würde jeder einzelne schwache Satz die Warnung
-auslösen, stünde sie ständig da und niemand läse sie mehr.
-
-**Der Vorschlag befüllt die Eingabe nicht.** Vorbefüllt bleibt dein letzter
-Wert. Die App sagt, was fällig wäre; das Plus drückst du selbst. Sonst
-bestätigt man im Halbschlaf eine Steigerung, die man nicht geschafft hat.
+**Aufwärmsätze trägst du nicht ein.** Ein leichterer Satz zählt als „nicht
+alle Sätze auf dem Gewicht“, und das Ziel bliebe stehen.
 
 **Kein Sprachmodell dahinter.** Die Regel ist deterministisch und
 nachrechenbar: Bei gleichen Daten sagt sie immer dasselbe.
@@ -373,11 +361,6 @@ nachrechenbar: Bei gleichen Daten sagt sie immer dasselbe.
 Weil es zu dieser Übung noch keine Historie gibt. Der Standardplan liefert
 absichtlich **keine Startgewichte** — die wären geraten und würden die Regel
 mit falschen Zahlen füttern. Die erste Einheit ist die Eichung.
-
-**Ich habe alle Sätze mit der maximalen Wiederholungszahl geschafft, und
-trotzdem soll ich das Gewicht halten. Warum?**
-Weil es erst eine solche Einheit war. Coach will zwei hintereinander sehen.
-Die Ansage sagt in dem Fall „Noch eine saubere Einheit, dann geht es hoch".
 
 **Ich habe die Einheit abgebrochen, obwohl die gemachten Sätze gut waren —
 warum zählt sie nicht?**
@@ -975,7 +958,7 @@ captured-topics:
   - Sätze eintragen im Studio
   - Die Pause zwischen den Sätzen
   - Gepaarte Übungen (Supersets)
-  - Die Coach-Ansage: wann das Gewicht hochgeht
+  - Wann die Wiederholungen und wann das Gewicht steigen
   - Training ohne Empfang
   - Einheit beenden und Rückblick
   - Der Kalender

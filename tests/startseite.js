@@ -43,6 +43,12 @@ module.exports = (port) => testlauf('Startseite', port, async (t) => {
     ok(reihe.every((y, i) => i === 0 || y > reihe[i - 1]),
        'oben stehen Aufhänger, Überschrift, Unterzeile, Voraussetzung, Knöpfe, Anmeldung untereinander');
 
+    const zeilen = await page.$$eval('#beispiel tbody tr', (tr) => tr.map((r) => [...r.cells].map((c) => c.textContent.trim()).join(' | ')));
+    ok(zeilen.length === 7 && zeilen[2] === '3 | 50 kg | 8 | 8, 8, 6 | Übung nicht geschafft'
+       && zeilen[3] === '4 | 50 kg | 8 | 8, 8, 8 | Übung geschafft'
+       && zeilen[6] === '7 | 55 kg | 6 | 6, 6, 6 | Übung geschafft, neues Gewicht',
+       'die Beispieltabelle steht da, mit verfehlter Zeile und neuem Gewicht');
+
     await page.evaluate(() => document.querySelectorAll('img').forEach((i) => { i.loading = 'eager'; }));
     await page.waitForFunction(() => [...document.images].every((i) => i.complete), null, { timeout: 15000 });
     const kaputt = await page.evaluate(() => [...document.images].filter((i) => i.naturalWidth === 0).map((i) => i.getAttribute('src')));

@@ -74,6 +74,18 @@ h2.gross { margin: 0 0 14px; font-size: clamp(30px, 4vw, 48px); line-height: 1.0
 .punkte b { display: block; }
 .punkte span { color: var(--leise); font-size: 16px; }
 
+/* Beispieltabelle */
+.tabelle-rahmen { margin-top: 32px; overflow-x: auto; border: 1px solid var(--linie); border-radius: 20px; }
+.tabelle { width: 100%; border-collapse: collapse; font: 16px var(--mono); }
+.tabelle th { text-align: left; padding: 16px 20px; font: 600 13px var(--mono); color: var(--leise); background: var(--flaeche); border-bottom: 1px solid var(--linie); }
+.tabelle td { padding: 14px 20px; border-bottom: 1px solid var(--linie); white-space: nowrap; }
+.tabelle tr:last-child td { border-bottom: 0; }
+.tabelle td:last-child { font-family: var(--sans); white-space: normal; }
+.tabelle .ist-verfehlt td { background: rgb(255 138 115 / .08); }
+.tabelle .ist-verfehlt td:last-child { color: #ff8a73; font-weight: 600; }
+.tabelle .ist-hoch td { background: rgb(242 183 5 / .08); }
+.tabelle .ist-hoch td:nth-child(2), .tabelle .ist-hoch td:last-child { color: var(--tag); font-weight: 700; }
+
 /* Raster */
 .raster { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-top: 44px; }
 .feld { grid-column: span 2; padding: 26px; background: var(--flaeche); border: 1px solid var(--linie); border-radius: 20px; }
@@ -125,6 +137,17 @@ details p { margin: 0 0 22px; color: var(--leise); max-width: 62ch; }
 .fuss a:hover { color: var(--text); }
 
 @media (max-width: 520px) { .voraussetzung { font-size: 13px; padding: 8px 14px; } }
+@media (max-width: 600px) {
+  .tabelle, .tabelle thead, .tabelle tbody { display: block; }
+  .tabelle tr { display: grid; grid-template-columns: 2.6em 4.6em 2.6em 1fr; border-bottom: 1px solid var(--linie); }
+  .tabelle tbody tr:last-child { border-bottom: 0; }
+  .tabelle th, .tabelle td { padding: 10px 8px; border-bottom: 0; font-size: 14px; }
+  .tabelle th:first-child, .tabelle td:first-child { padding-left: 14px; }
+  .tabelle th:last-child { display: none; }
+  .tabelle td:last-child { grid-column: 1 / -1; padding: 0 14px 12px; }
+  .tabelle th:first-child { font-size: 0; }
+  .tabelle th:first-child::after { content: "Nr."; font-size: 13px; }
+}
 @media (max-width: 880px) {
   .paar, .paar--links { grid-template-columns: 1fr; gap: 36px; }
   .paar .handy, .paar--links .handy { width: 260px; margin-inline: auto; }

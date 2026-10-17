@@ -96,8 +96,29 @@
         <figure class="handy"><div class="handy__rahmen"><img src="assets/img/startseite/studio.jpg" alt="Regler mit dem Ziel für den nächsten Satz" loading="lazy"></div></figure>
         <div>
           <h2 class="gross">Du siehst nur noch, was du heute schaffen sollst.</h2>
-          <p class="text">Coach rechnet nach doppelter Progression: erst die Wiederholungen bis zur Obergrenze, nach zwei sauberen Einheiten mehr Gewicht. Das Ziel steht schon im Feld. Schaffst du es, tippst du nur auf „Satz bestätigen“.</p>
+          <p class="text">Coach rechnet nach doppelter Progression: erst die Wiederholungen bis zur Obergrenze, dann mehr Gewicht. Das Ziel steht schon im Feld. Schaffst du es, tippst du nur auf „Satz bestätigen“.</p>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="abschnitt" id="beispiel">
+    <div class="innen">
+      <h2 class="gross">Beispielübung</h2>
+      <p class="text">3 Sätze, Bereich 6 bis 10 Wiederholungen, Startgewicht 50 kg.</p>
+      <div class="tabelle-rahmen">
+        <table class="tabelle">
+          <thead><tr><th>Training</th><th>Gewicht</th><th>Ziel</th><th>Geschafft</th><th>Ergebnis</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>50 kg</td><td>6</td><td>6, 6, 6</td><td>Übung geschafft</td></tr>
+            <tr><td>2</td><td>50 kg</td><td>7</td><td>7, 7, 7</td><td>Übung geschafft</td></tr>
+            <tr class="ist-verfehlt"><td>3</td><td>50 kg</td><td>8</td><td>8, 8, 6</td><td>Übung nicht geschafft</td></tr>
+            <tr><td>4</td><td>50 kg</td><td>8</td><td>8, 8, 8</td><td>Übung geschafft</td></tr>
+            <tr><td>5</td><td>50 kg</td><td>9</td><td>9, 9, 9</td><td>Übung geschafft</td></tr>
+            <tr><td>6</td><td>50 kg</td><td>10</td><td>10, 10, 10</td><td>Übung geschafft</td></tr>
+            <tr class="ist-hoch"><td>7</td><td>55 kg</td><td>6</td><td>6, 6, 6</td><td>Übung geschafft, neues Gewicht</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </section>
