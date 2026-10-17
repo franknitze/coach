@@ -85,9 +85,9 @@
           <h2 class="gross">Gebaut für das Studio, nicht für das Sofa.</h2>
           <p class="text">Im Studio hast du schlechten Empfang, verschwitzte Finger und zwei Minuten Pause. Darauf ist jede Ansicht ausgelegt.</p>
           <ul class="punkte">
+            <li><svg class="sym" aria-hidden="true"><use href="#ph-hand-tap"/></svg><div><b>Einfache Bedienung mit dem Daumen</b><span>Große Plus- und Minusknöpfe. Eine Tastatur brauchst du nie.</span></div></li>
+            <li><svg class="sym" aria-hidden="true"><use href="#ph-timer"/></svg><div><b>2 Minuten Pause nach jedem Satz</b><span>Nach jedem Satz zählt die Pause herunter, damit deine Muskeln die nötige Pause bekommen.</span></div></li>
             <li><svg class="sym" aria-hidden="true"><use href="#ph-wifi-slash"/></svg><div><b>Läuft ohne Netz</b><span>Jeder Satz liegt zuerst auf dem Handy und geht zum Server, sobald wieder Empfang da ist.</span></div></li>
-            <li><svg class="sym" aria-hidden="true"><use href="#ph-hand-tap"/></svg><div><b>Bedienung mit dem Daumen</b><span>Große Plus- und Minusknöpfe. Eine Tastatur brauchst du nie.</span></div></li>
-            <li><svg class="sym" aria-hidden="true"><use href="#ph-timer"/></svg><div><b>Pause läuft von selbst</b><span>Nach jedem Satz zählt die Pause herunter und verschwindet bei null.</span></div></li>
           </ul>
         </div>
         <figure class="handy"><div class="handy__rahmen"><img src="assets/img/startseite/pause.jpg" alt="Pause nach einem bestätigten Satz" loading="lazy"></div></figure>
