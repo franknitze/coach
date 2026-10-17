@@ -155,3 +155,7 @@ Die Tests brauchen Playwright und laufen gegen das installierte Chrome.
 `COACH_BROWSER=webkit` läuft gegen WebKit, dieselbe Engine wie Safari. Jeder
 Lauf startet einen eigenen PHP-Server mit eigenem Datenverzeichnis über
 `COACH_DATA`; das echte `data/` wird nie angefasst.
+
+## Lizenz
+
+MIT, siehe [LICENSE](LICENSE).
