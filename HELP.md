@@ -49,6 +49,10 @@ gefragt.
 werden drei Dinge verlangt: das aktuelle Passwort, das neue und das neue noch
 einmal. Nach dem Wechsel bleibst du auf diesem Gerät angemeldet.
 
+Wer nicht angemeldet ist, sieht je nach Installation die schlichte
+Anmeldeseite oder eine Startseite, die Coach vorstellt und das
+Anmeldeformular enthält. Die Anmeldung funktioniert auf beiden gleich.
+
 Abmelden steht unten in der Fußzeile und braucht **zwei Tipper**: der erste
 fragt „Wirklich abmelden?", der zweite meldet ab. Ein Tipp irgendwo anders
 nimmt die Frage zurück.
@@ -88,6 +92,12 @@ sich ab, sobald ein Passwort gesetzt ist, sonst könnte sich jeder ein neues
 setzen, der die Adresse kennt. Es hilft nur die Kommandozeile auf dem Server:
 `php bin/init-config.php --force`. Deine Trainingsdaten bleiben dabei
 unangetastet.
+
+**Warum sehe ich bei meiner Installation keine Startseite mit Vorstellung
+der App, sondern nur das Anmeldeformular?**
+Die Startseite ist ein Schalter und steht ab Werk auf aus. Wer Coach selbst
+installiert, soll keine Werbeseite für einen fremden Anbieter bekommen. Für
+dich als Nutzer ändert sich nichts: Anmelden geht auf beiden Seiten gleich.
 
 **Warum verlangt Coach mindestens acht Zeichen?**
 Die App liegt offen im Netz, jeder mit der Adresse sieht das Anmeldeformular.
@@ -357,19 +367,41 @@ nachrechenbar: Bei gleichen Daten sagt sie immer dasselbe.
 
 ### Häufige Nutzerfragen
 
-**Warum sagt der Coach bei jeder Übung „Erste Einheit: Gewicht antasten"?**
+**Warum steht beim ersten Training einer Übung 0 kg im Feld?**
 Weil es zu dieser Übung noch keine Historie gibt. Der Standardplan liefert
 absichtlich **keine Startgewichte** — die wären geraten und würden die Regel
-mit falschen Zahlen füttern. Die erste Einheit ist die Eichung.
+mit falschen Zahlen füttern. Das erste Training ist die Eichung: Du stellst
+das Gewicht mit dem Plus selbst ein, die Wiederholungen stehen auf der
+Mindestzahl.
+
+**Ich habe 8, 8, 6 geschafft. Warum steht beim nächsten Training wieder 8
+im Feld?**
+Weil das Ziel 8 war und ein Satz es nicht geschafft hat. Eine Wiederholung
+mehr gibt es erst, wenn alle Sätze das Ziel erreicht haben. Bis dahin
+wiederholst du das Ziel.
+
+**Ich habe in allen Sätzen die Höchstzahl geschafft. Warum steigt das
+Gewicht sofort?**
+Weil die Übung damit geschafft ist. Es gibt keine Pflichtrunde, in der du
+die Höchstzahl ein zweites Mal machen musst. Das Gewicht steigt um die Stufe
+der Übung, und es geht wieder bei der Mindestzahl los.
+
+**Warum ist mein Ziel niedriger als das, was ich zuletzt in einigen Sätzen
+geschafft habe?**
+Weil das Ziel nur steigt, wenn alle Sätze es geschafft haben. Ein Satz mit
+weniger Wiederholungen oder mit leichterem Gewicht reicht, damit das Ziel
+stehen bleibt. Steigerst du das Gewicht innerhalb einer Übung von Satz zu
+Satz, zählt der leichtere Satz als „nicht alle auf dem Gewicht“.
+
+**Kann ich Sätze, Wiederholungen und Gewichtsstufe ändern?**
+Ja, für jede Übung einzeln unter Einstellungen → Übungen: die Anzahl der
+Sätze, den Bereich der Wiederholungen und die Gewichtsstufe. Ein Startgewicht
+gibt es nicht als Einstellung, das wählst du beim ersten Training.
 
 **Ich habe die Einheit abgebrochen, obwohl die gemachten Sätze gut waren —
 warum zählt sie nicht?**
 Weil die Zielsatzzahl nicht erreicht wurde. Zwei starke Sätze belegen nicht,
-dass vier gegangen wären.
-
-**Warum ist die Ansage orange?**
-Orange bedeutet in Coach genau eine Sache: eine Steigerung ist fällig. Die
-Farbe kommt sonst nirgends dekorativ vor, damit sie ihre Aussage behält.
+dass vier gegangen wären. Das Ziel bleibt beim nächsten Training dasselbe.
 
 **Bei Klimmzug und Dips zeigt Coach an, dass ich das Gewicht *senken* soll.
 Ist das ein Fehler?**
@@ -394,8 +426,8 @@ Im Studio ist der Empfang oft schlecht. Coach ist darauf ausgelegt:
 - Sobald die Verbindung zurück ist, gehen die Sätze automatisch raus.
 
 Nicht offline verfügbar: die Einstellungen (der Verweis darauf verschwindet
-ohne Netz), die Verlaufskurven, und die Coach-Ansage bleibt auf dem Stand des
-letzten Ladens.
+ohne Netz), die Verlaufskurven, und das Ziel im Feld bleibt auf dem Stand
+des letzten Ladens.
 
 ### Begründung
 
@@ -410,8 +442,8 @@ wissen, ob er noch voll ist.
 **Der Zeitpunkt reist mit.** Ein Satz, der Dienstagabend im Funkloch
 entstanden ist und Mittwoch übertragen wird, landet trotzdem unter Dienstag.
 
-**Die Coach-Ansage veraltet bewusst.** Die Progressionsregel lebt an genau
-einer Stelle, und die liegt auf dem Server. Eine zweite Fassung im Browser
+**Das Ziel im Feld veraltet bewusst.** Die Regel, die es ausrechnet, lebt an
+genau einer Stelle, und die liegt auf dem Server. Eine zweite Fassung im Browser
 könnte etwas anderes sagen.
 
 ### Häufige Nutzerfragen
@@ -859,7 +891,8 @@ Ja, in der Bildauswahl, ebenfalls in zwei Schritten.
 ### Verhalten
 
 Coach lässt sich als App auf den Homescreen legen und öffnet dann ohne
-Browserleiste, mit eigenem Icon. Ohne Netz startet sie trotzdem und zeigt den
+Browserleiste, mit eigenem Icon: die gelbe Plakette mit einem C, dasselbe
+Zeichen wie im Browser-Tab und links oben im Kopf der App. Ohne Netz startet sie trotzdem und zeigt den
 zuletzt geladenen Stand.
 
 Ändert sich etwas an der App, lädt sie beim nächsten Öffnen einmal neu.
@@ -896,6 +929,12 @@ Coach benutzt Apples Angaben für den Vollbildmodus, und die wertet nur Safari
 aus. Über Chrome installiert kann sich die Anzeige beim Drehen ins Querformat
 verstellen und bleibt es auch nach dem Zurückdrehen — aufziehen mit zwei
 Fingern stellt sie wieder her. In Safari tritt das nicht auf.
+
+**Auf meinem Homescreen ist noch das alte Symbol. Warum?**
+Entferne die App vom Homescreen und lege sie über Safari neu hinzu, dann
+erscheint das aktuelle Symbol. Mach das nur, wenn die Statusleiste keine
+wartenden Sätze mehr anzeigt: Was noch nicht übertragen ist, liegt nur auf
+dem Handy.
 
 **Warum lädt die Seite manchmal einmal von selbst neu?**
 Weil eine neue Fassung der App bereitsteht und übernommen wurde. Das passiert
@@ -950,8 +989,17 @@ Nein, die liegen bewusst offen, damit sie im Studio schnell laden. Sie zeigen
 nur Geräte, keine Personen — und mit der Bildbibliothek GD wird der
 Aufnahmeort beim Hochladen entfernt.
 
+**Darf ich Coach selbst benutzen und verändern?**
+Ja. Der Code liegt offen auf GitHub unter der MIT-Lizenz. Sie erlaubt jede
+Nutzung und Veränderung, verlangt wird nur, dass der Lizenzhinweis im Code
+stehen bleibt.
+
+**Was brauche ich, um Coach selbst zu betreiben?**
+Einen Webserver mit PHP 8.0 oder neuer und HTTPS. Eine Datenbank brauchst du
+nicht, die Daten liegen als Dateien auf deinem Webspace.
+
 <!-- save-help:checkpoint
-last-saved: 2026-08-22T14:20:00+02:00
+last-saved: 2026-10-18T09:00:00+02:00
 captured-topics:
   - Anmelden und Passwort
   - Was heute dran ist
@@ -970,20 +1018,11 @@ captured-topics:
   - Die App auf dem Homescreen
   - Wo deine Daten liegen
 boundary-hint: |
-  Init am 22.08.2026: erster vollständiger Lauf, ab hier wird inkrementell
-  aufgebaut. Ausgewertet wurde der Gesprächsverlauf vom 19.–22.08.2026
-  (erste und zweite echte Trainingseinheit, Pausen-Panel, Schrittweiten,
-  Rotationsschleife, Dashboard, Fortschritts-Index, Körpergewicht, Kalender,
-  Schriftskala, README, Standardplan beim Einrichten, rollierendes
-  30-Tage-Fenster, Ordner-Umbenennungen) samt der darin festgehaltenen
-  Begründungen aus CLAUDE.md und SPEC.md. Zuletzt verarbeitet: die
-  Aufteilung der Einstellungen in "Übungen" und "Allgemein" und das neue
-  Passwortformular (deployed und committet als c495835), danach die
-  Herausnahme des Schwerpunkt-Schalters aus der Oberfläche — er schrieb
-  einen Wert, den kein Codepfad las. In dieser Datei kommt das Thema
-  deshalb bewusst gar nicht vor; der offene Punkt dazu steht in STATE.md.
-  Danach: offene Einheiten. Wer eine Einheit pausierte, kam über die Liste
-  nur in die Leseansicht und sah die fehlenden Übungen nicht; bei zwei
-  unvollständigen Einheiten bediente der Knopf unten wortlos eine davon.
-  Sektionen 2 und 8 sind entsprechend erweitert.
+  Lauf am 18.10.2026 über die Session vom 17.10.2026: Startseite für
+  Besucher hinter dem Schalter startseite, MIT-Lizenz, neue
+  Progressionsregel nach Frank (Wiederholung mehr nur, wenn alle Sätze das
+  Ziel schaffen; einmal Höchstzahl in allen Sätzen heißt sofort mehr
+  Gewicht), Beispieltabelle auf der Startseite, Hinweis auf einstellbare
+  Sätze, Wiederholungen und Stufe, Logo und Favicon (gelbe Plakette mit
+  gezeichnetem C). Zuletzt verarbeitet: Logo und Favicon live.
 -->
