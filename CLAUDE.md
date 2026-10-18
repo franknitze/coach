@@ -311,6 +311,8 @@ sips -Z 1200 --setProperty format jpeg images/IMG_1644.JPG --out assets/img/exer
 
 ## Deployment (All-Inkl)
 
+**Nach jedem Commit sofort pushen und deployen** (Vorgabe von Frank, 17.10.2026), ohne Rückfrage; danach die Live-Seite prüfen.
+
 Eingerichtet und im Betrieb. **`bin/deploy.sh` ist der einzige Weg**, von Hand zu rsyncen ist der Fehler, der schon zweimal Daten gekostet hat. Das Skript prüft erst die Fotos und die PHP-Syntax, bricht bei jeder Datei über 400 KB ab, lädt dann hoch und prüft am Ende die Live-URLs. `bin/deploy.sh --trocken` zeigt vorher, was sich ändern würde.
 
 **Wohin deployed wird, steht nicht in diesem Repo.** Server-Alias, Zielpfad und Domain liegen in `bin/ziel.conf`, das per `.gitignore` ausgeschlossen ist; die Vorlage dazu ist `bin/ziel.conf.beispiel`. Fehlt die Datei, bricht der Deploy mit einer Anleitung ab. Grund: Hostname, Paketkennung und Pfad sind zwar keine Zugangsdaten, sagen einem Fremden aber genau, wo die Kiste steht. Zugangsdaten stehen auch dort nicht, der Schlüssel liegt in `~/.ssh/config`.
