@@ -53,6 +53,17 @@ function version(string $pfad): string
     $zeit = is_file($voll) ? filemtime($voll) : time();
     return $pfad . '?v=' . $zeit;
 }
+
+/*
+ * Texte und Adresse für Suchmaschinen und Vorschaubilder der Startseite.
+ * Das Vorschaubild (Open Graph) braucht eine vollständige Adresse; sie wird
+ * aus dem Aufruf gebaut, damit im öffentlichen Repo keine Domain fest steht.
+ */
+$titel        = 'Coach · Die Trainings-App, die auch offline weiterarbeitet';
+$beschreibung = 'Coach führt dich durch jede Einheit im Studio, speichert jeden Satz sofort und sagt dir, wann das Gewicht hochgeht.';
+$verzeichnis  = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/')), '/');
+$adresse      = (($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !== 'off' ? 'https' : 'http')
+              . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . $verzeichnis . '/';
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -62,14 +73,25 @@ function version(string $pfad): string
 <meta name="theme-color" content="#1b1e24">
 <?php if ($startseite): ?>
 <meta name="robots" content="index, follow">
-<meta name="description" content="Coach führt dich durch jede Einheit im Studio, speichert jeden Satz sofort und sagt dir, wann das Gewicht hochgeht.">
+<meta name="description" content="<?= h($beschreibung) ?>">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="de_DE">
+<meta property="og:site_name" content="Coach">
+<meta property="og:title" content="<?= h($titel) ?>">
+<meta property="og:description" content="<?= h($beschreibung) ?>">
+<meta property="og:url" content="<?= h($adresse) ?>">
+<meta property="og:image" content="<?= h($adresse . 'assets/img/og.png') ?>">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Coach: die Trainings-App, die auch offline weiterarbeitet, mit dem Studio-Bildschirm auf einem Handy">
+<meta name="twitter:card" content="summary_large_image">
 <?php else: ?>
 <meta name="robots" content="noindex, nofollow">
 <?php endif; ?>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Coach">
-<title><?= $startseite ? 'Coach · Die Trainings-App, die auch offline weiterarbeitet' : 'Coach' ?></title>
+<title><?= h($startseite ? $titel : 'Coach') ?></title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="assets/icons/logo.svg" type="image/svg+xml">
 <link rel="icon" href="assets/icons/icon-32.png" sizes="32x32" type="image/png">

@@ -23,6 +23,7 @@ module.exports = (port) => testlauf('Startseite', port, async (t) => {
     ok(await page.locator('#anmeldung').count() === 1, 'ohne Schalter die schlichte Anmeldung');
     ok(await page.locator('meta[name="robots"][content="noindex, nofollow"]').count() === 1,
        'ohne Schalter bleibt die Seite aus Suchmaschinen heraus');
+    ok(await page.locator('meta[property^="og:"]').count() === 0, 'ohne Schalter kein Vorschaubild');
 
     // Favicon und Logo, auf beiden Anmeldeseiten
     // Am Inhalt geprüft, nicht am Status: Der eingebaute PHP-Server liefert
@@ -48,6 +49,13 @@ module.exports = (port) => testlauf('Startseite', port, async (t) => {
        'und zeigt das Logo im Kopf');
     ok(await page.locator('meta[name="robots"][content="index, follow"]').count() === 1,
        'die Startseite darf in Suchmaschinen');
+    const og = (name) => page.locator(`meta[property="og:${name}"]`).getAttribute('content');
+    ok((await og('image')) === basis + '/assets/img/og.png', 'das Vorschaubild steht mit voller Adresse da');
+    ok((await anfang('/assets/img/og.png')).subarray(1, 4).toString() === 'PNG', 'og.png ist ein PNG');
+    ok((await og('title')) === 'Coach · Die Trainings-App, die auch offline weiterarbeitet'
+       && (await og('url')) === basis + '/', 'Titel und Adresse des Vorschaubilds stimmen');
+    ok(await page.locator('meta[name="twitter:card"][content="summary_large_image"]').count() === 1,
+       'das Vorschaubild wird groß angezeigt');
     ok(await page.locator('a[href="https://github.com/franknitze/coach"]').count() >= 2,
        'Verweise auf GitHub sind da');
     ok(await page.locator('a[href="https://tidycal.com/cato-services/erstgespraech"]').count() >= 2,
