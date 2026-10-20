@@ -168,7 +168,7 @@ Ausbaustufen (KI-Coach über eine Sprachmodell-API, Dashboard-Widgets) sind in �
 
 ## Startseite für Besucher
 
-Wer nicht angemeldet ist, sieht auf coach.nitze.de eine Vorstellung der App mit dem Anmeldeformular darin (`lib/startseite.php`, `assets/startseite.css`, Bilder in `assets/img/startseite/`). **Sie hängt an einem Schalter:** `"startseite": true` in `data/config.json`, Vorgabe `false`. Ohne den Schalter zeigt `index.php` die schlichte Anmeldung. Grund: Das Repo ist öffentlich, und wer Coach daraus installiert, soll keine Werbeseite für Cato Services bekommen. Der Schalter steht in `data/` und reist deshalb nie mit einem Deploy.
+Wer nicht angemeldet ist, sieht auf coach.nitze.io eine Vorstellung der App mit dem Anmeldeformular darin (`lib/startseite.php`, `assets/startseite.css`, Bilder in `assets/img/startseite/`). **Sie hängt an einem Schalter:** `"startseite": true` in `data/config.json`, Vorgabe `false`. Ohne den Schalter zeigt `index.php` die schlichte Anmeldung. Grund: Das Repo ist öffentlich, und wer Coach daraus installiert, soll keine Werbeseite für Cato Services bekommen. Der Schalter steht in `data/` und reist deshalb nie mit einem Deploy.
 
 Ist noch kein Passwort gesetzt, gewinnt die Einrichtung, auch mit Schalter.
 

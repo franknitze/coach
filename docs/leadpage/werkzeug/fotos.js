@@ -12,7 +12,7 @@ const nur = process.argv[2];
 
 async function neu(browser, angemeldet) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true, colorScheme: 'dark', locale: 'de-DE' });
-  if (angemeldet) await ctx.addCookies([{ name: 'coach', value: SID, domain: 'coach.nitze.de', path: '/', secure: true, httpOnly: true }]);
+  if (angemeldet) await ctx.addCookies([{ name: 'coach', value: SID, domain: 'coach.nitze.io', path: '/', secure: true, httpOnly: true }]);
   await ctx.route('**/api/**', route => {
     if (route.request().method() === 'GET') return route.continue();
     if (!angemeldet) return route.abort();
@@ -21,7 +21,7 @@ async function neu(browser, angemeldet) {
   });
   const page = await ctx.newPage();
   page.on('pageerror', e => console.log('  FEHLER', e.message));
-  await page.goto('https://coach.nitze.de/', { waitUntil: 'networkidle' });
+  await page.goto('https://coach.nitze.io/', { waitUntil: 'networkidle' });
   await page.waitForTimeout(600);
   return page;
 }

@@ -12,7 +12,7 @@ const ZIEL = path.join(__dirname, '..', 'screenshots');
 (async () => {
   const browser = await chromium.launch({ channel: 'chrome' });
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true, colorScheme: 'dark' });
-  await ctx.addCookies([{ name: 'coach', value: SID, domain: 'coach.nitze.de', path: '/', secure: true, httpOnly: true }]);
+  await ctx.addCookies([{ name: 'coach', value: SID, domain: 'coach.nitze.io', path: '/', secure: true, httpOnly: true }]);
   await ctx.route('**/api/**', route => {
     const m = route.request().method();
     if (m === 'GET') return route.continue();
@@ -21,7 +21,7 @@ const ZIEL = path.join(__dirname, '..', 'screenshots');
   });
   const page = await ctx.newPage();
   page.on('pageerror', e => console.log('FEHLER', e.message));
-  await page.goto('https://coach.nitze.de/', { waitUntil: 'networkidle' });
+  await page.goto('https://coach.nitze.io/', { waitUntil: 'networkidle' });
   await page.waitForTimeout(800);
   await page.screenshot({ path: path.join(ZIEL, 'roh-start.png'), fullPage: true });
   const knoepfe = await page.$$eval('button, a, [data-einheit], [data-tag]', els => els.map(e => (e.tagName + ' ' + [...e.attributes].filter(a => a.name.startsWith('data-')).map(a => a.name + '=' + a.value).join(' ') + ' | ' + e.innerText.replace(/\s+/g, ' ').slice(0, 60))));
