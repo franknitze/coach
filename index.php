@@ -171,6 +171,7 @@ $adresse      = (($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !
         <nav class="menue" id="menue" hidden>
             <button class="menue__eintrag" type="button" data-menue="kalender">Kalender</button>
             <button class="menue__eintrag" type="button" data-menue="plan">Einstellungen</button>
+            <button class="menue__eintrag" type="button" data-menue="ausgeblendet" hidden>Ausgeblendete Übungen</button>
             <hr class="menue__trenner">
             <button class="menue__eintrag menue__eintrag--leise" type="button" id="abmelden">Abmelden</button>
         </nav>
@@ -198,6 +199,17 @@ $adresse      = (($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !
              das Bild des Geräts. Beides gehört zusammen. -->
         <div class="lupe__anleitung" id="lupe-anleitung"></div>
     </div>
+
+    <!-- Rückfrage beim Entfernen einer Übung: ausblenden oder vollständig
+         löschen, beim Löschen ein zweites Mal "wirklich?". Den Inhalt baut
+         assets/app.js je Stufe neu. -->
+    <div class="blatt" id="frage" hidden>
+        <div class="blatt__innen frage" role="dialog" aria-modal="true" id="frage-inhalt"></div>
+    </div>
+
+    <!-- Rückmeldung nach Ausblenden, Aktivieren, Löschen. Oben mittig, über
+         der Seite, verschwindet von selbst. -->
+    <div class="rueckmeldung" id="rueckmeldung" role="status" hidden></div>
 
     <!-- Verlauf einer Übung als Tabelle. Außerhalb von #app aus demselben
          Grund wie die Lupe. Kopf und Schließen-Knopf stehen fest, nur die

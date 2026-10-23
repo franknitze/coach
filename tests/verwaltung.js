@@ -36,7 +36,8 @@ module.exports = (port) => testlauf('Verwaltung', port, async (t) => {
     ok(await page.locator('#abmelden').isHidden(), 'Abmelden ist ohne Menü nicht zu sehen');
     await page.click('#menue-knopf');
     ok(await page.locator('#menue').isVisible(), 'der Knopf oben rechts öffnet das Menü');
-    const reihe = await page.$$eval('#menue > *', (k) => k.map((e) => e.tagName === 'HR' ? '---' : e.textContent.trim()));
+    const reihe = await page.$$eval('#menue > *', (k) => k.filter((e) => e.tagName === 'HR' || e.dataset.menue !== 'ausgeblendet')
+        .map((e) => e.tagName === 'HR' ? '---' : e.textContent.trim()));
     ok(reihe.join(' | ') === 'Kalender | Einstellungen | --- | Abmelden',
        'Reihenfolge: Kalender, Einstellungen, Trennstrich, Abmelden: ' + reihe.join(' | '));
     ok(await page.locator('#menue [data-menue="kalender"]').isHidden()
@@ -120,13 +121,13 @@ module.exports = (port) => testlauf('Verwaltung', port, async (t) => {
     await page.locator('[data-abbrechen]').click();
     await page.waitForSelector('.zeile');
 
-    // Löschen in zwei Schritten
+    // Vollständig löschen über "Entfernen": zwei Rückfragen
+    // (ausführlich in tests/entfernen.js)
     await page.locator('.zeile', { hasText: 'Wadenheben' }).click();
     await page.waitForSelector('.editor');
-    ok(await page.locator('[data-frage]').isVisible(), 'erster Schritt: "Übung löschen"');
-    await page.locator('[data-frage]').click();
-    ok(await page.locator('[data-loesche]').isVisible(), 'zweiter Schritt: "Wirklich löschen"');
-    await page.locator('[data-loesche]').click();
+    await page.click('[data-entfernen]');
+    await page.click('[data-frage-loeschen]');
+    await page.click('[data-frage-endgueltig]');
     await page.waitForFunction((n) => document.querySelectorAll('.zeile').length === n, vorher);
     ok(true, 'gelöscht, Liste wieder bei ' + vorher);
 

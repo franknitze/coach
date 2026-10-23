@@ -73,7 +73,7 @@ foreach ((array) ($heutige['exercises'] ?? []) as $eintrag) {
 $heute = [];
 
 foreach ($alle as $uebung) {
-    if (($uebung['day'] ?? '') !== $tag) {
+    if (($uebung['day'] ?? '') !== $tag || !uebung_sichtbar($uebung)) {
         continue;
     }
     $id = $uebung['id'];

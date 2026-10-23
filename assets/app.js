@@ -270,6 +270,8 @@
         const plan = menue.querySelector('[data-menue="plan"]');
         kalender.hidden = !(zustand.einheiten && (zustand.einheiten.sessions || []).length > 0);
         plan.hidden = !zustand.plan;
+        menue.querySelector('[data-menue="ausgeblendet"]').hidden = !(zustand.plan
+            && Object.values(zustand.uebungen || {}).some(function (u) { return u.hidden; }));
         menue.hidden = false;
         menueKnopf.setAttribute('aria-expanded', 'true');
     }
@@ -333,7 +335,6 @@
         planBereich: 'uebungen',  // gewählter Bereich der Einstellungen
         passwortText: '',      // Rückmeldung des Passwortformulars
         passwortOk: false,     // true = Bestätigung, false = Fehler
-        loeschfrage: null,
         meldung: '',
     };
 
@@ -1943,7 +1944,7 @@
 
         Object.keys(tage).forEach(function (tag) {
             const liste = Object.values(zustand.uebungen)
-                .filter(function (u) { return u.day === tag; })
+                .filter(function (u) { return u.day === tag && !u.hidden; })
                 .sort(function (a, b) {
                     return (a.order - b.order) || a.name.localeCompare(b.name, 'de');
                 });
@@ -1967,6 +1968,190 @@
         });
 
         return html;
+    }
+
+    /* ---------- Ausgeblendete Übungen ----------
+     *
+     * Über das Menü erreichbar, sobald es mindestens eine gibt (Frank,
+     * 23.10.2026). Jede lässt sich wieder aktivieren, sie kommt dann an ihre
+     * alte Stelle im alten Trainingstag zurück, oder vollständig löschen.
+     */
+    function zeichneAusgeblendet() {
+        const tage = (zustand.plan && zustand.plan.days) || {};
+        const liste = Object.values(zustand.uebungen || {})
+            .filter(function (u) { return u.hidden; })
+            .sort(function (a, b) { return a.name.localeCompare(b.name, 'de'); });
+
+        let html = '<div class="titelzeile">'
+            + '<h1 class="titel">Ausgeblendet</h1>'
+            + '<button class="kopfknopf" data-gehe="start">Fertig</button>'
+            + '</div>'
+            + '<p class="leer__text">Ausgeblendete Übungen stehen nicht mehr in Plan und Studio. '
+            + 'Ihre Sätze zählen weiter im Rückblick und in der Fortschrittskurve.</p>';
+
+        if (liste.length === 0) {
+            return html + '<p class="tag__leer">Keine ausgeblendeten Übungen.</p>';
+        }
+
+        liste.forEach(function (u) {
+            html += '<section class="ausgeblendet" data-uebung="' + esc(u.id) + '">'
+                + '<p class="ausgeblendet__name">' + esc(u.name) + '</p>'
+                + '<p class="ausgeblendet__tag">' + esc((tage[u.day] && tage[u.day].label) || u.day) + '</p>'
+                + '<div class="ausgeblendet__knoepfe">'
+                + '<button class="knopf knopf--leise" type="button" data-aktivieren="' + esc(u.id)
+                + '">Wieder aktivieren</button>'
+                + '<button class="loeschen" type="button" data-endgueltig="' + esc(u.id)
+                + '">Vollständig löschen</button>'
+                + '</div></section>';
+        });
+        return html;
+    }
+
+    /*
+     * Der Dialog zum Entfernen. Zwei Stufen: erst ausblenden oder löschen,
+     * beim Löschen noch einmal "wirklich?" mit der Zahl der betroffenen
+     * Einheiten. Er liegt außerhalb von #app und baut seinen Inhalt selbst.
+     */
+    const frage = document.getElementById('frage');
+
+    function frageZeigen(html) {
+        document.getElementById('frage-inhalt').innerHTML = html;
+        frage.hidden = false;
+    }
+
+    function frageSchliessen() {
+        if (frage && !frage.hidden) {
+            frage.hidden = true;
+            document.getElementById('frage-inhalt').innerHTML = '';
+        }
+    }
+
+    function frageEntfernen(id) {
+        const u = zustand.uebungen[id];
+        if (!u) {
+            return;
+        }
+        frageZeigen('<h2 class="frage__titel">' + esc(u.name) + ' entfernen</h2>'
+            + '<p class="frage__text"><strong>Ausblenden</strong> nimmt die Übung aus Plan und Studio. '
+            + 'Alle Sätze bleiben erhalten und zählen weiter im Rückblick und in der Fortschrittskurve. '
+            + 'Über das Menü lässt sie sich wieder aktivieren.</p>'
+            + '<p class="frage__text"><strong>Vollständig löschen</strong> entfernt die Übung und alle ihre Sätze.</p>'
+            + '<button class="knopf" type="button" data-frage-ausblenden="' + esc(id) + '">Ausblenden</button>'
+            + '<button class="loeschen loeschen--scharf" type="button" data-frage-loeschen="' + esc(id)
+            + '">Vollständig löschen</button>'
+            + '<button class="knopf knopf--leise" type="button" data-frage-zu>Abbrechen</button>');
+    }
+
+    async function frageEndgueltig(id) {
+        const u = zustand.uebungen[id];
+        if (!u) {
+            return;
+        }
+        let anzahl = null;
+        try {
+            anzahl = (await api('api/exercises.php?usage=' + encodeURIComponent(id))).sessions;
+        } catch (err) {
+            frageZeigen('<h2 class="frage__titel">Gerade keine Verbindung</h2>'
+                + '<p class="frage__text">' + esc(err.message) + ' Löschen geht nur mit Netz.</p>'
+                + '<button class="knopf knopf--leise" type="button" data-frage-zu>Schließen</button>');
+            return;
+        }
+        frageZeigen('<h2 class="frage__titel">Wirklich alle Daten löschen?</h2>'
+            + '<p class="frage__text">' + esc(u.name) + ' und ' + (anzahl === 0
+                ? 'ihre Einstellungen werden gelöscht. Sätze gibt es keine.'
+                : 'ihre Sätze aus ' + anzahl + (anzahl === 1 ? ' Einheit' : ' Einheiten')
+                  + ' werden gelöscht. Einheiten, in denen sonst nichts stand, fallen mit weg.')
+            + '</p><p class="frage__text">In der App lässt sich das nicht rückgängig machen. '
+            + 'Auf dem Server bleibt eine Sicherungskopie in data/sicherung/.</p>'
+            + '<button class="loeschen loeschen--scharf" type="button" data-frage-endgueltig="' + esc(id)
+            + '">Endgültig löschen</button>'
+            + '<button class="knopf knopf--leise" type="button" data-frage-zu>Abbrechen</button>');
+    }
+
+    async function uebungAusblenden(id, ausblenden) {
+        const name = (zustand.uebungen[id] || {}).name || id;
+        try {
+            const antwort = await api('api/exercises.php?id=' + encodeURIComponent(id)
+                + '&hidden=' + (ausblenden ? '1' : '0'), { method: 'POST' });
+            zustand.uebungen = antwort.exercises || {};
+        } catch (err) {
+            hinweis(err.message, true);
+            return false;
+        }
+        hinweis(name + (ausblenden ? ' ist ausgeblendet.' : ' ist wieder im Plan.'));
+        return true;
+    }
+
+    async function uebungAktivieren(id) {
+        if (await uebungAusblenden(id, false)) {
+            zeichnen();
+        }
+    }
+
+    async function uebungLoeschen(id) {
+        const name = (zustand.uebungen[id] || {}).name || id;
+        try {
+            const antwort = await api('api/exercises.php?id=' + encodeURIComponent(id), { method: 'DELETE' });
+            zustand.uebungen = antwort.exercises || {};
+        } catch (err) {
+            hinweis(err.message, true);
+            return;
+        }
+        hinweis(name + ' ist gelöscht.');
+        if (zustand.ansicht === 'uebung') {
+            zustand.ansicht = 'plan';
+            zustand.uebungId = null;
+        }
+        einheitenHolen();   // Rückblick und Kurve rechnen sich ohne die Sätze anders
+        zeichnen();
+    }
+
+    if (frage) {
+        frage.addEventListener('click', async function (e) {
+            const k = e.target.closest('button');
+            if (e.target === frage || (k && k.hasAttribute('data-frage-zu'))) {
+                return frageSchliessen();
+            }
+            if (!k) {
+                return;
+            }
+            const d = k.dataset;
+            if (d.frageAusblenden) {
+                frageSchliessen();
+                if (await uebungAusblenden(d.frageAusblenden, true)) {
+                    zustand.ansicht = 'plan';
+                    zustand.uebungId = null;
+                    zeichnen();
+                }
+            } else if (d.frageLoeschen) {
+                await frageEndgueltig(d.frageLoeschen);
+            } else if (d.frageEndgueltig) {
+                frageSchliessen();
+                await uebungLoeschen(d.frageEndgueltig);
+            }
+        });
+        addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                frageSchliessen();
+            }
+        });
+    }
+
+    /*
+     * Rückmeldung nach Ausblenden, Aktivieren, Löschen: oben mittig, legt
+     * sich über die Seite und geht von selbst. Ein Fehler bleibt länger.
+     */
+    let hinweisUhr = null;
+    function hinweis(text, fehler) {
+        const box = document.getElementById('rueckmeldung');
+        if (!box) {
+            return;
+        }
+        box.textContent = text;
+        box.classList.toggle('ist-fehler', !!fehler);
+        box.hidden = false;
+        clearTimeout(hinweisUhr);
+        hinweisUhr = setTimeout(function () { box.hidden = true; }, fehler ? 8000 : 4000);
     }
 
     function zeichneZeile(u) {
@@ -2089,12 +2274,17 @@
             + '<button class="knopf knopf--leise" type="button" data-abbrechen>Abbrechen</button>'
             + '</div>';
 
+        // "Entfernen" fragt, ob ausgeblendet oder vollständig gelöscht wird
+        // (Frank, 23.10.2026). Eine schon ausgeblendete Übung, die man aus
+        // dem Rückblick heraus öffnet, bekommt gleich ihre beiden Wege.
         if (!neu) {
-            html += zustand.loeschfrage === u.id
-                ? '<button class="loeschen loeschen--scharf" type="button" data-loesche="'
-                  + esc(u.id) + '">Wirklich löschen</button>'
-                : '<button class="loeschen" type="button" data-frage="' + esc(u.id)
-                  + '">Übung löschen</button>';
+            html += u.hidden
+                ? '<button class="loeschen" type="button" data-aktivieren="' + esc(u.id)
+                  + '">Wieder aktivieren</button>'
+                  + '<button class="loeschen" type="button" data-endgueltig="' + esc(u.id)
+                  + '">Vollständig löschen</button>'
+                : '<button class="loeschen" type="button" data-entfernen="' + esc(u.id)
+                  + '">Entfernen</button>';
         }
 
         return html + '</form>';
@@ -2324,6 +2514,8 @@
             app.innerHTML = zeichneUebung();
         } else if (zustand.ansicht === 'kalender') {
             app.innerHTML = zeichneKalender();
+        } else if (zustand.ansicht === 'ausgeblendet') {
+            app.innerHTML = zeichneAusgeblendet();
         } else if (zustand.ansicht === 'einheit') {
             app.innerHTML = zeichneEinheit();
         } else if (zustand.ansicht === 'studio') {
@@ -2520,9 +2712,9 @@
         const ziel = e.target.closest('[data-gehe], [data-tag], [data-monat], [data-einheit], [data-oeffne], '
             + '[data-foto], [data-bild], [data-bildweg], '
             + '[data-bestaetige], [data-korrigiere], [data-extra], [data-bearbeite], '
-            + '[data-neu], [data-abbrechen], [data-frage], [data-loesche], [data-prio], '
+            + '[data-neu], [data-abbrechen], [data-prio], '
             + '[data-gewichtweg], [data-bereich], [data-weiter], '
-            + '[data-anleitung], [data-verlauf], [data-seite]');
+            + '[data-anleitung], [data-verlauf], [data-seite], [data-entfernen], [data-aktivieren], [data-endgueltig]');
         if (!ziel) {
             return;
         }
@@ -2653,6 +2845,18 @@
 
         if (d.seite) {
             return rueckblickBlaettern(d.seite);
+        }
+
+        if (d.entfernen) {
+            return frageEntfernen(d.entfernen);
+        }
+
+        if (d.endgueltig) {
+            return frageEndgueltig(d.endgueltig);
+        }
+
+        if (d.aktivieren) {
+            return uebungAktivieren(d.aktivieren);
         }
 
         if (d.oeffne) {
@@ -2789,7 +2993,6 @@
             zustand.uebungHer = zustand.ansicht === 'einheit' ? 'einheit' : 'plan';
             zustand.ansicht = 'uebung';
             zustand.uebungId = d.bearbeite;
-            zustand.loeschfrage = null;
             zustand.meldung = '';
             // Erst leeren, dann zeichnen. Sonst zeigt der erste Bildaufbau
             // den Verlauf der zuvor geöffneten Übung.
@@ -2811,30 +3014,7 @@
 
         if (ziel.hasAttribute('data-abbrechen')) {
             zustand.ansicht = 'plan';
-            zustand.loeschfrage = null;
             zustand.meldung = '';
-            return zeichnen();
-        }
-
-        // Löschen in zwei Schritten statt über einen Browser-Dialog.
-        if (d.frage) {
-            zustand.loeschfrage = d.frage;
-            return zeichnen();
-        }
-
-        if (d.loesche) {
-            try {
-                const antwort = await api(
-                    'api/exercises.php?id=' + encodeURIComponent(d.loesche),
-                    { method: 'DELETE' }
-                );
-                zustand.uebungen = antwort.exercises || {};
-                zustand.ansicht = 'plan';
-                zustand.uebungId = null;
-                zustand.loeschfrage = null;
-            } catch (err) {
-                zustand.meldung = err.message;
-            }
             return zeichnen();
         }
 

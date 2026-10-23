@@ -28,6 +28,7 @@ const laeufe = {
     verlaufstabelle: { port: 8785, modul: './verlaufstabelle' },
     blaettern:  { port: 8779, modul: './blaettern' },
     ohnepaare:  { port: 8787, modul: './ohnepaare' },
+    entfernen:  { port: 8777, modul: './entfernen' },
 };
 
 (async function () {

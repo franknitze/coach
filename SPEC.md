@@ -150,6 +150,7 @@
 - `station` ist die aufgeklebte Gerätenummer aus dem Studio, optional. Sie ist der Grund, warum man das richtige Gerät wiederfindet, und trägt die gelbe Plakette in der Oberfläche.
 - `assisted` kennzeichnet eine Unterstützungsmaschine: Dort hebt ein Gegengewicht einen Teil des Körpergewichts an, **weniger Gewicht heißt schwerer**. Ohne dieses Feld schickte die Progressionsregel dort in die falsche Richtung.
 - `execution` und `search` tragen die Ausführung in einem Satz und einen englischen Suchbegriff für Video und Bildersuche.
+- `hidden` (seit 23.10.2026): ausgeblendet. Die Übung steht nicht mehr in Plan und Studio, ihre Sätze zählen weiter in Rückblick und Fortschritt. Vollständiges Löschen entfernt dagegen auch alle Sätze, nach Rückfrage und mit Sicherungskopie in `data/sicherung/`.
 
 ### `plan.json` — Struktur des Trainingsplans
 ```json

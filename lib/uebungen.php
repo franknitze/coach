@@ -103,6 +103,11 @@ function uebung_pruefen(array $roh, array $plan): array
          * nachschlagen, welche Übung gemeint ist, und brauchbare Videos
          * findet man fast nur unter dem englischen Namen.
          */
+        // Ausgeblendet (Frank, 23.10.2026): nicht mehr in Plan und Studio,
+        // aber mit allen Angaben erhalten, damit Rückblick und
+        // Fortschrittskurve weiter stimmen. Wird über "Entfernen" gesetzt,
+        // nicht über das Formular.
+        'hidden'       => !empty($roh['hidden']),
         'execution'    => trim((string) ($roh['execution'] ?? '')),
         'search'       => trim((string) ($roh['search'] ?? '')),
         /*
@@ -121,6 +126,12 @@ function uebung_pruefen(array $roh, array $plan): array
 }
 
 /** Übungen eines Tages, nach order und dann nach Name sortiert. */
+/** Steht die Übung in Plan und Studio, also nicht ausgeblendet? */
+function uebung_sichtbar(array $uebung): bool
+{
+    return empty($uebung['hidden']);
+}
+
 function uebungen_sortiert(array $uebungen): array
 {
     usort($uebungen, function (array $a, array $b): int {

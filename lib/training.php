@@ -376,7 +376,9 @@ function training_soll(string $tag, array $uebungen): array
     $soll = [];
 
     foreach ($uebungen as $uebung) {
-        if (($uebung['day'] ?? '') === $tag) {
+        // Eine ausgeblendete Übung gehört nicht mehr zum Tag. Sonst stünde
+        // jede künftige Einheit als unvollständig da.
+        if (($uebung['day'] ?? '') === $tag && empty($uebung['hidden'])) {
             $soll[(string) $uebung['id']] = (int) ($uebung['target_sets'] ?? 0);
         }
     }
@@ -460,4 +462,90 @@ function training_offene_heute(array $uebungen): array
     // dann stünde die ÄLTESTE offene Einheit vorn, und die Startseite böte
     // nach dem Neuladen die an, die man zuerst liegengelassen hat.
     return $offene;
+}
+
+/**
+ * In wie vielen Einheiten eine Übung Sätze hat. Für die Rückfrage vor dem
+ * vollständigen Löschen: "Sätze aus 9 Einheiten".
+ */
+function training_einheiten_mit(string $uebungId): int
+{
+    $anzahl = 0;
+    training_rueckwaerts(function (array $session) use ($uebungId, &$anzahl): bool {
+        foreach ((array) ($session['exercises'] ?? []) as $eintrag) {
+            if (($eintrag['exercise_id'] ?? '') === $uebungId && !empty($eintrag['sets'])) {
+                $anzahl++;
+                break;
+            }
+        }
+        return false;
+    });
+    return $anzahl;
+}
+
+/**
+ * Nimmt alle Sätze einer Übung aus allen Monatsdateien (Frank, 23.10.2026:
+ * "Wenn löschen, dann richtig löschen").
+ *
+ * Eine Einheit, in der danach keine Übung mehr steht, fällt mit weg. Vorher
+ * wandert jede betroffene Monatsdatei als Kopie mit Datum nach
+ * data/sicherung/, denn ein Fehlgriff wäre sonst endgültig: Eine Sicherung
+ * von data/ gibt es noch nicht.
+ *
+ * @return int wie viele Einheiten betroffen waren
+ */
+function training_uebung_loeschen(string $uebungId, string $stempel): int
+{
+    $betroffen = 0;
+
+    foreach (training_monate() as $monat) {
+        $datei = TRAINING_DIR . '/' . $monat . '.json';
+        $hatSie = false;
+        foreach (training_monat($monat) as $session) {
+            foreach ((array) ($session['exercises'] ?? []) as $eintrag) {
+                if (($eintrag['exercise_id'] ?? '') === $uebungId) {
+                    $hatSie = true;
+                }
+            }
+        }
+        if (!$hatSie) {
+            continue;
+        }
+
+        daten_sichern($datei, $stempel);
+
+        json_update($datei, function (array $sessions) use ($uebungId, &$betroffen): array {
+            $uebrig = [];
+            foreach ($sessions as $session) {
+                $vorher = (array) ($session['exercises'] ?? []);
+                $nachher = array_values(array_filter($vorher, static fn (array $e): bool =>
+                    ($e['exercise_id'] ?? '') !== $uebungId));
+                if (count($nachher) !== count($vorher)) {
+                    $betroffen++;
+                }
+                if ($nachher === []) {
+                    continue;
+                }
+                $session['exercises'] = $nachher;
+                $uebrig[] = $session;
+            }
+            return $uebrig;
+        });
+    }
+
+    return $betroffen;
+}
+
+/**
+ * Legt eine Kopie einer Datei aus data/ in data/sicherung/ ab, mit Datum
+ * und Anlass im Namen, etwa "2026-10-20261023-153325-vor-loeschen.json".
+ */
+function daten_sichern(string $datei, string $stempel): void
+{
+    if (!is_file($datei)) {
+        return;
+    }
+    $ziel = DATA_DIR . '/sicherung';
+    ensure_dir($ziel);
+    copy($datei, $ziel . '/' . basename($datei, '.json') . '-' . $stempel . '.json');
 }
