@@ -1986,23 +1986,29 @@
             + '<h1 class="titel">Ausgeblendet</h1>'
             + '<button class="kopfknopf" data-gehe="start">Fertig</button>'
             + '</div>'
-            + '<p class="leer__text">Ausgeblendete Übungen stehen nicht mehr in Plan und Studio. '
+            + '<p class="leer__text ausgeblendet__hinweis">Ausgeblendete Übungen stehen nicht mehr in Plan und Studio. '
             + 'Ihre Sätze zählen weiter im Rückblick und in der Fortschrittskurve.</p>';
 
         if (liste.length === 0) {
             return html + '<p class="tag__leer">Keine ausgeblendeten Übungen.</p>';
         }
 
-        liste.forEach(function (u) {
-            html += '<section class="ausgeblendet" data-uebung="' + esc(u.id) + '">'
-                + '<p class="ausgeblendet__name">' + esc(u.name) + '</p>'
-                + '<p class="ausgeblendet__tag">' + esc((tage[u.day] && tage[u.day].label) || u.day) + '</p>'
-                + '<div class="ausgeblendet__knoepfe">'
-                + '<button class="knopf knopf--leise" type="button" data-aktivieren="' + esc(u.id)
-                + '">Wieder aktivieren</button>'
-                + '<button class="loeschen" type="button" data-endgueltig="' + esc(u.id)
-                + '">Vollständig löschen</button>'
-                + '</div></section>';
+        // Dieselben Zeilen wie in den Einstellungen, nach Trainingstag
+        // gruppiert (Frank, 23.10.2026): am Foto und an der Gerätenummer
+        // erkennt man die Übung, und ein Tipp öffnet sie. Aktivieren und
+        // Löschen stehen dort im Formular.
+        Object.keys(tage).forEach(function (tag) {
+            const imTag = liste.filter(function (u) { return u.day === tag; });
+            if (imTag.length === 0) {
+                return;
+            }
+            html += '<section class="tag">'
+                + '<div class="tag__kopf">'
+                + '<span class="tag__name">' + esc(tage[tag].label) + '</span>'
+                + '<span class="tag__zahl">' + imTag.length + '</span>'
+                + '</div>';
+            imTag.forEach(function (u) { html += zeichneZeile(u); });
+            html += '</section>';
         });
         return html;
     }
@@ -2084,8 +2090,21 @@
 
     async function uebungAktivieren(id) {
         if (await uebungAusblenden(id, false)) {
+            if (zustand.ansicht === 'uebung') {
+                zustand.ansicht = ausDemFormular();
+                zustand.uebungId = null;
+            }
             zeichnen();
         }
+    }
+
+    /**
+     * Wohin es aus dem Übungsformular zurückgeht: in die Übersicht der
+     * ausgeblendeten Übungen, wenn man von dort kam, sonst in die
+     * Einstellungen wie bisher.
+     */
+    function ausDemFormular() {
+        return zustand.uebungHer === 'ausgeblendet' ? 'ausgeblendet' : 'plan';
     }
 
     async function uebungLoeschen(id) {
@@ -2099,7 +2118,7 @@
         }
         hinweis(name + ' ist gelöscht.');
         if (zustand.ansicht === 'uebung') {
-            zustand.ansicht = 'plan';
+            zustand.ansicht = ausDemFormular();
             zustand.uebungId = null;
         }
         einheitenHolen();   // Rückblick und Kurve rechnen sich ohne die Sätze anders
@@ -2990,7 +3009,8 @@
         /* --- Einstellungen --- */
 
         if (d.bearbeite) {
-            zustand.uebungHer = zustand.ansicht === 'einheit' ? 'einheit' : 'plan';
+            zustand.uebungHer = ['einheit', 'ausgeblendet'].indexOf(zustand.ansicht) >= 0
+                ? zustand.ansicht : 'plan';
             zustand.ansicht = 'uebung';
             zustand.uebungId = d.bearbeite;
             zustand.meldung = '';
@@ -3013,7 +3033,7 @@
         }
 
         if (ziel.hasAttribute('data-abbrechen')) {
-            zustand.ansicht = 'plan';
+            zustand.ansicht = ausDemFormular();
             zustand.meldung = '';
             return zeichnen();
         }
@@ -3183,7 +3203,7 @@
         try {
             const antwort = await api('api/exercises.php', { daten: daten });
             zustand.uebungen = antwort.exercises || {};
-            zustand.ansicht = 'plan';
+            zustand.ansicht = ausDemFormular();
             zustand.uebungId = null;
             zustand.meldung = '';
         } catch (err) {

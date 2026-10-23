@@ -85,10 +85,26 @@ module.exports = (port) => testlauf('Übung entfernen', port, async (t) => {
     await page.click('#menue-knopf');
     ok(await page.locator('[data-menue="ausgeblendet"]').isVisible(), 'jetzt steht "Ausgeblendete Übungen" im Menü');
     await page.click('[data-menue="ausgeblendet"]');
-    await page.waitForSelector('.ausgeblendet');
-    ok((await page.locator('.ausgeblendet').innerText()).includes('Latzug'), 'die Übersicht listet den Latzug');
-    await page.click('.ausgeblendet [data-aktivieren]');
+    await page.waitForSelector('.zeile');
+    const zeile = page.locator('.zeile', { hasText: 'Latzug' });
+    ok(await zeile.count() === 1 && await zeile.locator('img').count() === 1
+       && (await zeile.innerText()).includes('07') && (await zeile.innerText()).includes('Rücken'),
+       'die Übersicht zeigt den Latzug als Zeile wie in den Einstellungen, mit Foto, Nummer und Daten');
+    ok((await page.locator('.tag__name').first().innerText()).toLowerCase().includes('oberkörper'),
+       'nach Trainingstag gruppiert');
+
+    // Antippen öffnet die Übung, dort stehen Aktivieren und Löschen
+    await zeile.locator('.zeile__text').click();
+    await page.waitForSelector('.editor');
+    ok(await page.locator('[data-aktivieren]').isVisible(), 'die Übung lässt sich öffnen, dort steht "Wieder aktivieren"');
+    await page.click('[data-abbrechen]');
+    await page.waitForSelector('.zeile');
+    ok((await page.locator('.titel').innerText()) === 'Ausgeblendet', '"Abbrechen" führt zurück in die Übersicht');
+
+    await zeile.locator('.zeile__text').click();
+    await page.click('[data-aktivieren]');
     await page.waitForSelector('.tag__leer');
+    ok((await page.locator('.titel').innerText()) === 'Ausgeblendet', 'nach dem Aktivieren steht man wieder in der Übersicht, jetzt leer');
     const zurueck = daten('exercises.json');
     ok(zurueck.latzug.hidden === false && zurueck.latzug.day === 'oberkoerper' && zurueck.latzug.order === 2,
        'wieder aktiviert: alter Tag, alte Stelle');
