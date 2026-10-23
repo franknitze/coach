@@ -188,9 +188,11 @@ function coach_empfehlung(array $uebung): array
  * Aufwärmsätze werden nicht eingetragen (Frank, 26.08.2026). Ein leichterer
  * Satz lässt die Einheit als nicht geschafft zählen.
  *
- * @return array{gewicht: float, ziel: int, vorher: float, ereignis: string}
+ * @return array{gewicht: float, ziel: int, vorher: float, ereignis: string, ereignisse: array}
  *         ereignis der letzten Einheit: weiter, halten, zurueckholen,
  *         steigern oder zusatz. vorher ist das Gewicht vor einer Steigerung.
+ *         ereignisse hält das Ereignis jeder Einheit fest, mit denselben
+ *         Schlüsseln wie $einheiten; Einheiten ohne Satz fehlen darin.
  */
 function coach_nachspielen(array $einheiten, int $repMin, int $repMax, float $schritt,
                            int $zielSaetze, bool $unterstuetzt): array
@@ -199,8 +201,9 @@ function coach_nachspielen(array $einheiten, int $repMin, int $repMax, float $sc
     $ziel = $repMin;
     $vorher = 0.0;
     $ereignis = 'halten';
+    $ereignisse = [];
 
-    foreach ($einheiten as $einheit) {
+    foreach ($einheiten as $schluessel => $einheit) {
         $saetze = (array) ($einheit['sets'] ?? []);
         if ($saetze === []) {
             continue;
@@ -246,7 +249,60 @@ function coach_nachspielen(array $einheiten, int $repMin, int $repMax, float $sc
         } else {
             $ereignis = 'halten';
         }
+        $ereignisse[$schluessel] = $ereignis;
     }
 
-    return ['gewicht' => (float) $gewicht, 'ziel' => $ziel, 'vorher' => $vorher, 'ereignis' => $ereignis];
+    return ['gewicht' => (float) $gewicht, 'ziel' => $ziel, 'vorher' => $vorher,
+            'ereignis' => $ereignis, 'ereignisse' => $ereignisse];
+}
+
+/**
+ * Der Verlauf einer Übung für die Tabelle auf der Studio-Kachel, neueste
+ * Einheit zuerst.
+ *
+ * Je Einheit: Datum, die Sätze und ob das Ziel erreicht wurde. "Erreicht"
+ * ist dasselbe "geschafft" wie in coach_nachspielen(), also alle Sätze auf
+ * dem Gewicht, so viele wie verlangt und jeder mindestens beim Ziel. Es wird
+ * aus derselben Nachspielung gelesen und nicht ein zweites Mal gerechnet,
+ * sonst könnte die Tabelle etwas anderes sagen als die Regler.
+ *
+ * Die Einheit von heute fehlt: Sie läuft womöglich noch, und ein halber Tag
+ * stünde als nicht erreicht da. Was heute gemacht ist, zeigt die Punktreihe.
+ *
+ * @return list<array{date: string, sets: array, achieved: bool}>
+ */
+function coach_verlauf(array $uebung): array
+{
+    $einheiten = array_reverse(training_letzte_einheiten((string) $uebung['id'], PHP_INT_MAX));
+    if ($einheiten === []) {
+        return [];
+    }
+
+    $stand = coach_nachspielen(
+        $einheiten,
+        (int) ($uebung['rep_min'] ?? 8),
+        (int) ($uebung['rep_max'] ?? 12),
+        (float) ($uebung['weight_step'] ?? config()['default_weight_step']),
+        (int) ($uebung['target_sets'] ?? 0),
+        !empty($uebung['assisted'])
+    );
+
+    $heute = (new DateTimeImmutable('now'))->format('Y-m-d');
+    $verlauf = [];
+    foreach ($stand['ereignisse'] as $schluessel => $ereignis) {
+        $einheit = $einheiten[$schluessel];
+        if (beginnt_mit((string) $einheit['date'], $heute)) {
+            continue;
+        }
+        $verlauf[] = [
+            'date'     => (string) $einheit['date'],
+            'sets'     => array_map(static fn (array $satz): array => [
+                'weight' => (float) ($satz['weight'] ?? 0),
+                'reps'   => (int) ($satz['reps'] ?? 0),
+            ], array_values((array) $einheit['sets'])),
+            'achieved' => in_array($ereignis, ['weiter', 'steigern', 'zusatz'], true),
+        ];
+    }
+
+    return array_reverse($verlauf);
 }

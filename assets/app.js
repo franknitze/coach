@@ -549,6 +549,91 @@
         }) || null;
     }
 
+    /*
+     * Symbole aus Phosphor Icons (MIT), Stärke "bold", als Pfad direkt im
+     * Code: Die PWA soll offline laufen und nichts nachladen.
+     */
+    const SYMBOLE = {
+        verlauf: 'M140,80v41.21l34.17,20.5a12,12,0,1,1-12.34,20.58l-40-24A12,12,0,0,1,116,128V80a12,12,0,0,1,24,0ZM128,28A99.38,99.38,0,0,0,57.24,57.34c-4.69,4.74-9,9.37-13.24,14V64a12,12,0,0,0-24,0v40a12,12,0,0,0,12,12H72a12,12,0,0,0,0-24H57.77C63,86,68.37,80.22,74.26,74.26a76,76,0,1,1,1.58,109,12,12,0,0,0-16.48,17.46A100,100,0,1,0,128,28Z',
+        ja:      'M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z',
+        nein:    'M208.49,191.51a12,12,0,0,1-17,17L128,145,64.49,208.49a12,12,0,0,1-17-17L111,128,47.51,64.49a12,12,0,0,1,17-17L128,111l63.51-63.52a12,12,0,0,1,17,17L145,128Z',
+    };
+
+    function symbol(pfad) {
+        return '<svg class="sym" viewBox="0 0 256 256" aria-hidden="true"><path d="' + pfad + '"/></svg>';
+    }
+
+    /* ---------- Verlauf einer Übung ----------
+     *
+     * Eine Zeile je Einheit, neueste oben: "Fr 16.10.2026 · 65 kg · 12/12/12
+     * · Haken" (Vorgabe von Frank, 23.10.2026). Eine Zeile je Satz nahm zu
+     * viel Platz weg. Weichen die Gewichte innerhalb der Einheit ab, stehen
+     * sie mit Schrägstrich in derselben Reihenfolge wie die Wiederholungen.
+     *
+     * Die Zahlen kommen fertig aus api/plan.php (coach_verlauf()), auch das
+     * Erreicht. Hier wird nur gesetzt, nichts gerechnet.
+     *
+     * Der Knopf zum Schließen steht fest unten, die Tabelle läuft dahinter
+     * durch (Frank, 23.10.2026): Bei einer langen Liste soll man nicht erst
+     * bis ans Ende wischen müssen, um wieder an die Regler zu kommen.
+     */
+    const blatt = document.getElementById('blatt');
+
+    function datumVoll(iso) {
+        const d = new Date(iso);
+        const zwei = function (n) { return (n < 10 ? '0' : '') + n; };
+        return WOCHENTAGE[d.getDay()] + ' ' + zwei(d.getDate()) + '.' + zwei(d.getMonth() + 1) + '.' + d.getFullYear();
+    }
+
+    function verlaufGewicht(saetze, hilfe) {
+        const gewichte = saetze.map(function (s) { return s.weight; });
+        const gleich = gewichte.every(function (g) { return g === gewichte[0]; });
+        if (gleich) {
+            return last(gewichte[0], hilfe);
+        }
+        return gewichte.map(zahl).join('/') + (hilfe ? ' kg Hilfe' : ' kg');
+    }
+
+    function verlaufZeigen(uebungId) {
+        const u = uebungImStudio(uebungId);
+        if (!blatt || !u) {
+            return;
+        }
+        document.getElementById('blatt-nummer').textContent = u.station || '';
+        document.getElementById('blatt-nummer').hidden = !u.station;
+        document.getElementById('blatt-name').textContent = u.name;
+        document.getElementById('blatt-zeilen').innerHTML = (u.history || []).map(function (e) {
+            return '<tr><td>' + esc(datumVoll(e.date)) + '</td>'
+                + '<td>' + esc(verlaufGewicht(e.sets, u.assisted)) + '</td>'
+                + '<td>' + e.sets.map(function (s) { return s.reps; }).join('/') + '</td>'
+                + '<td class="' + (e.achieved ? 'ist-erreicht' : 'ist-verfehlt') + '">'
+                + symbol(e.achieved ? SYMBOLE.ja : SYMBOLE.nein)
+                + '<span class="unsichtbar">' + (e.achieved ? 'erreicht' : 'nicht erreicht') + '</span></td></tr>';
+        }).join('');
+        blatt.hidden = false;
+        document.getElementById('blatt-liste').scrollTop = 0;
+    }
+
+    function verlaufSchliessen() {
+        if (blatt && !blatt.hidden) {
+            blatt.hidden = true;
+        }
+    }
+
+    if (blatt) {
+        // Ein Tipp neben das Blatt schließt es ebenso wie der Knopf.
+        blatt.addEventListener('click', function (e) {
+            if (e.target === blatt || e.target.closest('#blatt-zu')) {
+                verlaufSchliessen();
+            }
+        });
+        addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                verlaufSchliessen();
+            }
+        });
+    }
+
     function lupeSchliessen() {
         if (lupe && !lupe.hidden) {
             lupe.hidden = true;
@@ -1168,6 +1253,10 @@
                 zeilen: letztesErgebnis(u)
                     ? '<span class="kachel__zuletzt">' + esc(letztesErgebnis(u)) + '</span>'
                     : '',
+                // Nur auf der offenen Kachel: Dort steht man vor dem Gerät
+                // und fragt "was war beim letzten Mal". Auf den
+                // zugeklappten wäre es neunmal derselbe Knopf.
+                verlauf: offen && (u.history || []).length > 0,
             });
 
         if (offen) {
@@ -1196,6 +1285,8 @@
      * $opts.zeilen   zusätzliche Zeilen unter der Vorgabe, fertiges HTML
      * $opts.rueckweg true im Rückblick: dann zählt die Zeile, was gemacht
      *                wurde, nicht was vorgesehen war
+     * $opts.verlauf  true: rechts neben der Punktreihe der Knopf zur
+     *                Verlaufstabelle
      */
     function zeichneKachelKopf(u, opts) {
         const ziel = u.target_sets;
@@ -1253,16 +1344,26 @@
         // Zwei getrennte Ziele nebeneinander: das Foto vergrößert, der Text
         // führt weiter. Verschachtelte Knöpfe wären ungültiges HTML, deshalb
         // ist der Kopf ein div und nicht selbst ein Knopf.
-        return '<div class="kachel__kopf">'
-            + bild
-            + '<button class="kachel__text" ' + opts.knopf + '>'
+        const text = '<button class="kachel__text" ' + opts.knopf + '>'
             + '<span class="kachel__name">' + esc(u.name) + '</span>'
             + '<span class="kachel__ziel">'
             + anzahl + ' Sätze · '
             + '<b class="kachel__zahl">' + u.rep_min + '–' + u.rep_max + '</b> Wdh</span>'
             + opts.zeilen
             + '<span class="punkte">' + punkte + '</span>'
-            + '</button></div>';
+            + '</button>';
+
+        // Der Verlaufsknopf kann nicht in die Textfläche, die ist selbst ein
+        // Knopf. Er liegt deshalb mit ihr in einer Spalte und unten rechts
+        // darüber, auf Höhe der Punktreihe (Frank, 23.10.2026).
+        const spalte = opts.verlauf
+            ? '<div class="kachel__spalte">' + text
+              + '<button class="kachel__verlauf" type="button" data-verlauf="' + esc(u.id)
+              + '" aria-label="Verlauf von ' + esc(u.name) + '">'
+              + symbol(SYMBOLE.verlauf) + '</button></div>'
+            : text;
+
+        return '<div class="kachel__kopf">' + bild + spalte + '</div>';
     }
 
     /**
@@ -2267,7 +2368,7 @@
             + '[data-bestaetige], [data-korrigiere], [data-extra], [data-bearbeite], '
             + '[data-neu], [data-abbrechen], [data-frage], [data-loesche], [data-prio], '
             + '[data-gewichtweg], [data-bereich], [data-weiter], '
-            + '[data-anleitung]');
+            + '[data-anleitung], [data-verlauf]');
         if (!ziel) {
             return;
         }
@@ -2436,6 +2537,11 @@
             // eigenes Ziel, sonst würde ein Blick aufs Gerät die Kachel
             // schließen, an der man gerade arbeitet.
             lupeZeigen(d.foto, d.name || '', d.nummer || '', d.anleitung || '');
+            return;
+        }
+
+        if (d.verlauf) {
+            verlaufZeigen(d.verlauf);
             return;
         }
 

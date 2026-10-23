@@ -185,6 +185,25 @@ $adresse      = (($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !
         <div class="lupe__anleitung" id="lupe-anleitung"></div>
     </div>
 
+    <!-- Verlauf einer Übung als Tabelle. Außerhalb von #app aus demselben
+         Grund wie die Lupe. Kopf und Schließen-Knopf stehen fest, nur die
+         Liste dazwischen läuft. -->
+    <div class="blatt" id="blatt" hidden>
+        <div class="blatt__innen" role="dialog" aria-modal="true" aria-labelledby="blatt-name">
+            <div class="blatt__kopf">
+                <span class="plakette" id="blatt-nummer" hidden></span>
+                <span class="blatt__name" id="blatt-name"></span>
+            </div>
+            <div class="blatt__liste" id="blatt-liste">
+                <table class="verlaufstabelle">
+                    <thead><tr><th>Datum</th><th>Gewicht</th><th>Wdh</th><th>Ziel</th></tr></thead>
+                    <tbody id="blatt-zeilen"></tbody>
+                </table>
+            </div>
+            <button class="knopf knopf--leise blatt__zu" id="blatt-zu" type="button">Schließen</button>
+        </div>
+    </div>
+
     <!-- Abmelden steht ganz unten und leise, nicht im Kopf.
          Oben rechts lag es genau da, wo der Daumen beim Halten des Handys
          ohnehin liegt, und ein Fehlgriff kostet im Studio den Zugang: neu

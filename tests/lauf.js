@@ -26,6 +26,7 @@ const laeufe = {
     offline:    { port: 8796, modul: './offline' },
     einheiten:  { port: 8797, modul: './einheiten' },
     startseite: { port: 8798, modul: './startseite' },
+    verlaufstabelle: { port: 8785, modul: './verlaufstabelle' },
 };
 
 (async function () {

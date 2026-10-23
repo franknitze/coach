@@ -80,6 +80,10 @@ foreach ($alle as $uebung) {
     $uebung['last']  = training_letzte_werte($id);
     $uebung['today'] = $erledigt[$id] ?? [];
     $uebung['coach'] = coach_empfehlung($uebung);
+    // Der Verlauf reist mit, damit die Tabelle auf der Kachel auch im
+    // Funkloch aufgeht: Die Studio-Ansicht wird gemerkt, ein eigener
+    // Abruf je Übung käme ohne Netz nicht durch.
+    $uebung['history'] = coach_verlauf($uebung);
     $heute[] = $uebung;
 }
 
