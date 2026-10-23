@@ -39,9 +39,20 @@ module.exports = (port) => testlauf('Verlauf', port, async (t) => {
     await page.locator('.zeile', { hasText: 'Bankdrücken' }).locator('.zeile__text').click();
     await page.waitForSelector('.editor');
     ok(await page.locator('#e-execution').count() === 1, 'Ausführung ist bearbeitbar');
-    ok(await page.locator('#e-search').count() === 1, 'englischer Suchbegriff auch');
-    await page.locator('[data-abbrechen]').click();
+    ok(await page.locator('#e-search').count() === 0 && await page.locator('#e-video').count() === 1,
+       'statt des Suchbegriffs gibt es ein Feld für den YouTube-Link');
+    // Nur YouTube-Links werden angenommen
+    await page.fill('#e-video', 'https://example.com/irgendwas');
+    await page.click('.editor button[type="submit"]');
+    await page.waitForFunction(() => document.querySelector('.editor .fehler').textContent.length > 0);
+    ok((await page.locator('.editor .fehler').innerText()).includes('kein YouTube-Link'),
+       'ein fremder Link wird abgewiesen: ' + (await page.locator('.editor .fehler').innerText()));
+    await page.fill('#e-video', 'https://youtu.be/abc123');
+    await page.click('.editor button[type="submit"]');
     await page.waitForSelector('.zeile');
+    const gespeichert = JSON.parse(require('fs').readFileSync(t.datenordner + '/exercises.json', 'utf8'));
+    ok(gespeichert.bankdruecken.video_url === 'https://youtu.be/abc123' && !('search' in gespeichert.bankdruecken),
+       'ein YouTube-Link wird gespeichert, ein Suchbegriff nicht mehr');
     await page.locator('.zeile', { hasText: 'Bankdrücken' }).locator('.zeile__text').click();
     await page.waitForSelector('.chart');
 

@@ -141,7 +141,7 @@
     "station": "12",
     "assisted": false,
     "execution": "Rücken flach an die Lehne, Knie nicht ganz durchdrücken.",
-    "search": "leg press 45 degree"
+    "video_url": "https://www.youtube.com/watch?v=…"
   }
 }
 ```
@@ -149,7 +149,7 @@
 - `photo` verweist auf eine Datei in `assets/img/exercises/`.
 - `station` ist die aufgeklebte Gerätenummer aus dem Studio, optional. Sie ist der Grund, warum man das richtige Gerät wiederfindet, und trägt die gelbe Plakette in der Oberfläche.
 - `assisted` kennzeichnet eine Unterstützungsmaschine: Dort hebt ein Gegengewicht einen Teil des Körpergewichts an, **weniger Gewicht heißt schwerer**. Ohne dieses Feld schickte die Progressionsregel dort in die falsche Richtung.
-- `execution` und `search` tragen die Ausführung in einem Satz und einen englischen Suchbegriff für Video und Bildersuche.
+- `execution` trägt die Ausführung in einem Satz, `video_url` ein selbst hinterlegtes YouTube-Video (nur https auf youtube.com oder youtu.be, leer erlaubt). Bis zum 23.10.2026 stand hier ein englischer Suchbegriff mit Knöpfen für YouTube- und Google-Suche; die sind entfallen, weil eine Suche nur zufällig das richtige Video findet.
 - `hidden` (seit 23.10.2026): ausgeblendet. Die Übung steht nicht mehr in Plan und Studio, ihre Sätze zählen weiter in Rückblick und Fortschritt. Vollständiges Löschen entfernt dagegen auch alle Sätze, nach Rückfrage und mit Sicherungskopie in `data/sicherung/`.
 
 ### `plan.json` — Struktur des Trainingsplans
@@ -235,7 +235,7 @@
 - Die **Punktreihe im Kachelkopf** ist die Fortschrittsanzeige: gefüllt = erledigt, leer = steht aus. Erledigte Sätze werden **nicht aufgelistet** (Vorgabe vom 26.08.2026); unter dem Kachelkopf stehen nur die Regler. Die Punkte sind dafür größer geworden. Damit entfällt auch das nachträgliche Ändern eines Satzes.
 - Ein großer Bestätigungs-Button pro Satz → danach läuft der **Pausen-Timer** (`rest_timer_seconds`), als Panel über dem unteren Bildschirmdrittel. Nach dem letzten Satz einer Einheit startet keine Pause: Sie dient dem nächsten Satz, und den gibt es dann nicht. Bei null verschwindet das Panel von selbst, es gibt keinen Zustand danach.
 - **Keine Supersets** (Frank, 23.10.2026): Nach einem Satz bleibt die Übung offen, bis alle ihre Sätze durch sind, dann geht es zur nächsten offenen. Der frühere Sprung zur Partnerübung mit kürzerer Pause ist entfallen: Frank hatte ihn nie bemerkt, und eine Liste, die nicht der Reihe nach läuft, kostet die Übersicht.
-- Ein Tipp aufs **Foto** öffnet die **Großansicht**: Bild, Gerätenummer, Name, Ausführungstext, Suchbegriff und Verweise auf Video und Bildersuche. Geändert am 26.08.2026: Vorher klappte der Text als eigene Zeile auf der Kachel auf und schob die Regler nach unten — also genau das weg, wofür die Kachel geöffnet war. Foto und Ausführung beantworten dieselbe Frage, deshalb stehen sie zusammen.
+- Ein Tipp aufs **Foto** öffnet die **Großansicht**: Bild, Gerätenummer, Name, Ausführungstext und, falls hinterlegt, der Knopf „Video ansehen“. Geändert am 26.08.2026: Vorher klappte der Text als eigene Zeile auf der Kachel auf und schob die Regler nach unten — also genau das weg, wofür die Kachel geöffnet war. Foto und Ausführung beantworten dieselbe Frage, deshalb stehen sie zusammen.
 - Hat eine Übung **kein Foto**, bleibt die Zeile **„Wie geht die Übung?"** als einziger Weg dorthin stehen; die Großansicht zeigt dann nur den Text. Mit Foto entfällt sie.
 - Der Ausgang aus der Einheit steht **immer** unter der letzten Kachel, fertig oder nicht. Der letzte Satz wird ganz unten bestätigt, und eine Meldung neun Kacheln weiter oben sieht man nicht. Eine Einheit wird nicht immer fertig.
 - **Ohne Netz:** Jeder bestätigte Satz geht zuerst in den lokalen Puffer, auch bei bester Verbindung. Der Satz gilt, sobald er dort liegt; das Senden ist eine Frage von später. Eine Statusleiste nennt jederzeit Zahl und Lage. Im Studio ist schlechter Empfang der Normalfall, kein Sonderfall.

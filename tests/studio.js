@@ -229,9 +229,10 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
     ok((await page.locator('#lupe-name').innerText()).includes('Bankdrücken'),
        'mit dem Namen der Übung');
 
-    const video = page.locator('#lupe .ausfuehrung__suche a').first();
-    ok((await video.getAttribute('href')).includes('youtube.com'),
-       'das Video ist von hier aus erreichbar');
+    const video = page.locator('#lupe .ausfuehrung__video a');
+    ok(await video.count() === 1 && (await video.getAttribute('href')) === 'https://www.youtube.com/watch?v=testvideo',
+       'das hinterlegte Video ist von hier aus erreichbar, und nur das');
+    ok(await page.locator('#lupe a[href*="google"]').count() === 0, 'einen Google-Knopf gibt es nicht mehr');
     ok(await video.getAttribute('target') === '_blank',
        'und öffnet daneben, damit die Einheit nicht verlassen wird');
 

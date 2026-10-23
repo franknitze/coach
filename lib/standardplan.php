@@ -44,44 +44,35 @@ function standardplan_uebungen(): array
      */
     $plan = [
         // id, Name, Muskelgruppe, Tag, Reihenfolge, Sätze, Wdh von, Wdh bis,
-        // Schritt, Ausführung, englischer Suchbegriff
+        // Schritt, Ausführung
 
         // ---------- A: Oberkörper, 30 Sätze ----------
         ['bankdruecken', 'Langhantel-Bankdrücken flach', 'brust', 'oberkoerper', 1, 4, 5, 8, 2.5,
-         'Griff etwa eine Handbreit außerhalb der Schultern. Ellenbogen rund 45 Grad zum Körper, nicht seitlich abspreizen. Stange zur unteren Brust, kurz auflegen ohne abfedern.',
-         'barbell bench press'],
+         'Griff etwa eine Handbreit außerhalb der Schultern. Ellenbogen rund 45 Grad zum Körper, nicht seitlich abspreizen. Stange zur unteren Brust, kurz auflegen ohne abfedern.'],
 
         ['latzug_weit', 'Latzug weit zur Brust', 'ruecken', 'oberkoerper', 2, 4, 6, 10, 5.0,
-         'Weiter Obergriff, etwa anderthalb Schulterbreiten. Zur oberen Brust ziehen, nicht in den Nacken. Brust raus, Schultern nach hinten unten, oben vollständig ausstrecken lassen.',
-         'wide grip lat pulldown to chest'],
+         'Weiter Obergriff, etwa anderthalb Schulterbreiten. Zur oberen Brust ziehen, nicht in den Nacken. Brust raus, Schultern nach hinten unten, oben vollständig ausstrecken lassen.'],
 
         ['schraegbank_kh', 'Kurzhantel-Schrägbankdrücken 30 Grad', 'brust', 'oberkoerper', 3, 3, 8, 10, 2.5,
-         'Bank auf 30 Grad, steiler trifft zunehmend die Schulter statt die Brust. Hanteln bis auf Brusthöhe ablassen, unten kurz die Dehnung halten.',
-         'incline dumbbell press 30 degrees'],
+         'Bank auf 30 Grad, steiler trifft zunehmend die Schulter statt die Brust. Hanteln bis auf Brusthöhe ablassen, unten kurz die Dehnung halten.'],
 
         ['rudern_brustauflage', 'Rudern mit Brustauflage', 'ruecken', 'oberkoerper', 4, 4, 6, 10, 2.5,
-         'Brust liegt auf der Schrägbank oder am Gerät auf. Zum unteren Brustkorb ziehen, Ellenbogen dicht am Körper. Die Auflage nimmt den unteren Rücken aus der Übung, deshalb diese Variante und nicht freies Vorgebeugtes Rudern.',
-         'chest supported row'],
+         'Brust liegt auf der Schrägbank oder am Gerät auf. Zum unteren Brustkorb ziehen, Ellenbogen dicht am Körper. Die Auflage nimmt den unteren Rücken aus der Übung, deshalb diese Variante und nicht freies Vorgebeugtes Rudern.'],
 
         ['schulterdruecken_kh', 'Kurzhantel-Schulterdrücken sitzend', 'schulter', 'oberkoerper', 5, 3, 8, 10, 2.5,
-         'Rückenlehne fast senkrecht, etwa 80 Grad. Hanteln auf Ohrhöhe starten, Ellenbogen leicht vor der Körperlinie. Oben nicht vollständig durchdrücken.',
-         'seated dumbbell shoulder press'],
+         'Rückenlehne fast senkrecht, etwa 80 Grad. Hanteln auf Ohrhöhe starten, Ellenbogen leicht vor der Körperlinie. Oben nicht vollständig durchdrücken.'],
 
         ['kabelrudern_eng', 'Kabelrudern sitzend, enger Parallelgriff', 'ruecken', 'oberkoerper', 6, 3, 10, 12, 5.0,
-         'Enger Griff mit den Handflächen zueinander. Zum Bauchnabel ziehen, Oberkörper aufrecht und ruhig, kein Schwung aus der Hüfte. Vorne die Schulterblätter weit auseinanderlaufen lassen.',
-         'seated cable row close neutral grip'],
+         'Enger Griff mit den Handflächen zueinander. Zum Bauchnabel ziehen, Oberkörper aufrecht und ruhig, kein Schwung aus der Hüfte. Vorne die Schulterblätter weit auseinanderlaufen lassen.'],
 
         ['kabel_fliegende', 'Kabel-Fliegende auf Brusthöhe, stehend', 'brust', 'oberkoerper', 7, 3, 12, 15, 5.0,
-         'Beide Rollen auf Brusthöhe, einen Schritt nach vorn. Arme leicht gebeugt und in diesem Winkel fixiert, Bewegung nur aus der Schulter. Vorne die Hände übereinanderführen, nicht nur bis auf Schulterbreite.',
-         'standing cable chest fly mid pulley'],
+         'Beide Rollen auf Brusthöhe, einen Schritt nach vorn. Arme leicht gebeugt und in diesem Winkel fixiert, Bewegung nur aus der Schulter. Vorne die Hände übereinanderführen, nicht nur bis auf Schulterbreite.'],
 
         ['trizeps_ueberkopf', 'Trizepsdrücken über Kopf am Kabel mit Seil', 'trizeps', 'oberkoerper', 8, 3, 10, 15, 5.0,
-         'Rolle unten, Seil über den Kopf greifen, mit dem Rücken zum Gerät. Oberarme neben den Ohren fixiert, nur die Unterarme bewegen sich. Diese Variante, weil der Trizeps über Kopf gedehnt arbeitet.',
-         'overhead cable triceps extension rope'],
+         'Rolle unten, Seil über den Kopf greifen, mit dem Rücken zum Gerät. Oberarme neben den Ohren fixiert, nur die Unterarme bewegen sich. Diese Variante, weil der Trizeps über Kopf gedehnt arbeitet.'],
 
         ['curl_schraeg', 'Kurzhantel-Curl auf der Schrägbank 45 Grad', 'bizeps', 'oberkoerper', 9, 3, 8, 12, 2.5,
-         'Bank auf 45 Grad, Arme hängen senkrecht nach unten hinter der Körperlinie. Oberarme bleiben unten, nur der Unterarm bewegt sich. Der Bizeps arbeitet hier gedehnt, das ist der Zweck der Schrägbank.',
-         'incline dumbbell curl'],
+         'Bank auf 45 Grad, Arme hängen senkrecht nach unten hinter der Körperlinie. Oberarme bleiben unten, nur der Unterarm bewegt sich. Der Bizeps arbeitet hier gedehnt, das ist der Zweck der Schrägbank.'],
 
         // ---------- B: Ganzkörper, 30 Sätze ----------
         // Ersetzt die Langhantel-Kniebeuge: die Stange hinter dem Kopf
@@ -90,69 +81,53 @@ function standardplan_uebungen(): array
         // Hackenschmidt-Maschine trainiert dasselbe Muster ohne jede
         // Beteiligung der Schulter.
         ['kniebeuge', 'Hackenschmidt-Kniebeuge', 'quadrizeps', 'ganzkoerper', 1, 4, 5, 8, 2.5,
-         'Rücken liegt am Polster an, Schultern unter den Auflagen, Füße schulterbreit mittig auf der Platte. Mindestens bis Oberschenkel waagerecht. Die Schulter ist an dieser Übung nicht beteiligt, deshalb steht sie hier statt der Langhantel-Kniebeuge. Gibt es keine Hackenschmidt-Maschine: schwere Beinpresse mit hoher Fußstellung, oder eine Safety Squat Bar, falls das Studio eine hat.',
-         'hack squat machine'],
+         'Rücken liegt am Polster an, Schultern unter den Auflagen, Füße schulterbreit mittig auf der Platte. Mindestens bis Oberschenkel waagerecht. Die Schulter ist an dieser Übung nicht beteiligt, deshalb steht sie hier statt der Langhantel-Kniebeuge. Gibt es keine Hackenschmidt-Maschine: schwere Beinpresse mit hoher Fußstellung, oder eine Safety Squat Bar, falls das Studio eine hat.'],
 
         ['klimmzug_eng', 'Klimmzug im Untergriff, unterstützt', 'ruecken', 'ganzkoerper', 2, 4, 6, 10, 5.0,
-         'An der Unterstützungsmaschine, Knie oder Füße auf dem Polster. Untergriff etwa schulterbreit, Handflächen zum Gesicht. Bis das Kinn über die Stange, unten vollständig ausstrecken. ACHTUNG: hier zählt weniger Gewicht als Fortschritt, das Gegengewicht nimmt Körpergewicht ab.',
-         'assisted chin up machine'],
+         'An der Unterstützungsmaschine, Knie oder Füße auf dem Polster. Untergriff etwa schulterbreit, Handflächen zum Gesicht. Bis das Kinn über die Stange, unten vollständig ausstrecken. ACHTUNG: hier zählt weniger Gewicht als Fortschritt, das Gegengewicht nimmt Körpergewicht ab.'],
 
         ['dips_brust', 'Dips vorgeneigt, unterstützt', 'brust', 'ganzkoerper', 3, 4, 6, 10, 2.5,
-         'An der Unterstützungsmaschine, Knie auf dem Polster. Oberkörper deutlich nach vorn geneigt und Ellenbogen leicht abgespreizt, dann trägt die Brust. Aufrecht mit engen Ellenbogen wäre es eine Trizepsübung. Bis Oberarm waagerecht, nicht tiefer. ACHTUNG: weniger Gewicht ist hier der Fortschritt.',
-         'assisted dip machine chest'],
+         'An der Unterstützungsmaschine, Knie auf dem Polster. Oberkörper deutlich nach vorn geneigt und Ellenbogen leicht abgespreizt, dann trägt die Brust. Aufrecht mit engen Ellenbogen wäre es eine Trizepsübung. Bis Oberarm waagerecht, nicht tiefer. ACHTUNG: weniger Gewicht ist hier der Fortschritt.'],
 
         ['kreuzheben_rum', 'Rumänisches Kreuzheben mit der Langhantel', 'beinbeuger', 'ganzkoerper', 4, 4, 8, 10, 2.5,
-         'Aus dem Stand starten, nicht vom Boden. Knie leicht gebeugt und in diesem Winkel bleiben, Hüfte weit nach hinten, Stange dicht am Bein entlang bis etwa Mitte Schienbein. Rücken durchgehend gerade.',
-         'romanian deadlift barbell'],
+         'Aus dem Stand starten, nicht vom Boden. Knie leicht gebeugt und in diesem Winkel bleiben, Hüfte weit nach hinten, Stange dicht am Bein entlang bis etwa Mitte Schienbein. Rücken durchgehend gerade.'],
 
         ['seitheben_kabel', 'Kabel-Seitheben einarmig', 'schulter', 'ganzkoerper', 5, 4, 12, 20, 2.5,
-         'Rolle ganz unten, Kabel läuft vor dem Körper zur Gegenseite. Arm fast gestreckt seitlich bis Schulterhöhe. Am Kabel, weil unten anders als mit der Kurzhantel bereits Last auf dem Muskel liegt.',
-         'single arm cable lateral raise'],
+         'Rolle ganz unten, Kabel läuft vor dem Körper zur Gegenseite. Arm fast gestreckt seitlich bis Schulterhöhe. Am Kabel, weil unten anders als mit der Kurzhantel bereits Last auf dem Muskel liegt.'],
 
         ['face_pull', 'Face Pull am Kabel mit Seil', 'schulter', 'ganzkoerper', 6, 3, 15, 20, 5.0,
-         'Rolle auf Gesichtshöhe. Seil zum Gesicht ziehen, Hände laufen dabei nach außen auseinander, Ellenbogen bleiben hoch. Trifft die hintere Schulter und den oberen Rücken.',
-         'cable face pull'],
+         'Rolle auf Gesichtshöhe. Seil zum Gesicht ziehen, Hände laufen dabei nach außen auseinander, Ellenbogen bleiben hoch. Trifft die hintere Schulter und den oberen Rücken.'],
 
         ['beinbeuger_liegend', 'Beinbeuger liegend', 'beinbeuger', 'ganzkoerper', 7, 3, 10, 15, 5.0,
-         'Bauchlage, Polster knapp über der Ferse. Hüfte bleibt auf der Bank, kein Hohlkreuz beim Anziehen. Oben kurz halten, langsam ablassen.',
-         'lying leg curl'],
+         'Bauchlage, Polster knapp über der Ferse. Hüfte bleibt auf der Bank, kein Hohlkreuz beim Anziehen. Oben kurz halten, langsam ablassen.'],
 
         ['waden_stehend', 'Wadenheben stehend, Knie gestreckt', 'waden', 'ganzkoerper', 8, 4, 8, 12, 5.0,
-         'Fußballen auf der Kante, Fersen tief ablassen bis es zieht. Knie durchgehend gestreckt, dann arbeitet der Zwillingswadenmuskel. Oben eine Sekunde halten.',
-         'standing calf raise'],
+         'Fußballen auf der Kante, Fersen tief ablassen bis es zieht. Knie durchgehend gestreckt, dann arbeitet der Zwillingswadenmuskel. Oben eine Sekunde halten.'],
 
         // ---------- C: Unterkörper, 28 Sätze ----------
         ['beinpresse', 'Beinpresse 45 Grad', 'quadrizeps', 'unterkoerper', 1, 4, 6, 10, 5.0,
-         'Füße schulterbreit, mittig auf der Platte. Tiefer heißt mehr Bewegungsumfang, aber nur so weit, wie das Becken flach auf der Lehne bleibt. Knie nicht vollständig durchdrücken.',
-         '45 degree leg press'],
+         'Füße schulterbreit, mittig auf der Platte. Tiefer heißt mehr Bewegungsumfang, aber nur so weit, wie das Becken flach auf der Lehne bleibt. Knie nicht vollständig durchdrücken.'],
 
         ['beinbeuger_sitzend', 'Beinbeuger sitzend', 'beinbeuger', 'unterkoerper', 2, 4, 8, 12, 5.0,
-         'Sitzend, weil die Hüfte dabei gebeugt ist und die Oberschenkelrückseite dadurch gedehnt arbeitet. Das ergänzt die liegende Variante von Tag B, es ist nicht dieselbe Übung.',
-         'seated leg curl'],
+         'Sitzend, weil die Hüfte dabei gebeugt ist und die Oberschenkelrückseite dadurch gedehnt arbeitet. Das ergänzt die liegende Variante von Tag B, es ist nicht dieselbe Übung.'],
 
         ['split_squat', 'Bulgarian Split Squat', 'quadrizeps', 'unterkoerper', 3, 3, 8, 12, 2.5,
-         'Hinterer Fuß erhöht auf einer Bank, vorderer Fuß weit genug vorn, dass das Knie über dem Fußgelenk bleibt. Oberkörper leicht vorgeneigt. Wiederholungen gelten je Bein.',
-         'bulgarian split squat rear foot elevated'],
+         'Hinterer Fuß erhöht auf einer Bank, vorderer Fuß weit genug vorn, dass das Knie über dem Fußgelenk bleibt. Oberkörper leicht vorgeneigt. Wiederholungen gelten je Bein.'],
 
         ['beinstrecker', 'Beinstrecker sitzend', 'quadrizeps', 'unterkoerper', 4, 4, 12, 20, 5.0,
-         'Rückenlehne so, dass das Kniegelenk genau auf der Drehachse liegt. Oben eine Sekunde vollständig strecken, langsam ablassen.',
-         'seated leg extension'],
+         'Rückenlehne so, dass das Kniegelenk genau auf der Drehachse liegt. Oben eine Sekunde vollständig strecken, langsam ablassen.'],
 
         ['waden_sitzend', 'Wadenheben sitzend, Knie 90 Grad', 'waden', 'unterkoerper', 5, 4, 12, 20, 5.0,
-         'Knie im rechten Winkel unter dem Polster. Bei gebeugtem Knie arbeitet der darunterliegende Schollenmuskel, den die stehende Variante kaum trifft. Deshalb beide im Plan.',
-         'seated calf raise'],
+         'Knie im rechten Winkel unter dem Polster. Bei gebeugtem Knie arbeitet der darunterliegende Schollenmuskel, den die stehende Variante kaum trifft. Deshalb beide im Plan.'],
 
         ['curl_sz', 'SZ-Curl stehend', 'bizeps', 'unterkoerper', 6, 3, 8, 12, 2.5,
-         'SZ-Stange im Untergriff, Griff etwa schulterbreit an der ersten Biegung. Oberarme bleiben am Körper, kein Schwung aus der Hüfte.',
-         'ez bar curl'],
+         'SZ-Stange im Untergriff, Griff etwa schulterbreit an der ersten Biegung. Oberarme bleiben am Körper, kein Schwung aus der Hüfte.'],
 
         ['trizepsdruecken', 'Trizepsdrücken am Kabel mit Seil', 'trizeps', 'unterkoerper', 7, 3, 10, 15, 5.0,
-         'Rolle oben, Ellenbogen am Körper fixiert. Unten die Seilenden auseinanderziehen, dann arbeitet der äußere Kopf mit.',
-         'cable triceps pushdown rope'],
+         'Rolle oben, Ellenbogen am Körper fixiert. Unten die Seilenden auseinanderziehen, dann arbeitet der äußere Kopf mit.'],
 
         ['bauch_kabel', 'Kabel-Crunch kniend', 'bauch', 'unterkoerper', 8, 3, 10, 15, 5.0,
-         'Kniend vor dem Kabelturm, Seil neben dem Kopf. Mit dem Brustkorb Richtung Becken einrollen, die Hüfte bleibt stehen. Mit Zusatzgewicht, weil der Bauch wie jeder Muskel Last braucht.',
-         'kneeling cable crunch'],
+         'Kniend vor dem Kabelturm, Seil neben dem Kopf. Mit dem Brustkorb Richtung Becken einrollen, die Hüfte bleibt stehen. Mit Zusatzgewicht, weil der Bauch wie jeder Muskel Last braucht.'],
     ];
 
     /*
@@ -168,13 +143,12 @@ function standardplan_uebungen(): array
             'id' => $z[0], 'name' => $z[1], 'muscle_group' => $z[2], 'day' => $z[3],
             'order' => $z[4], 'target_sets' => $z[5],
             'rep_min' => $z[6], 'rep_max' => $z[7], 'weight_step' => $z[8],
-            // Ausführung und englischer Suchbegriff: die Namen allein sind
+            // Ausführung: die Namen allein sind
             // mehrdeutig. "Überkopfdrücken" kann sitzend oder stehend sein,
             // mit Lang- oder Kurzhantel, und "Fliegende am Kabel" gibt es von
-            // oben, von der Mitte und von unten. Ohne diese Angaben lässt
-            // sich nicht nachschlagen, welche Übung gemeint ist.
+            // oben, von der Mitte und von unten. Ein Video hinterlegt jeder
+            // selbst (video_url), der Standardplan bringt keins mit.
             'execution' => $z[9],
-            'search'    => $z[10],
             'assisted'  => in_array($z[0], $unterstuetzt, true),
             'photo' => standardplan_bild($z[3], (int) $z[4]),
             // Die Gerätenummer bleibt leer: Sie klebt am Gerät im eigenen

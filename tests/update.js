@@ -81,7 +81,7 @@ module.exports = function update() {
     jetzt.eigene_uebung = {
         id: 'eigene_uebung', name: 'Selbst angelegt', muscle_group: 'brust',
         day: 'oberkoerper', order: 99, target_sets: 3, rep_min: 8, rep_max: 12,
-        weight_step: 2.5, photo: 'meins.jpg', station: '', execution: '', search: '',
+        weight_step: 2.5, photo: 'meins.jpg', station: '', execution: '', video_url: '',
     };
     fs.writeFileSync(path.join(ordner, 'exercises.json'),
         JSON.stringify(jetzt, null, 2));

@@ -97,11 +97,8 @@ function uebung_pruefen(array $roh, array $plan): array
         'weight_step'  => $step,
         'photo'        => trim((string) ($roh['photo'] ?? '')),
         /*
-         * Ausführung und englischer Suchbegriff. Ein Name allein ist
-         * mehrdeutig: "Überkopfdrücken" kann sitzend oder stehend sein,
-         * mit Lang- oder Kurzhantel. Ohne diese Felder lässt sich nicht
-         * nachschlagen, welche Übung gemeint ist, und brauchbare Videos
-         * findet man fast nur unter dem englischen Namen.
+         * Ausführung: Ein Name allein ist mehrdeutig, "Überkopfdrücken" kann
+         * sitzend oder stehend sein, mit Lang- oder Kurzhantel.
          */
         // Ausgeblendet (Frank, 23.10.2026): nicht mehr in Plan und Studio,
         // aber mit allen Angaben erhalten, damit Rückblick und
@@ -109,7 +106,10 @@ function uebung_pruefen(array $roh, array $plan): array
         // nicht über das Formular.
         'hidden'       => !empty($roh['hidden']),
         'execution'    => trim((string) ($roh['execution'] ?? '')),
-        'search'       => trim((string) ($roh['search'] ?? '')),
+        // Ein fest hinterlegtes Video statt einer Suche (Frank, 23.10.2026):
+        // Dass eine Suche genau das Video findet, das die Übung erklärt, ist
+        // Zufall. Der Suchbegriff und der Google-Knopf sind dafür entfallen.
+        'video_url'    => video_link((string) ($roh['video_url'] ?? '')),
         /*
          * Unterstützungsmaschine: mehr Gewicht heißt LEICHTER.
          *
@@ -126,6 +126,29 @@ function uebung_pruefen(array $roh, array $plan): array
 }
 
 /** Übungen eines Tages, nach order und dann nach Name sortiert. */
+/**
+ * Prüft einen YouTube-Link. Leer ist erlaubt. Angenommen werden nur
+ * https-Adressen auf youtube.com und youtu.be: Der Knopf heißt "Video" und
+ * öffnet sich im Studio mit einem Tipp, dahinter soll nichts anderes liegen.
+ *
+ * @throws InvalidArgumentException mit einer Meldung für die Oberfläche
+ */
+function video_link(string $roh): string
+{
+    $link = trim($roh);
+    if ($link === '') {
+        return '';
+    }
+    $teile = parse_url($link);
+    $host = strtolower((string) ($teile['host'] ?? ''));
+    $erlaubt = ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'];
+    if (($teile['scheme'] ?? '') !== 'https' || !in_array($host, $erlaubt, true)) {
+        throw new InvalidArgumentException(
+            'Das ist kein YouTube-Link. Er beginnt mit https://www.youtube.com/ oder https://youtu.be/.');
+    }
+    return $link;
+}
+
 /** Steht die Übung in Plan und Studio, also nicht ausgeblendet? */
 function uebung_sichtbar(array $uebung): bool
 {

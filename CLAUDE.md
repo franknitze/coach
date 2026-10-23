@@ -393,6 +393,8 @@ Ohne Foto bleibt es beim Alten: Dann steht die Nummer **an der Stelle** des Bild
 
 **Bei null verschwindet das Panel, es gibt keinen Zustand danach.** Dort stand einmal ein helles Grün mit „Weiter". Es sagte nur, was ohnehin zu sehen ist, und kostete einen Tipp, bevor man wieder an den Reglern war. Dass die Pause vorbei ist, erkennt man daran, dass sie weg ist. Das Rütteln bleibt, es erreicht einen auch dann, wenn man nicht aufs Handy schaut.
 
+**Ein Video wird hinterlegt, nicht gesucht** (Frank, 23.10.2026). Das Feld `video_url` nimmt nur https-Links auf youtube.com und youtu.be an (`video_link()` in `lib/uebungen.php`), leer ist erlaubt; der Knopf „Video ansehen" öffnet ihn daneben. Der englische Suchbegriff `search` und die Knöpfe für YouTube- und Google-Suche sind entfallen, auch aus dem Standardplan: Eine Suche fand nur zufällig das Video, das die Übung erklärt. Das Übungsformular trägt `novalidate`, sonst kommentierte der Browser das Feld vom Typ `url` mit seiner eigenen Sprechblase.
+
 **Es gibt keine Supersets mehr** (Frank, 23.10.2026). Jede Übung wird am Stück gemacht, die Pause ist immer `rest_timer_seconds`. Ein altes Feld `partner` in `exercises.json` liest kein Code mehr; `tests/ohnepaare.js` hält fest, dass es auch nichts mehr bewirkt. Die Klasse `.wechsel` trägt heute nur noch den Hinweis zur Unterstützungsmaschine.
 
 **Nach dem letzten Satz einer Einheit startet keine Pause.** Sie dient dem nächsten Satz; gibt es keinen, hieße Herunterzählen, jemanden vor dem Ausgang warten zu lassen. Geprüft wird der ganze Tag und nicht nur die eigene Übung, denn der letzte Satz kann mitten in der Liste liegen, wenn man sie nicht der Reihe nach abarbeitet.

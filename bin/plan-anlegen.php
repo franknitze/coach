@@ -14,7 +14,7 @@ declare(strict_types=1);
  * vollständig gelöscht. Deshalb gibt es --force nicht mehr.
  *
  * --aktualisieren schreibt nur die Felder, die aus dem Plan stammen:
- * Name, Ausführung, Suchbegriff, Sätze, Wiederholungen, Schrittweite,
+ * Name, Ausführung, Sätze, Wiederholungen, Schrittweite,
  * Tag, Reihenfolge, Muskelgruppe. Foto und Gerätenummer bleiben stehen.
  *
  * --neu setzt wirklich alles zurück und legt vorher eine Sicherung an.
@@ -78,7 +78,7 @@ $uebungen = standardplan_uebungen();
  */
 const AUS_DEM_PLAN = [
     'name', 'muscle_group', 'day', 'order', 'target_sets',
-    'rep_min', 'rep_max', 'weight_step', 'execution', 'search',
+    'rep_min', 'rep_max', 'weight_step', 'execution',
     'assisted',
 ];
 

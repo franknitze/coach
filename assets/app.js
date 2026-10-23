@@ -1467,7 +1467,7 @@
      * Übung ein Bild, aber angelegte Übungen müssen keins haben.
      */
     function zeichneAnleitung(u) {
-        if (u.photo || (!u.execution && !u.search)) {
+        if (u.photo || (!u.execution && !u.video_url)) {
             return '';
         }
 
@@ -1757,7 +1757,7 @@
      * Übung aufmacht, will meist zuerst wissen, wie sie geht.
      */
     function zeichneAusfuehrung(u) {
-        if (!u.execution && !u.search) {
+        if (!u.execution && !u.video_url) {
             return '';
         }
 
@@ -1767,16 +1767,13 @@
             html += '<p class="ausfuehrung__text">' + esc(u.execution) + '</p>';
         }
 
-        if (u.search) {
-            // Videos zu Kraftübungen sind fast durchweg englisch, und der
-            // englische Name ist eindeutiger als jede deutsche Übersetzung.
-            const suche = encodeURIComponent(u.search);
-            html += '<div class="ausfuehrung__suche">'
-                 + '<span class="ausfuehrung__begriff">' + esc(u.search) + '</span>'
-                 + '<a class="kopfknopf" target="_blank" rel="noopener" '
-                 + 'href="https://www.youtube.com/results?search_query=' + suche + '">Video</a>'
-                 + '<a class="kopfknopf" target="_blank" rel="noopener" '
-                 + 'href="https://www.google.com/search?q=' + suche + '">Google</a>'
+        // Das selbst hinterlegte Video (Frank, 23.10.2026). Öffnet daneben,
+        // damit die Einheit nicht verlassen wird. Suche und Google-Knopf
+        // sind entfallen: eine Suche fand nur zufällig das richtige Video.
+        if (u.video_url) {
+            html += '<div class="ausfuehrung__video">'
+                 + '<a class="kopfknopf" target="_blank" rel="noopener" href="'
+                 + esc(u.video_url) + '">Video ansehen</a>'
                  + '</div>';
         }
 
@@ -2214,7 +2211,7 @@
             return u[feld] === undefined || u[feld] === '' ? ersatz : u[feld];
         };
 
-        let html = '<form class="editor" data-id="' + esc(u.id || '') + '">'
+        let html = '<form class="editor" novalidate data-id="' + esc(u.id || '') + '">'
             + '<label class="mini" for="e-name">Name</label>'
             + '<input class="feld feld--text" id="e-name" name="name" required '
             + 'value="' + esc(u.name || '') + '" placeholder="Beinpresse">'
@@ -2279,9 +2276,10 @@
             + 'name="execution" rows="4" placeholder="Wie genau wird die Übung '
             + 'ausgeführt?">' + esc(u.execution || '') + '</textarea>'
 
-            + '<label class="mini" for="e-search">Englischer Suchbegriff</label>'
-            + '<input class="feld feld--text" id="e-search" name="search" '
-            + 'value="' + esc(u.search || '') + '" placeholder="z. B. incline dumbbell curl">'
+            + '<label class="mini" for="e-video">Video (YouTube-Link)</label>'
+            + '<input class="feld feld--text" id="e-video" name="video_url" type="url" '
+            + 'inputmode="url" autocomplete="off" autocapitalize="off" '
+            + 'value="' + esc(u.video_url || '') + '" placeholder="https://www.youtube.com/watch?v=…">'
 
             + '<label class="mini">Foto</label>'
             + zeichneBildauswahl(u.photo || '')
