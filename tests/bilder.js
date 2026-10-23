@@ -8,7 +8,7 @@ module.exports = (port) => testlauf('Bilder', port, async (t) => {
     const { page, ok } = t;
 
     await t.anmelden();
-    await page.click('[data-gehe="plan"]');
+    await t.menue('plan');
     await page.waitForSelector('.zeile');
     await page.locator('.zeile').first().click();
     await page.waitForSelector('.editor');

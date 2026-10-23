@@ -218,8 +218,8 @@
     /*
      * Abmelden in zwei Schritten, wie das Löschen eines Fotos.
      *
-     * Der Knopf steht unten am Seitenende, und unten am Seitenende liegt
-     * auf dem Handy der Daumen. Die Frage kostet einen Tipp und verhindert
+     * Der Knopf steht im Menü oben rechts, dicht unter Kalender und
+     * Einstellungen. Die Frage kostet einen Tipp und verhindert
      * den Fehlgriff, der im Studio teuer wäre: Anmelden braucht das Netz,
      * das dort oft fehlt, und bis dahin lägen die gepufferten Sätze fest.
      * Jede andere Berührung nimmt die Frage zurück.
@@ -253,6 +253,60 @@
                 zuruecknehmen();
             }
         }, true);
+    }
+
+    /* ---------- Menü oben rechts ----------
+     *
+     * Kalender, Einstellungen, abgesetzt Abmelden (Frank, 23.10.2026). Die
+     * Einträge blenden sich aus, wenn sie ins Leere führten: Kalender erst
+     * mit der ersten Einheit, Einstellungen nur mit geladenem Plan, denn der
+     * Verwaltungsbereich braucht das Netz. Ein Tipp daneben schließt.
+     */
+    const menueKnopf = document.getElementById('menue-knopf');
+    const menue = document.getElementById('menue');
+
+    function menueOeffnen() {
+        const kalender = menue.querySelector('[data-menue="kalender"]');
+        const plan = menue.querySelector('[data-menue="plan"]');
+        kalender.hidden = !(zustand.einheiten && (zustand.einheiten.sessions || []).length > 0);
+        plan.hidden = !zustand.plan;
+        menue.hidden = false;
+        menueKnopf.setAttribute('aria-expanded', 'true');
+    }
+
+    function menueSchliessen() {
+        if (menue && !menue.hidden) {
+            menue.hidden = true;
+            menueKnopf.setAttribute('aria-expanded', 'false');
+        }
+    }
+
+    if (menueKnopf && menue) {
+        menueKnopf.addEventListener('click', function () {
+            if (menue.hidden) {
+                menueOeffnen();
+            } else {
+                menueSchliessen();
+            }
+        });
+        menue.addEventListener('click', function (e) {
+            const eintrag = e.target.closest('[data-menue]');
+            if (eintrag) {
+                menueSchliessen();
+                window.scrollTo(0, 0);
+                gehe(eintrag.dataset.menue, false);
+            }
+        });
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('#menue, #menue-knopf')) {
+                menueSchliessen();
+            }
+        });
+        addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                menueSchliessen();
+            }
+        });
     }
 
     const zustand = {
@@ -797,15 +851,8 @@
 
         html += zeichneRueckblick();
 
-        if (zustand.einheiten && (zustand.einheiten.sessions || []).length > 0) {
-            html += '<button class="verweis" data-gehe="kalender">Kalender</button>';
-        }
-
-        // Der Verwaltungsbereich braucht das Netz und wird zu Hause bedient.
-        // Ohne Verbindung führt der Verweis ins Leere, also weg damit.
-        if (zustand.plan) {
-            html += '<button class="verweis" data-gehe="plan">Einstellungen</button>';
-        }
+        // Kalender und Einstellungen stehen seit dem 23.10.2026 im Menü oben
+        // rechts (menueOeffnen()), nicht mehr als Verweise unter dem Rückblick.
 
         /*
          * Der Knopf unten verschwindet, wenn er nicht mehr sagen könnte,
@@ -2368,6 +2415,73 @@
 
     /* ---------- Ereignisse ---------- */
 
+    /**
+     * Wechselt die Ansicht. Aufgerufen vom Klick auf ein data-gehe in #app
+     * und vom Menü oben rechts, das außerhalb von #app liegt.
+     *
+     * abschluss: true für den Ausgang aus einer Einheit (pausieren oder
+     * beenden).
+     */
+    async function gehe(ziel, abschluss) {
+        zustand.ansicht = ziel;
+        zustand.uebungId = null;
+        zustand.offen = null;
+        zustand.meldung = '';
+        zustand.passwortText = '';
+        if (ziel !== 'studio') {
+            pauseBeenden();
+        }
+        /*
+         * "Einheit beenden" gibt den Tag wieder frei. Ohne das bot die
+         * Startseite weiter die gerade abgeschlossene Einheit an, und
+         * "Weiter trainieren" führte zurück in eine Liste, in der alles
+         * abgehakt war und nur wieder "Einheit beenden" stand.
+         */
+        if (abschluss) {
+            zustand.tagWahl = null;
+        }
+
+        if (ziel === 'start' || ziel === 'studio') {
+            try {
+                await studioLaden(zustand.tagWahl);
+
+                /*
+                 * Wer das Studio betritt, hält den Tag fest. Der Server
+                 * schlägt ab dem ersten bestätigten Satz schon den
+                 * nächsten Tag vor, weil die laufende Einheit dann die
+                 * letzte in den Logs ist. Ohne das Festhalten spränge
+                 * die Ansicht mitten in der Einheit weg.
+                 */
+                if (ziel === 'studio' && zustand.studio) {
+                    zustand.tagWahl = zustand.studio.day.key;
+                }
+            } catch (err) {
+                zustand.meldung = err.message;
+            }
+        }
+
+        // Nach einer Einheit steht ein Eintrag mehr im Rückblick.
+        if (ziel === 'start') {
+            einheitenHolen();
+        }
+
+        // Beim ersten Betreten den laufenden Monat. Kommt man aus einer
+        // Einheit zurück, bleibt der Monat stehen, den man angesehen hat.
+        if (ziel === 'kalender' && !zustand.kalender) {
+            await kalenderLaden(monatVon(new Date()));
+        }
+
+        zeichnen();
+
+        // Der Ausgang aus der Einheit liegt unter der letzten Kachel. Ohne
+        // das stünde man danach unten auf der Startseite statt bei
+        // Trainingstag und Knopf (Frank, 23.10.2026).
+        if (abschluss) {
+            window.scrollTo(0, 0);
+        }
+        return;
+    }
+
     app.addEventListener('click', async function (e) {
         const ziel = e.target.closest('[data-gehe], [data-tag], [data-monat], [data-einheit], [data-oeffne], '
             + '[data-foto], [data-bild], [data-bildweg], '
@@ -2383,63 +2497,7 @@
         /* --- Navigation --- */
 
         if (d.gehe) {
-            zustand.ansicht = d.gehe;
-            zustand.uebungId = null;
-            zustand.offen = null;
-            zustand.meldung = '';
-            zustand.passwortText = '';
-            if (d.gehe !== 'studio') {
-                pauseBeenden();
-            }
-            /*
-             * "Einheit beenden" gibt den Tag wieder frei. Ohne das bot die
-             * Startseite weiter die gerade abgeschlossene Einheit an, und
-             * "Weiter trainieren" führte zurück in eine Liste, in der alles
-             * abgehakt war und nur wieder "Einheit beenden" stand.
-             */
-            if (d.abschluss) {
-                zustand.tagWahl = null;
-            }
-
-            if (d.gehe === 'start' || d.gehe === 'studio') {
-                try {
-                    await studioLaden(zustand.tagWahl);
-
-                    /*
-                     * Wer das Studio betritt, hält den Tag fest. Der Server
-                     * schlägt ab dem ersten bestätigten Satz schon den
-                     * nächsten Tag vor, weil die laufende Einheit dann die
-                     * letzte in den Logs ist. Ohne das Festhalten spränge
-                     * die Ansicht mitten in der Einheit weg.
-                     */
-                    if (d.gehe === 'studio' && zustand.studio) {
-                        zustand.tagWahl = zustand.studio.day.key;
-                    }
-                } catch (err) {
-                    zustand.meldung = err.message;
-                }
-            }
-
-            // Nach einer Einheit steht ein Eintrag mehr im Rückblick.
-            if (d.gehe === 'start') {
-                einheitenHolen();
-            }
-
-            // Beim ersten Betreten den laufenden Monat. Kommt man aus einer
-            // Einheit zurück, bleibt der Monat stehen, den man angesehen hat.
-            if (d.gehe === 'kalender' && !zustand.kalender) {
-                await kalenderLaden(monatVon(new Date()));
-            }
-
-            zeichnen();
-
-            // Der Ausgang aus der Einheit liegt unter der letzten Kachel. Ohne
-            // das stünde man danach unten auf der Startseite statt bei
-            // Trainingstag und Knopf (Frank, 23.10.2026).
-            if (d.abschluss) {
-                window.scrollTo(0, 0);
-            }
-            return;
+            return gehe(d.gehe, !!d.abschluss);
         }
 
         /*

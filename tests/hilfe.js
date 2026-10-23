@@ -88,8 +88,8 @@ module.exports = (port) => testlauf('Unterstützung', port, async (t) => {
 
     // Im Studio führt der Weg über den Startbildschirm zurück in den Plan.
     await page.click('.kopfknopf[data-gehe="start"]');
-    await page.waitForSelector('[data-gehe="plan"]');
-    await page.click('[data-gehe="plan"]');
+    await page.waitForSelector('#menue-knopf');
+    await t.menue('plan');
     await page.waitForSelector('.zeile');
     await page.locator('.zeile', { hasText: 'Klimmzug' }).locator('.zeile__text').click();
     await page.waitForSelector('#e-assisted');
@@ -121,7 +121,7 @@ module.exports = (port) => testlauf('Unterstützung', port, async (t) => {
        'die y-Achse spannt über die tatsächliche Hilfe: ' + werte.join(' '));
 
     // Zum Vergleich die normale Übung: dort bleibt alles beim Alten
-    await page.click('[data-gehe="plan"]');
+    await t.menue('plan');
     await page.waitForSelector('.zeile');
     await page.locator('.zeile', { hasText: 'Bankdrücken' }).click();
     await page.waitForSelector('.chart');
@@ -133,7 +133,7 @@ module.exports = (port) => testlauf('Unterstützung', port, async (t) => {
     ok((await page.locator('.verlauf__lese').innerText()).includes('80 kg ×'),
        'die Ableselinie zeigt dort das schwerste Gewicht: 80 kg');
 
-    await page.click('[data-gehe="plan"]');
+    await t.menue('plan');
     await page.waitForSelector('.zeile');
     await page.locator('.zeile', { hasText: 'Klimmzug' }).locator('.zeile__text').click();
     await page.waitForSelector('#e-assisted');

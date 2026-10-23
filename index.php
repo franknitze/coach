@@ -160,6 +160,20 @@ $adresse      = (($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !
 
     <header class="kopf">
         <span class="wortmarke"><img class="wortmarke__zeichen" src="assets/icons/logo.svg" alt="" width="24" height="24">Coach</span>
+        <!-- Menü oben rechts (Frank, 23.10.2026): Kalender, Einstellungen und
+             abgesetzt Abmelden. Liegt außerhalb von #app, damit es in jeder
+             Ansicht da ist; assets/app.js blendet Einträge aus, die gerade
+             ins Leere führten. -->
+        <button class="menue-knopf" id="menue-knopf" type="button" aria-label="Menü"
+                aria-expanded="false" aria-controls="menue">
+            <svg class="sym" viewBox="0 0 256 256" aria-hidden="true"><path d="M228,128a12,12,0,0,1-12,12H40a12,12,0,0,1,0-24H216A12,12,0,0,1,228,128ZM40,76H216a12,12,0,0,0,0-24H40a12,12,0,0,0,0,24ZM216,180H40a12,12,0,0,0,0,24H216a12,12,0,0,0,0-24Z"/></svg>
+        </button>
+        <nav class="menue" id="menue" hidden>
+            <button class="menue__eintrag" type="button" data-menue="kalender">Kalender</button>
+            <button class="menue__eintrag" type="button" data-menue="plan">Einstellungen</button>
+            <hr class="menue__trenner">
+            <button class="menue__eintrag menue__eintrag--leise" type="button" id="abmelden">Abmelden</button>
+        </nav>
     </header>
 
     <!-- Sagt, ob Sätze noch im lokalen Puffer liegen. Steht außerhalb von
@@ -204,14 +218,6 @@ $adresse      = (($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !
         </div>
     </div>
 
-    <!-- Abmelden steht ganz unten und leise, nicht im Kopf.
-         Oben rechts lag es genau da, wo der Daumen beim Halten des Handys
-         ohnehin liegt, und ein Fehlgriff kostet im Studio den Zugang: neu
-         anmelden geht nur mit Netz, und im Funkloch gibt es keins. Der
-         zweite Tipp bestätigt, so wie beim Löschen eines Fotos. -->
-    <footer class="fuss">
-        <button class="fuss__knopf" type="button" id="abmelden">Abmelden</button>
-    </footer>
 
     <!-- Der Pausen-Timer liegt außerhalb von #app, damit das Sekundenzählen
          nicht die ganze Übungsliste neu zeichnet. -->

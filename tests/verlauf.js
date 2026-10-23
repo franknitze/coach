@@ -23,7 +23,7 @@ module.exports = (port) => testlauf('Verlauf', port, async (t) => {
     t.training(proMonat);
 
     await t.anmelden();
-    await page.click('[data-gehe="plan"]');
+    await t.menue('plan');
     await page.waitForSelector('.zeile');
 
     await page.locator('.zeile', { hasText: 'Bankdrücken' }).click();
@@ -34,7 +34,7 @@ module.exports = (port) => testlauf('Verlauf', port, async (t) => {
 
     /* ---------- Ausführung und Nachschlagen ---------- */
 
-    await page.click('[data-gehe="plan"]');
+    await t.menue('plan');
     await page.waitForSelector('.zeile');
     await page.locator('.zeile', { hasText: 'Bankdrücken' }).locator('.zeile__text').click();
     await page.waitForSelector('.editor');
@@ -66,7 +66,7 @@ module.exports = (port) => testlauf('Verlauf', port, async (t) => {
     ok(await page.locator('.ch-kreuz').count() === 2, 'beide Diagramme zeigen dasselbe Fadenkreuz');
 
     // Übung ohne Verlauf
-    await page.click('[data-gehe="plan"]');
+    await t.menue('plan');
     await page.waitForSelector('.zeile');
     await page.locator('.zeile', { hasText: 'Schulterdrücken' }).click();
     await page.waitForSelector('.editor');

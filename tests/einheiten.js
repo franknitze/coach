@@ -180,7 +180,7 @@ module.exports = (port) => testlauf('Rückblick', port, async (t) => {
 
     /* ---------- Der Kalender ---------- */
 
-    await page.locator('[data-gehe="kalender"]').click();
+    await t.menue('kalender');
     await page.waitForSelector('.kal__tag');
 
     ok(await page.locator('.titel').innerText() === marke(jetzt),
@@ -244,7 +244,7 @@ module.exports = (port) => testlauf('Rückblick', port, async (t) => {
 
     /* ---------- Körpergewicht eintragen ---------- */
 
-    await page.click('[data-gehe="plan"]');
+    await t.menue('plan');
     // Das Körpergewicht steht seit dem 22.08.2026 im Bereich "Allgemein".
     await page.click('[data-bereich="allgemein"]');
     await page.waitForSelector('#gewicht-form');

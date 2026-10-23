@@ -292,6 +292,12 @@ async function testlauf(name, port, lauf) {
             await page.waitForSelector('#app .heute__tag, #app .leer__titel');
         },
 
+        /** Öffnet das Menü oben rechts und wählt einen Eintrag (kalender, plan). */
+        async menue(ziel) {
+            await page.click('#menue-knopf');
+            await page.click('#menue [data-menue="' + ziel + '"]');
+        },
+
         /** Wechselt in den Studio-Modus eines bestimmten Trainingstags. */
         async studio(tagLabel) {
             await page.locator('.tagknopf', { hasText: tagLabel }).click();

@@ -27,22 +27,35 @@ module.exports = (port) => testlauf('Verwaltung', port, async (t) => {
      * Zugang, denn Anmelden braucht das Netz, das dort oft fehlt.
      */
 
-    ok(await page.locator('.kopf #abmelden').count() === 0,
-       'im Kopf steht kein Abmelden mehr');
-    ok(await page.locator('.fuss #abmelden').count() === 1,
-       'es steht in der Fußzeile');
+    /*
+     * Seit dem 23.10.2026 steht Abmelden im Menü oben rechts (Franks
+     * Vorgabe), abgesetzt durch einen Trennstrich unter Kalender und
+     * Einstellungen. Die Nachfrage bleibt.
+     */
+    ok(await page.locator('#menue').isHidden(), 'das Menü ist zu');
+    ok(await page.locator('#abmelden').isHidden(), 'Abmelden ist ohne Menü nicht zu sehen');
+    await page.click('#menue-knopf');
+    ok(await page.locator('#menue').isVisible(), 'der Knopf oben rechts öffnet das Menü');
+    const reihe = await page.$$eval('#menue > *', (k) => k.map((e) => e.tagName === 'HR' ? '---' : e.textContent.trim()));
+    ok(reihe.join(' | ') === 'Kalender | Einstellungen | --- | Abmelden',
+       'Reihenfolge: Kalender, Einstellungen, Trennstrich, Abmelden: ' + reihe.join(' | '));
+    ok(await page.locator('#menue [data-menue="kalender"]').isHidden()
+       && await page.locator('#menue [data-menue="plan"]').isVisible(),
+       'ohne eine einzige Einheit fehlt der Kalender, Einstellungen sind da');
 
     const raus = page.locator('#abmelden');
     await raus.click();
     ok((await raus.innerText()).toLowerCase().includes('wirklich'),
        'ein Tipp fragt erst nach: "' + (await raus.innerText()) + '"');
-    ok(await page.locator('#app').count() === 1,
-       'und meldet noch niemanden ab');
+    ok(await page.locator('#menue').isVisible() && await page.locator('#app').count() === 1,
+       'das Menü bleibt dabei offen, und niemand ist abgemeldet');
 
-    // Jede andere Berührung nimmt die Frage zurück
-    await page.locator('.kopf').click();
+    // Jede andere Berührung nimmt die Frage zurück und schließt das Menü
+    await page.locator('.wortmarke').click();
+    ok(await page.locator('#menue').isHidden(), 'ein Tipp daneben schließt das Menü');
+    await page.click('#menue-knopf');
     ok((await raus.innerText()) === 'Abmelden',
-       'ein Tipp woanders nimmt die Frage zurück');
+       'und nimmt die Frage zurück');
 
     await raus.click();
     await raus.click();
@@ -54,10 +67,12 @@ module.exports = (port) => testlauf('Verwaltung', port, async (t) => {
     // Der Bereich heißt in der Oberfläche "Einstellungen". Intern bleibt er
     // "plan", weil daran api/settings.php und plan.json hängen; die beiden
     // Namen dürfen auseinanderlaufen, aber nicht unbemerkt.
-    ok(await page.locator('[data-gehe="plan"]').innerText() === 'Einstellungen',
-       'der Verweis auf der Startseite heißt Einstellungen');
+    ok(await page.locator('#menue [data-menue="plan"]').innerText() === 'Einstellungen',
+       'der Eintrag im Menü heißt Einstellungen');
+    ok(await page.locator('.verweis').count() === 0,
+       'unter dem Rückblick stehen keine Verweise mehr, beides ist im Menü');
 
-    await page.click('[data-gehe="plan"]');
+    await t.menue('plan');
     await page.waitForSelector('.zeile');
     ok(await page.locator('.titel').innerText() === 'Einstellungen',
        'und die Überschrift dort ebenso');
@@ -129,7 +144,7 @@ module.exports = (port) => testlauf('Verwaltung', port, async (t) => {
      * // Auf den fertig gezeichneten Bereich warten, nicht auf #app: das
      * // steht schon mit "Wird geladen" im HTML, bevor die API antwortete.
      * await page.waitForSelector('[data-gehe="plan"]');
-     * await page.click('[data-gehe="plan"]');
+     * await t.menue('plan');
      * await page.click('[data-bereich="allgemein"]');
      * await page.waitForSelector('.prio');
      * const an = await page.locator('[data-prio="trizeps"][data-wert="focus"]')
@@ -225,7 +240,7 @@ module.exports = (port) => testlauf('Verwaltung', port, async (t) => {
      * unten, hinter 25 Übungszeilen.
      */
 
-    await page.click('[data-gehe="plan"]');
+    await t.menue('plan');
     await page.waitForSelector('.schalter--breit');
 
     const bereiche = await page.locator('.schalter--breit .schalter__teil').allInnerTexts();
@@ -340,6 +355,7 @@ module.exports = (port) => testlauf('Verwaltung', port, async (t) => {
     /* ---------- Und es gilt wirklich ---------- */
 
     const raus2 = page.locator('#abmelden');
+    await page.click('#menue-knopf');
     await raus2.click();
     await raus2.click();
     await page.waitForSelector('#anmeldung');

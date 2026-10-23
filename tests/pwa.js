@@ -82,7 +82,7 @@ module.exports = (port) => testlauf('PWA und Export', port, async (t) => {
 
     /* ---------- Die API darf niemals aus dem Cache kommen ---------- */
 
-    await page.click('[data-gehe="plan"]');
+    await t.menue('plan');
     await page.waitForSelector('.zeile');
 
     const apiImCache = await page.evaluate(async () => {

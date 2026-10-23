@@ -438,6 +438,8 @@ Der leere Fall („Hier ist noch kein Plan") steht jetzt **innerhalb** des Übun
 
 **Eine Bestätigung ist kein Kasten.** `.quittung` ist reiner Text in der Schriftfarbe, fett, an derselben Stelle wie `.fehler` und nur durch die Farbe von ihr unterschieden. Mit Rahmen, Fläche und Rundung sah sie aus wie ein viertes, leeres Eingabefeld unter den dreien darüber. Kein Grün: Gelb heißt „hier tippen", Orange heißt „Steigerung fällig", ein dritter Akzent nur für „hat geklappt" wäre einer zu viel.
 
+**Kalender, Einstellungen und Abmelden stehen im Menü oben rechts** (Frank, 23.10.2026), nicht mehr als Verweise unter dem Rückblick und im Fuß. Das Menü liegt im Kopf außerhalb von `#app`, damit es in jeder Ansicht da ist; seine Einträge tragen `data-menue` statt `data-gehe` und rufen `gehe()` direkt, weil der Klick-Handler nur auf `#app` lauscht. Kalender erscheint erst mit der ersten Einheit, Einstellungen nur mit geladenem Plan (ohne Netz führte der Eintrag ins Leere). Abmelden steht abgesetzt hinter einem Trennstrich und fragt weiter einmal nach. In Tests geht es über `t.menue('plan')` oder `t.menue('kalender')`.
+
 **Der Verwaltungsbereich heißt in der Oberfläche „Einstellungen", intern `plan`.** `data-gehe="plan"`, `zustand.ansicht === 'plan'`, `zeichnePlan()` — daran hängen `api/settings.php` und `plan.json`. Die beiden Namen dürfen auseinanderlaufen, aber nicht unbemerkt: zwei Tests in `tests/verwaltung.js` halten die sichtbare Beschriftung fest. SPEC.md §5.3 heißt seit dem Abgleich vom 21.08.2026 ebenfalls „Einstellungen" und nennt den internen Namen dazu.
 
 **Diagramme** (Phase 3, `chart()` in `app.js`):
