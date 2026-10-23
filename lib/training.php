@@ -113,11 +113,18 @@ function training_letzte_session(): ?array
  * überblickt, und die Antwort trägt die Sätze gleich mit. Ohne Deckel läse
  * jeder Aufruf der Startseite die gesamte Historie ein.
  */
-function training_letzte_sessions(int $anzahl): array
+function training_letzte_sessions(int $anzahl, int $versatz = 0): array
 {
     $gefunden = [];
+    $uebersprungen = 0;
 
-    training_rueckwaerts(function (array $session) use ($anzahl, &$gefunden): bool {
+    // $versatz überspringt die jüngsten Einheiten, damit lässt sich im
+    // Rückblick seitenweise zurückblättern (Frank, 23.10.2026).
+    training_rueckwaerts(function (array $session) use ($anzahl, $versatz, &$gefunden, &$uebersprungen): bool {
+        if ($uebersprungen < $versatz) {
+            $uebersprungen++;
+            return false;
+        }
         $gefunden[] = $session;
         return count($gefunden) >= $anzahl;
     });

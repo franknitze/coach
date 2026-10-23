@@ -27,6 +27,7 @@ const laeufe = {
     einheiten:  { port: 8797, modul: './einheiten' },
     startseite: { port: 8798, modul: './startseite' },
     verlaufstabelle: { port: 8785, modul: './verlaufstabelle' },
+    blaettern:  { port: 8779, modul: './blaettern' },
 };
 
 (async function () {

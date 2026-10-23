@@ -41,13 +41,17 @@ if ($monat !== '' && !preg_match('/^\d{4}-\d{2}$/', $monat)) {
 $grenze = (int) ($_GET['limit'] ?? EINHEITEN_DECKEL);
 $grenze = max(1, min(EINHEITEN_DECKEL, $grenze));
 
+// Wie viele der jüngsten Einheiten übersprungen werden: Blättern im
+// Rückblick, Seite für Seite um $grenze.
+$versatz = max(0, (int) ($_GET['offset'] ?? 0));
+
 $plan      = (array) json_read(PLAN_FILE, []);
 $tage      = (array) ($plan['days'] ?? []);
 $uebungen  = (array) json_read(EXERCISES_FILE, []);
 
 $ergebnis = [];
 
-$quelle = $monat === '' ? training_letzte_sessions($grenze) : training_monat($monat);
+$quelle = $monat === '' ? training_letzte_sessions($grenze, $versatz) : training_monat($monat);
 
 foreach ($quelle as $session) {
     $tag  = (string) ($session['day'] ?? '');
@@ -141,6 +145,7 @@ $antwort = [
 if ($monat === '') {
     $antwort['total']       = training_anzahl_sessions();
     $antwort['limit']       = $grenze;
+    $antwort['offset']      = $versatz;
     $antwort['fortschritt'] = fortschritt_punkte($uebungen);
 }
 

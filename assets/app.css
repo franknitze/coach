@@ -884,6 +884,8 @@ body {
     color: var(--schrift-leise);
 }
 
+.rueckblick__steuer { margin: 14px 0 0; }
+
 .kal {
     display: grid;
     grid-template-columns: repeat(7, 1fr);

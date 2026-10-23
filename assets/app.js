@@ -897,12 +897,8 @@
                  + '<section class="abschnitt rueckblick">'
                  + '<div class="tag__kopf">'
                  + '<span class="tag__name">Letzte Einheiten</span>'
-                 // Die Zahl gehört in die Abschnittsmarke, wie unter "Mein
-                 // Plan" die Zahl der Übungen je Trainingstag.
-                 + (r.total > r.sessions.length
-                     ? '<span class="tag__zahl">' + r.sessions.length + ' von '
-                       + r.total + '</span>'
-                     : '')
+                 // Wie viele es insgesamt sind, steht seit dem 23.10.2026 in
+                 // der Blätterzeile unter der Liste, nicht mehr hier.
                  + '</div>';
 
         /*
@@ -937,6 +933,24 @@
                  + (e.offen ? '<span class="einheit__weiter">Weiter</span>' : '')
                  + '</button>';
         });
+
+        /*
+         * Blättern, sobald es mehr Einheiten gibt als auf eine Seite passen
+         * (Frank, 23.10.2026). Dieselbe Zeile wie im Kalender: links zurück
+         * in der Zeit, also zu älteren Einheiten, rechts wieder zu neueren.
+         * Am jeweiligen Ende ist der Knopf gesperrt.
+         */
+        const versatz = r.offset || 0;
+        if (r.total > r.sessions.length || versatz > 0) {
+            const bis = versatz + r.sessions.length;
+            html += '<div class="kal__steuer rueckblick__steuer">'
+                 + '<button class="kopfknopf" data-seite="aelter"'
+                 + (bis >= r.total ? ' disabled' : '') + ' aria-label="Ältere Einheiten">←</button>'
+                 + '<span class="kal__zahl">' + (versatz + 1) + '–' + bis + ' von ' + r.total + '</span>'
+                 + '<button class="kopfknopf" data-seite="neuer"'
+                 + (versatz === 0 ? ' disabled' : '') + ' aria-label="Neuere Einheiten">→</button>'
+                 + '</div>';
+        }
 
         return html + '</section>';
     }
@@ -2374,7 +2388,7 @@
      * es nicht gibt.
      */
     function einheitenHolen() {
-        api('api/einheiten.php')
+        api('api/einheiten.php?offset=' + (zustand.rueckblickVersatz || 0))
             .then(function (antwort) {
                 zustand.einheiten = antwort;
                 if (zustand.ansicht === 'start') {
@@ -2382,6 +2396,27 @@
                 }
             })
             .catch(function () { zustand.einheiten = null; });
+    }
+
+    /**
+     * Eine Seite im Rückblick weiter. Klappt das Laden nicht (Funkloch),
+     * bleibt die bisherige Seite stehen, statt die Liste wegzunehmen.
+     */
+    async function rueckblickBlaettern(richtung) {
+        const r = zustand.einheiten;
+        if (!r) {
+            return;
+        }
+        const schritt = r.limit || 10;
+        const vorher = zustand.rueckblickVersatz || 0;
+        const neu = richtung === 'aelter' ? vorher + schritt : Math.max(0, vorher - schritt);
+        try {
+            zustand.einheiten = await api('api/einheiten.php?offset=' + neu);
+            zustand.rueckblickVersatz = neu;
+        } catch (err) {
+            return;
+        }
+        zeichnen();
     }
 
     /**
@@ -2460,8 +2495,10 @@
             }
         }
 
-        // Nach einer Einheit steht ein Eintrag mehr im Rückblick.
+        // Nach einer Einheit steht ein Eintrag mehr im Rückblick, und der
+        // steht auf der ersten Seite.
         if (ziel === 'start') {
+            zustand.rueckblickVersatz = 0;
             einheitenHolen();
         }
 
@@ -2488,7 +2525,7 @@
             + '[data-bestaetige], [data-korrigiere], [data-extra], [data-bearbeite], '
             + '[data-neu], [data-abbrechen], [data-frage], [data-loesche], [data-prio], '
             + '[data-gewichtweg], [data-bereich], [data-weiter], '
-            + '[data-anleitung], [data-verlauf]');
+            + '[data-anleitung], [data-verlauf], [data-seite]');
         if (!ziel) {
             return;
         }
@@ -2615,6 +2652,10 @@
         if (d.verlauf) {
             verlaufZeigen(d.verlauf);
             return;
+        }
+
+        if (d.seite) {
+            return rueckblickBlaettern(d.seite);
         }
 
         if (d.oeffne) {

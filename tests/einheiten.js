@@ -69,9 +69,9 @@ module.exports = (port) => testlauf('Rückblick', port, async (t) => {
        'die jüngste steht oben: "' + erste.split('\n')[0] + '"');
     ok(erste.includes('Oberkörper'), 'mit der Kategorie');
 
-    const rest = await page.locator('.rueckblick .tag__zahl').innerText();
-    ok(rest === '10 von 13',
-       'der Deckel steht in der Abschnittsmarke: "' + rest + '"');
+    const rest = await page.locator('.rueckblick__steuer .kal__zahl').innerText();
+    ok(rest === '1–10 von 13',
+       'der Deckel steht in der Blätterzeile unter der Liste: "' + rest + '"');
 
     /* ---------- Abgebrochene Einheiten sind erkennbar ---------- */
 

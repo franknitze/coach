@@ -102,6 +102,8 @@ SPEC.md §4 nennt nur die oberen drei. Die kleinen Stufen sind auf Franks Wunsch
 
 **Der Rückblick ist ein eigener Endpunkt und liefert die Sätze gleich mit.** `api/einheiten.php` gibt die letzten zehn Einheiten samt aller Sätze aus, gedeckelt in `EINHEITEN_DECKEL`. Zwei Entscheidungen darin:
 
+**Im Rückblick wird seitenweise geblättert** (Frank, 23.10.2026). `?offset=` überspringt die jüngsten Einheiten, `training_letzte_sessions()` nimmt dafür einen Versatz. Unter der Liste steht dieselbe Steuerzeile wie im Kalender: links zu älteren, rechts zu neueren, dazwischen „11–20 von 24“; die Zahl neben der Überschrift ist dafür weggefallen. Wer auf die Startseite kommt, steht wieder auf der ersten Seite, denn dort erscheint die gerade gemachte Einheit. Scheitert das Laden einer Seite, bleibt die bisherige stehen.
+
 Nicht an `plan.php` angehängt, obwohl der die Startseite ohnehin füllt: `plan.php` bedient auch das Studio, und dort wäre der Rückblick totes Gewicht auf genau dem Bildschirm mit der schlechtesten Verbindung. Umgekehrt nicht in Liste und Nachladen je Einheit getrennt: zehn Einheiten sind wenige Kilobyte, dafür öffnet sich die Detailansicht ohne Netz und ohne Wartezeit.
 
 Name, Foto, Stationsnummer und Vorgabe reisen je Übung mit, statt sie im Browser gegen `exercises.json` zu verbinden. Eine seit damals gelöschte Übung stünde sonst ohne Namen da, und ihre Sätze wären niemandem mehr zuzuordnen.
