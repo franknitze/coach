@@ -24,7 +24,7 @@ Nach A kommt B, nach B kommt C, dann wieder A. Nicht an Wochentage gebunden. Fä
 
 **Schwer zuerst.** Die Grundübungen stehen vorn, solange Kraft und Konzentration frisch sind. Isolation kommt zum Schluss, dort schadet Ermüdung wenig.
 
-**Antagonisten im Wechsel.** Drücken und Ziehen abwechselnd: während die eine Seite arbeitet, erholt sich die andere. Das spart Zeit, ohne die Qualität zu senken.
+**Antagonisten im Wechsel.** In der Reihenfolge eines Tages wechseln sich Drücken und Ziehen ab. Jede Übung wird dabei mit allen Sätzen am Stück gemacht, mit voller Pause. Gepaarte Übungen im direkten Wechsel (Supersets) gab es bis zum 23.10.2026; sie sind entfallen, weil sie die Übersicht kosten.
 
 **Progression schlägt Auswahl.** Dieselben Bewegungen über Monate, dafür mit steigendem Gewicht. Abwechslung um der Abwechslung willen zerstört die Vergleichbarkeit und damit die Steigerung.
 

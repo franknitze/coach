@@ -78,7 +78,7 @@ $uebungen = standardplan_uebungen();
  */
 const AUS_DEM_PLAN = [
     'name', 'muscle_group', 'day', 'order', 'target_sets',
-    'rep_min', 'rep_max', 'weight_step', 'execution', 'search', 'partner',
+    'rep_min', 'rep_max', 'weight_step', 'execution', 'search',
     'assisted',
 ];
 
@@ -151,7 +151,3 @@ echo "\n  neu angelegt: $neuAngelegt";
 echo ", aufgefrischt: $aufgefrischt";
 echo ", unberührt gelassen: $unberuehrt\n";
 echo "  Übungen mit zugeordnetem Foto: $mitFoto\n";
-// Aus den Übungen gezählt, nicht aus der Paarliste: die steht seit dem
-// Umzug in lib/standardplan.php und wird hier nicht mehr gebraucht.
-$imWechsel = count(array_filter($uebungen, fn (array $u): bool => $u['partner'] !== ''));
-echo "  Paare im Wechsel: " . intdiv($imWechsel, 2) . "\n";

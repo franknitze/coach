@@ -118,12 +118,11 @@
   "api_key": "langer-zufaelliger-string-fuer-n8n",
   "default_weight_step": 5,
   "rest_timer_seconds": 120,
-  "rest_pair_seconds": 90,
   "session_lifetime_days": 30
 }
 ```
 
-- `rest_pair_seconds` gilt beim Wechsel innerhalb eines Supersets. Die kürzere Pause reicht dort, weil jeder Muskel ruht, während der Gegenspieler arbeitet.
+- Supersets (gepaarte Übungen mit kürzerer Pause, `rest_pair_seconds`) gibt es seit dem 23.10.2026 nicht mehr. Jede Übung wird am Stück gemacht, die Pause ist immer `rest_timer_seconds`.
 
 ### `exercises.json` — Übungsbibliothek (Objekt, Key = Übungs-ID)
 ```json
@@ -142,8 +141,7 @@
     "station": "12",
     "assisted": false,
     "execution": "Rücken flach an die Lehne, Knie nicht ganz durchdrücken.",
-    "search": "leg press 45 degree",
-    "partner": null
+    "search": "leg press 45 degree"
   }
 }
 ```
@@ -152,7 +150,6 @@
 - `station` ist die aufgeklebte Gerätenummer aus dem Studio, optional. Sie ist der Grund, warum man das richtige Gerät wiederfindet, und trägt die gelbe Plakette in der Oberfläche.
 - `assisted` kennzeichnet eine Unterstützungsmaschine: Dort hebt ein Gegengewicht einen Teil des Körpergewichts an, **weniger Gewicht heißt schwerer**. Ohne dieses Feld schickte die Progressionsregel dort in die falsche Richtung.
 - `execution` und `search` tragen die Ausführung in einem Satz und einen englischen Suchbegriff für Video und Bildersuche.
-- `partner` verweist auf die Übung, mit der im Wechsel trainiert wird (Superset).
 
 ### `plan.json` — Struktur des Trainingsplans
 ```json
@@ -236,7 +233,7 @@
 - Felder sind mit dem **Tagesziel vorbefüllt**: Arbeitsgewicht und Ziel-Wiederholungen aus der Coach-Regel (`target_weight`, `target_reps`). Geändert am 26.08.2026; bis dahin stand dort der letzte Wert. Innerhalb einer Einheit wird der zuletzt bestätigte Satz wiederholt.
 - Die **Punktreihe im Kachelkopf** ist die Fortschrittsanzeige: gefüllt = erledigt, leer = steht aus. Erledigte Sätze werden **nicht aufgelistet** (Vorgabe vom 26.08.2026); unter dem Kachelkopf stehen nur die Regler. Die Punkte sind dafür größer geworden. Damit entfällt auch das nachträgliche Ändern eines Satzes.
 - Ein großer Bestätigungs-Button pro Satz → danach läuft der **Pausen-Timer** (`rest_timer_seconds`), als Panel über dem unteren Bildschirmdrittel. Nach dem letzten Satz einer Einheit startet keine Pause: Sie dient dem nächsten Satz, und den gibt es dann nicht. Bei null verschwindet das Panel von selbst, es gibt keinen Zustand danach.
-- **Supersets:** Hat eine Übung einen `partner`, führt die App nach dem Satz dorthin und nimmt die kürzere Pause (`rest_pair_seconds`). Jeder Muskel bekommt trotzdem die volle Pause, weil er ruht, während der Gegenspieler arbeitet, und die Einheit wird rund ein Viertel kürzer.
+- **Keine Supersets** (Frank, 23.10.2026): Nach einem Satz bleibt die Übung offen, bis alle ihre Sätze durch sind, dann geht es zur nächsten offenen. Der frühere Sprung zur Partnerübung mit kürzerer Pause ist entfallen: Frank hatte ihn nie bemerkt, und eine Liste, die nicht der Reihe nach läuft, kostet die Übersicht.
 - Ein Tipp aufs **Foto** öffnet die **Großansicht**: Bild, Gerätenummer, Name, Ausführungstext, Suchbegriff und Verweise auf Video und Bildersuche. Geändert am 26.08.2026: Vorher klappte der Text als eigene Zeile auf der Kachel auf und schob die Regler nach unten — also genau das weg, wofür die Kachel geöffnet war. Foto und Ausführung beantworten dieselbe Frage, deshalb stehen sie zusammen.
 - Hat eine Übung **kein Foto**, bleibt die Zeile **„Wie geht die Übung?"** als einziger Weg dorthin stehen; die Großansicht zeigt dann nur den Text. Mit Foto entfällt sie.
 - Der Ausgang aus der Einheit steht **immer** unter der letzten Kachel, fertig oder nicht. Der letzte Satz wird ganz unten bestätigt, und eine Meldung neun Kacheln weiter oben sieht man nicht. Eine Einheit wird nicht immer fertig.

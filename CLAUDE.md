@@ -393,6 +393,8 @@ Ohne Foto bleibt es beim Alten: Dann steht die Nummer **an der Stelle** des Bild
 
 **Bei null verschwindet das Panel, es gibt keinen Zustand danach.** Dort stand einmal ein helles Grün mit „Weiter". Es sagte nur, was ohnehin zu sehen ist, und kostete einen Tipp, bevor man wieder an den Reglern war. Dass die Pause vorbei ist, erkennt man daran, dass sie weg ist. Das Rütteln bleibt, es erreicht einen auch dann, wenn man nicht aufs Handy schaut.
 
+**Es gibt keine Supersets mehr** (Frank, 23.10.2026). Jede Übung wird am Stück gemacht, die Pause ist immer `rest_timer_seconds`. Ein altes Feld `partner` in `exercises.json` liest kein Code mehr; `tests/ohnepaare.js` hält fest, dass es auch nichts mehr bewirkt. Die Klasse `.wechsel` trägt heute nur noch den Hinweis zur Unterstützungsmaschine.
+
 **Nach dem letzten Satz einer Einheit startet keine Pause.** Sie dient dem nächsten Satz; gibt es keinen, hieße Herunterzählen, jemanden vor dem Ausgang warten zu lassen. Geprüft wird der ganze Tag und nicht nur die eigene Übung, denn der letzte Satz kann mitten in der Liste liegen, wenn man sie nicht der Reihe nach abarbeitet.
 
 **Der Ausgang aus einer Einheit steht immer unter der letzten Kachel**, fertig oder nicht. Der letzte Satz wird ganz unten bestätigt, und dort steht man dann; eine Meldung neun Kacheln weiter oben sieht man nicht. Bei offener Einheit tritt er zurück (kein Rahmen, kein Gelb), weil bis dahin auf „Satz bestätigen" getippt wird. Eine Einheit wird nicht immer fertig, und dann muss sie sich trotzdem beenden lassen, ohne dass man erst alles abhakt. Unfertig heißt er „Einheit pausieren“, fertig „Einheit beenden“ (Frank, 23.10.2026): Die offene Einheit lässt sich bis zum Ende des Tages von der Startseite aus fortsetzen. Beide führen auf die Startseite ganz oben, sonst stünde man dort unten, wo der Knopf war.
@@ -413,7 +415,7 @@ Das ist dieselbe Engine wie Safari (WebKit 26.5 gegen Safari 26.5 auf diesem Mac
 
 ```bash
 COACH_BROWSER=webkit node tests/lauf.js fotos regel fortschritt update verwaltung \
-    studio verlauf coach paare hilfe einrichtung einheiten
+    studio verlauf coach ohnepaare hilfe einrichtung einheiten
 ```
 
 **Offline wird in Tests doppelt abgesichert.** `setOffline()` allein genügt nicht: Anfragen durch den Service Worker gehen je nach Playwright-Fassung trotzdem durch, und wird die Seite nach dem Neuladen aus dem Cache bedient, meldet `navigator.onLine` weiter `true` — woran die Statusleiste hängt. `tests/pwa.js` und `tests/offline.js` sperren deshalb zusätzlich die API per `context.route(...).abort()`, und `pwa` überschreibt `navigator.onLine` per `addInitScript`, damit schon der erste `statusZeichnen()`-Aufruf beim Hochfahren die Wahrheit sieht.

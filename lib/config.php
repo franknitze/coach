@@ -109,10 +109,6 @@ function config(): array
             'api_key'               => '',
             'default_weight_step'   => 5,
             'rest_timer_seconds'    => 120,
-            // Pause beim Wechsel zwischen zwei gepaarten Übungen. Kürzer,
-            // weil jeder einzelne Muskel trotzdem auf die volle Pause
-            // kommt: er ruht, während der Gegenspieler arbeitet.
-            'rest_pair_seconds'     => 90,
             'session_lifetime_days' => 30,
             // Startseite mit Vorstellung der App statt der schlichten
             // Anmeldung (lib/startseite.php). Aus, damit eine Installation

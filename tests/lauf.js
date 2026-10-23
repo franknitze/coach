@@ -18,7 +18,6 @@ const laeufe = {
     studio:     { port: 8792, modul: './studio' },
     verlauf:    { port: 8793, modul: './verlauf' },
     coach:      { port: 8794, modul: './coach' },
-    paare:      { port: 8787, modul: './paare' },
     hilfe:      { port: 8786, modul: './hilfe' },
     einrichtung:{ port: 8790, modul: './einrichtung' },
     bilder:     { port: 8789, modul: './bilder' },
@@ -28,6 +27,7 @@ const laeufe = {
     startseite: { port: 8798, modul: './startseite' },
     verlaufstabelle: { port: 8785, modul: './verlaufstabelle' },
     blaettern:  { port: 8779, modul: './blaettern' },
+    ohnepaare:  { port: 8787, modul: './ohnepaare' },
 };
 
 (async function () {

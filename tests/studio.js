@@ -310,7 +310,6 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
     const cfgDatei = path.join(t.datenordner, 'config.json');
     const cfg = JSON.parse(fs.readFileSync(cfgDatei, 'utf8'));
     cfg.rest_timer_seconds = 2;
-    cfg.rest_pair_seconds = 2;
     fs.writeFileSync(cfgDatei, JSON.stringify(cfg, null, 2));
 
     t.training({});

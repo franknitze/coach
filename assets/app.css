@@ -1716,8 +1716,7 @@ body {
 
 /* Solange das Panel steht, braucht der Inhalt darunter Platz, sonst liegt
    die unterste Kachel während der Pause darunter. Der Wert deckt die Höhe
-   des Panels ab, nicht knapp, sondern mit Luft: die Beschriftung trägt bei
-   Supersets den Namen der nächsten Übung und darf umbrechen. */
+   des Panels ab, nicht knapp, sondern mit Luft. */
 body.hat-pause .inhalt { padding-bottom: calc(env(safe-area-inset-bottom) + 290px); }
 
 .pause__mini {
@@ -1964,7 +1963,9 @@ body.hat-pause .inhalt { padding-bottom: calc(env(safe-area-inset-bottom) + 290p
     resize: vertical;
 }
 
-/* Hinweis auf die Partnerübung, steht über den Reglern der offenen Kachel. */
+/* Hinweis über den Reglern der offenen Kachel. Heute nur noch der zur
+   Unterstützungsmaschine (.wechsel--hilfe); der Name stammt aus der Zeit,
+   als hier auch die Partnerübung eines Paars stand. */
 .wechsel {
     margin: 0 0 16px;
     padding: 10px 12px;
@@ -1978,8 +1979,6 @@ body.hat-pause .inhalt { padding-bottom: calc(env(safe-area-inset-bottom) + 290p
     font-weight: 600;
 }
 
-/* Beim Wechsel steht in der Pausenleiste, was als Nächstes kommt. Der
-   Text wird dann länger als das kurze "Pause". */
 .pause__mini {
     flex: 0 1 auto;
     min-width: 0;

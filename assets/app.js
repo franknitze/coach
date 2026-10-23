@@ -739,7 +739,7 @@
     const pauseWeg  = document.getElementById('pause-weg');
     let pauseUhr = null;
 
-    function pauseStarten(sekunden, naechstes) {
+    function pauseStarten(sekunden) {
         if (!sekunden) {
             return;
         }
@@ -747,7 +747,7 @@
 
         const beschriftung = document.querySelector('.pause__mini');
         if (beschriftung) {
-            beschriftung.textContent = naechstes ? 'Dann ' + naechstes : 'Pause';
+            beschriftung.textContent = 'Pause';
         }
 
         const ende = Date.now() + sekunden * 1000;
@@ -1572,13 +1572,7 @@
               + 'Das Gegengewicht nimmt dir Körpergewicht ab.</p>'
             : '';
 
-        const partner = u.partner ? uebungImStudio(u.partner) : null;
-        const partnerHinweis = partner
-            ? '<p class="wechsel">Im Wechsel mit <strong>' + esc(partner.name)
-              + '</strong>. Nach dem Satz führt die App dorthin.</p>'
-            : '';
-
-        html += hilfeHinweis + partnerHinweis
+        html += hilfeHinweis
             /*
              * Kein "Satz N", weder hier noch über den erledigten Sätzen.
              * Die Punktreihe im Kachelkopf sagt dasselbe und ist von weiter
@@ -2737,28 +2731,17 @@
             zustand.meldung = '';
 
             /*
-             * Wohin als Nächstes?
+             * Wohin als Nächstes? Ist die Übung durch, zur nächsten offenen,
+             * sonst bleibt sie offen. Jede Übung wird am Stück gemacht.
              *
-             * Hat die Übung einen Partner, der noch Sätze offen hat, geht
-             * es dorthin: Drücken und Ziehen im Wechsel. Jeder Muskel
-             * bekommt dadurch trotzdem die volle Pause, weil er ruht,
-             * während der Gegenspieler arbeitet, und die Einheit wird
-             * rund ein Viertel kürzer.
-             *
-             * Sonst wie bisher: ist die Übung durch, zur nächsten offenen.
+             * Bis zum 23.10.2026 sprang die App bei gepaarten Übungen nach
+             * jedem Satz zur Partnerübung, mit kürzerer Pause. Frank hat das
+             * herausgenommen: Er hatte es nie bemerkt, und es kostet die
+             * Übersicht, wenn die Liste nicht der Reihe nach läuft.
              */
             let gewechselt = false;
-            let imWechsel = false;
 
-            const partner = u.partner ? uebungImStudio(u.partner) : null;
-            const partnerOffen = partner
-                && (partner.today || []).length < partner.target_sets;
-
-            if (partnerOffen) {
-                zustand.offen = partner.id;
-                gewechselt = true;
-                imWechsel = true;
-            } else if (heute.length >= u.target_sets) {
+            if (heute.length >= u.target_sets) {
                 const dran = naechsteOffene();
                 zustand.offen = dran ? dran.id : null;
                 gewechselt = true;
@@ -2794,15 +2777,7 @@
                 return;
             }
 
-            // Beim Wechsel die kürzere Pause: die volle bekommt der Muskel
-            // trotzdem, verteilt über zwei Durchgänge.
-            const naechste = zustand.offen ? uebungImStudio(zustand.offen) : null;
-            pauseStarten(
-                imWechsel
-                    ? (zustand.studio.rest_pair_seconds || 90)
-                    : zustand.studio.rest_timer_seconds,
-                imWechsel && naechste ? naechste.name : ''
-            );
+            pauseStarten(zustand.studio.rest_timer_seconds);
 
             puffernSenden();   // bewusst ohne await: die Pause läuft schon
             return;
