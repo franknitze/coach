@@ -20,15 +20,16 @@ Sektionen sind in sich abgeschlossen und einzeln lesbar.
 2. [Was heute dran ist](#2-was-heute-dran-ist)
 3. [Sätze eintragen im Studio](#3-sätze-eintragen-im-studio)
 4. [Die Pause zwischen den Sätzen](#4-die-pause-zwischen-den-sätzen)
-5. [Gepaarte Übungen (Supersets)](#5-gepaarte-übungen-supersets)
+5. [Jede Übung am Stück, keine Supersets](#5-jede-übung-am-stück-keine-supersets)
 6. [Wann die Wiederholungen und wann das Gewicht steigen](#6-wann-die-wiederholungen-und-wann-das-gewicht-steigen)
 7. [Training ohne Empfang](#7-training-ohne-empfang)
-8. [Einheit beenden und Rückblick](#8-einheit-beenden-und-rückblick)
+8. [Einheit pausieren, beenden und Rückblick](#8-einheit-pausieren-beenden-und-rückblick)
 9. [Der Kalender](#9-der-kalender)
 10. [Die Fortschrittskurve auf der Startseite](#10-die-fortschrittskurve-auf-der-startseite)
 11. [Der Verlauf einer einzelnen Übung](#11-der-verlauf-einer-einzelnen-übung)
 12. [Körpergewicht eintragen](#12-körpergewicht-eintragen)
 13. [Einstellungen: Übungen und Allgemein](#13-einstellungen-übungen-und-allgemein)
+13a. [Übung entfernen: ausblenden oder vollständig löschen](#13a-übung-entfernen-ausblenden-oder-vollständig-löschen)
 14. [Fotos und Übungsbilder](#14-fotos-und-übungsbilder)
 15. [Die App auf dem Homescreen](#15-die-app-auf-dem-homescreen)
 16. [Wo deine Daten liegen](#16-wo-deine-daten-liegen)
@@ -53,9 +54,10 @@ Wer nicht angemeldet ist, sieht je nach Installation die schlichte
 Anmeldeseite oder eine Startseite, die Coach vorstellt und das
 Anmeldeformular enthält. Die Anmeldung funktioniert auf beiden gleich.
 
-Abmelden steht unten in der Fußzeile und braucht **zwei Tipper**: der erste
-fragt „Wirklich abmelden?", der zweite meldet ab. Ein Tipp irgendwo anders
-nimmt die Frage zurück.
+Abmelden steht im **Menü oben rechts** (die drei Striche), abgesetzt durch
+einen Strich unter Kalender und Einstellungen. Es braucht **zwei Tipper**: der
+erste fragt „Wirklich abmelden?", der zweite meldet ab. Ein Tipp irgendwo
+anders nimmt die Frage zurück und schließt das Menü.
 
 ### Begründung
 
@@ -70,9 +72,12 @@ man auch mal liegen lässt. Ohne die Abfrage genügte ein unbeaufsichtigtes
 Gerät, um den Zugang zu übernehmen. Das Passwort wechselt man alle paar
 Jahre einmal, die zwei Sekunden Tippen fallen nicht ins Gewicht.
 
-**Abmelden braucht zwei Tipper und steht unten**, nicht oben rechts im Kopf.
-Oben rechts liegt der Daumen ohnehin, wenn man das Handy hält; ein Fehlgriff
-dort kostet im Studio den Zugang.
+**Abmelden braucht zwei Tipper und steht im Menü.** Ein Fehlgriff kostet im
+Studio den Zugang, denn neu anmelden geht nur mit Netz. Früher stand es
+deshalb ganz unten auf der Seite. Seit es im Menü liegt, braucht es ohnehin
+einen Tipp mehr (Menü öffnen), und die Rückfrage bleibt. Der Trennstrich
+setzt es von Kalender und Einstellungen ab, damit es nicht wie der nächste
+Punkt derselben Reihe wirkt.
 
 ### Häufige Nutzerfragen
 
@@ -146,7 +151,7 @@ ist ausdrücklich vorgesehen und kein Umweg.
 **Ich habe eine Einheit angefangen, und mitten drin sprang die Anzeige auf
 den nächsten Tag um. Warum?**
 Das war ein Fehler und ist behoben. Sobald du das Studio betrittst, hält
-Coach den Tag fest, bis du „Einheit beenden" tippst — und findet ihn auch
+Coach den Tag fest, bis du „Einheit pausieren" oder „Einheit beenden" tippst, und findet ihn auch
 nach einem Neuladen wieder. Vorher rückte die Rotation schon beim ersten
 bestätigten Satz weiter, weil die laufende Einheit damit die letzte in der
 Historie war.
@@ -181,6 +186,13 @@ bei welchem Satz du bist** — gefüllte Punkte sind erledigt, leere stehen noch
 aus. Unter dem Kachelkopf stehen nur die Regler, damit die Eingabe nicht mit
 jedem Satz weiter nach unten rutscht.
 
+Auf der geöffneten Kachel steht rechts neben der Punktreihe ein **Knopf mit
+einer Uhr**. Er öffnet von unten ein Blatt mit dem **Verlauf dieser Übung**
+als Tabelle: eine Zeile je Einheit, die neueste oben, mit Wochentag und Datum,
+Gewicht, den Wiederholungen aller Sätze (etwa „12/12/12") und einem Haken oder
+Kreuz, ob das Ziel erreicht wurde. Der Knopf „Schließen" bleibt unten stehen,
+die Liste läuft dahinter durch. Die Einheit von heute steht nicht darin.
+
 ### Begründung
 
 **Keine Tastatur im Studio.** Man hat verschwitzte Hände, hält das Handy in
@@ -197,6 +209,16 @@ Aufwärmsatz war und das Feld den Satz an derselben Stelle wiederholte.
 
 **Halten beschleunigt**, weil die erste Einheit sonst unbedienbar wäre: von
 0 auf 80 kg in 2,5er-Schritten wären 32 Antipper.
+
+**Die Verlaufstabelle steht auf der Kachel**, weil man vor dem Gerät wissen
+will, was beim letzten Mal ging, ohne die Einheit zu verlassen. Eine Zeile je
+Einheit statt je Satz, weil die Tabelle sonst schon nach wenigen Einheiten
+mehrere Bildschirme lang wäre. Haken und Kreuz rechnet Coach mit derselben
+Regel aus, die auch die Regler befüllt, damit Tabelle und Ziel nie
+Verschiedenes sagen. Die heutige Einheit fehlt, weil sie womöglich noch
+läuft und als halbe Einheit fälschlich ein Kreuz bekäme; was heute gemacht
+ist, zeigt die Punktreihe. Die Tabelle geht auch ohne Empfang auf, weil der
+Verlauf mit dem Trainingstag geladen wird.
 
 **Jeder Satz wird einzeln gespeichert**, nicht gesammelt am Ende der Einheit.
 Im Studio kann der Akku leer werden; was du bestätigt hast, liegt fest. Und
@@ -235,10 +257,31 @@ Ein Vertipper von letzter Woche bleibt stehen.
 **Muss ich die Übungen der Reihe nach abarbeiten?**
 Nein. Du kannst jede Kachel jederzeit aufklappen, in jeder Reihenfolge.
 
+**Wo sehe ich, was ich bei dieser Übung die letzten Male gemacht habe?**
+Auf der geöffneten Kachel rechts neben den Punkten: der Knopf mit der Uhr.
+Er zeigt eine Tabelle mit einer Zeile je Einheit, die neueste oben.
+
+**Was bedeuten Haken und Kreuz in der Verlaufstabelle?**
+Ein Haken heißt: Alle Sätze haben das Ziel dieser Einheit geschafft, auf dem
+Arbeitsgewicht und in der vorgesehenen Zahl. Ein Kreuz heißt: mindestens ein
+Satz nicht, oder ein Satz war leichter. Stehen in einer Zeile mehrere
+Gewichte mit Schrägstrich (etwa „45/55/65 kg"), waren die Sätze
+unterschiedlich schwer, und das zählt als nicht erreicht.
+
+**Warum fehlt meine Einheit von heute in der Verlaufstabelle?**
+Weil sie noch laufen kann. Eine halbe Einheit bekäme sonst ein Kreuz, obwohl
+du noch gar nicht fertig bist. Ab morgen steht sie drin.
+
+**Warum gibt es bei manchen Übungen keinen Knopf mit der Uhr?**
+Bei einer Übung, die du noch nie gemacht hast, gibt es keinen Verlauf und
+deshalb keinen Knopf. Auf den zugeklappten Kacheln steht er nie, nur auf der,
+die du gerade geöffnet hast.
+
 **Wo finde ich, wie eine Übung überhaupt geht?**
 Tippe auf das Foto des Geräts. Es geht groß auf, und darunter stehen der
-Name, die Gerätenummer, die Ausführung und Verweise auf Video- und
-Bildersuche. Ein Tipp irgendwo schließt es wieder.
+Name, die Gerätenummer, die Ausführung und, wenn du bei der Übung einen
+YouTube-Link eingetragen hast, der Knopf „Video ansehen". Ein Tipp irgendwo
+schließt es wieder.
 
 Hat eine Übung kein Foto, steht dafür eine Zeile „Wie geht die Übung?" unter
 dem Kachelkopf — dann gäbe es sonst keinen Weg dorthin.
@@ -287,8 +330,8 @@ an der du gerade bist.
 
 **Kann ich die Pausenlänge ändern?**
 Die zwei Minuten stehen in der Konfiguration auf dem Server, nicht in der
-Oberfläche. Für gepaarte Übungen gilt eine kürzere Pause (siehe
-[Gepaarte Übungen](#5-gepaarte-übungen-supersets)).
+Oberfläche. Sie gelten für jede Übung gleich. Eine kürzere Pause für
+gepaarte Übungen gibt es nicht mehr.
 
 **Das Panel verdeckt die Eingabe der nächsten Übung.**
 Es nimmt das untere Bildschirmdrittel ein. Wenn es im Weg ist, tippe
@@ -296,35 +339,35 @@ Es nimmt das untere Bildschirmdrittel ein. Wenn es im Weg ist, tippe
 
 ---
 
-## 5. Gepaarte Übungen (Supersets)
+## 5. Jede Übung am Stück, keine Supersets
 
 ### Verhalten
 
-Manche Übungen sind zu zweit eingetragen, etwa Klimmzug und Dips. Nach einem
-Satz führt Coach dich automatisch zur Partnerübung und nimmt eine **kürzere
-Pause**, standardmäßig 90 statt 120 Sekunden.
+Nach einem Satz bleibt die Kachel offen, bis alle Sätze dieser Übung
+bestätigt sind. Danach klappt die nächste offene Übung der Reihe auf. Die
+Pause ist immer die volle, standardmäßig zwei Minuten.
+
+Früher gab es gepaarte Übungen (Supersets): Nach einem Satz sprang Coach zur
+Partnerübung, und die Pause war kürzer. Das ist entfallen.
 
 ### Begründung
 
-Jeder Muskel bekommt trotzdem die volle Erholung, weil er ruht, während der
-Gegenspieler arbeitet. Die Einheit wird dadurch rund ein Viertel kürzer, ohne
-dass die Erholung leidet.
-
-Der automatische Wechsel spart das Suchen: Wer im Wechsel trainiert, will
-nach dem Satz nicht durch die Liste scrollen.
+Der Wechsel zwischen zwei Übungen sollte Zeit sparen. Im Alltag hat er mehr
+gekostet als gebracht: Eine Liste, die nicht der Reihe nach abläuft, kostet
+die Übersicht, und wer nicht weiß, dass zwei Übungen gepaart sind, wundert
+sich, warum die App woandershin springt. Jede Übung für sich ist einfacher
+zu verstehen.
 
 ### Häufige Nutzerfragen
 
-**Warum springt die App nach dem Satz zu einer anderen Übung?**
-Weil diese beiden als Paar eingetragen sind. Das ist gewollt: Du machst
-abwechselnd einen Satz von jeder.
+**Kann ich zwei Übungen im Wechsel machen?**
+Ja, von Hand: Du kannst jede Kachel jederzeit öffnen und abwechselnd Sätze
+eintragen. Coach springt nur nicht mehr von selbst und verkürzt die Pause
+nicht.
 
-**Warum ist meine Pause hier kürzer?**
-Weil die Partnerübung einen anderen Muskel belastet. Deiner erholt sich
-währenddessen, die volle Pause bekommt er trotzdem.
-
-**Kann ich Paare selbst festlegen?**
-Über die Oberfläche derzeit nicht. Die Paare des Standardplans stehen fest.
+**Warum ist die Pause bei Klimmzug und Dips jetzt länger als früher?**
+Weil es keine kürzere Pause für gepaarte Übungen mehr gibt. Alle Übungen
+haben dieselbe Pause.
 
 ---
 
@@ -393,6 +436,29 @@ weniger Wiederholungen oder mit leichterem Gewicht reicht, damit das Ziel
 stehen bleibt. Steigerst du das Gewicht innerhalb einer Übung von Satz zu
 Satz, zählt der leichtere Satz als „nicht alle auf dem Gewicht“.
 
+**Ich habe dreimal 12 von 10 bis 12 geschafft. Warum soll ich jetzt mehr
+Gewicht machen statt 13 Wiederholungen?**
+Weil 12 die Höchstzahl dieser Übung ist. Schaffen alle Sätze die Höchstzahl,
+steigt das Gewicht um eine Stufe, und das Ziel fällt auf die Mindestzahl.
+13 Wiederholungen schlägt Coach nie vor, solange die Obergrenze bei 12 liegt.
+Willst du mehr Wiederholungen, setz die Obergrenze bei der Übung höher.
+
+**Was passiert, wenn ich mehr Wiederholungen mache als vorgesehen?**
+Das schadet nicht, es zählt aber immer der **schwächste** Satz. Liegen alle
+Sätze über dem Ziel, aber unter der Höchstzahl, wird das neue Ziel der
+schwächste Satz plus eins. Liegen alle über der Höchstzahl, zählt das wie
+genau die Höchstzahl: ein Gewicht höher, Ziel Mindestzahl, ohne Vorsprung.
+Bleibt ein Satz unter dem Ziel, gilt die Einheit als nicht geschafft, egal
+wie stark die anderen waren.
+
+**Coach schlägt ein Gewicht vor, das es als Hantel nicht gibt. Was mache
+ich?**
+Stell das Gewicht ein, das du wirklich nimmst, zum Beispiel 14 statt
+12,75 kg. Coach rechnet ab dann mit deinem Gewicht weiter: Ziel ist die
+Mindestzahl, und es geht Wiederholung für Wiederholung hoch. Die nächste
+Steigerung ist dein Gewicht plus die Stufe der Übung. Passt die Stufe zu den
+Hanteln in deinem Studio, stimmen die Vorschläge von vornherein.
+
 **Kann ich Sätze, Wiederholungen und Gewichtsstufe ändern?**
 Ja, für jede Übung einzeln unter Einstellungen → Übungen: die Anzahl der
 Sätze, den Bereich der Wiederholungen und die Gewichtsstufe. Ein Startgewicht
@@ -425,7 +491,7 @@ Im Studio ist der Empfang oft schlecht. Coach ist darauf ausgelegt:
   Netz siehst, was heute ansteht.
 - Sobald die Verbindung zurück ist, gehen die Sätze automatisch raus.
 
-Nicht offline verfügbar: die Einstellungen (der Verweis darauf verschwindet
+Nicht offline verfügbar: die Einstellungen (der Eintrag im Menü verschwindet
 ohne Netz), die Verlaufskurven, und das Ziel im Feld bleibt auf dem Stand
 des letzten Ladens.
 
@@ -462,7 +528,7 @@ Der Server hat ihn zurückgewiesen — anders als bei einem Netzfehler hilft
 Wiederholen hier nicht. Er wandert sichtbar zur Seite, statt endlos erneut
 versucht zu werden.
 
-**Warum verschwindet der Verweis auf die Einstellungen, wenn ich kein Netz
+**Warum fehlt im Menü der Eintrag Einstellungen, wenn ich kein Netz
 habe?**
 Weil die Einstellungen ohne Server nicht funktionieren. Ein Knopf, der ins
 Leere führt, ist schlimmer als keiner.
@@ -474,7 +540,7 @@ Studio gar nichts.
 
 ---
 
-## 8. Einheit beenden und Rückblick
+## 8. Einheit pausieren, beenden und Rückblick
 
 ### Verhalten
 
@@ -482,11 +548,18 @@ Aus einer laufenden Einheit führen zwei Wege heraus:
 
 - **„Pause"** oben rechts — du kommst zur Startseite zurück, die Einheit
   bleibt offen und du kannst später weitermachen.
-- **„Einheit beenden"** unter der letzten Kachel — die Einheit ist fertig,
-  ob durchgezogen oder nicht.
+- **Der Knopf unter der letzten Kachel.** Solange noch Sätze offen sind,
+  heißt er **„Einheit pausieren"**: Die Einheit bleibt bis zum Ende des
+  Tages offen. Sind alle Sätze durch, heißt er **„Einheit beenden"**.
 
-Danach findest du die Einheit auf der Startseite unter den letzten zehn
-Einheiten, mit Datum, Trainingstag und Umfang.
+Beide Wege führen auf die Startseite, und die steht dann **ganz oben**.
+Dort findest du die Einheit unter „Letzte Einheiten", mit Datum,
+Trainingstag und Umfang.
+
+Unter der Liste stehen, sobald es mehr als zehn Einheiten gibt, zwei Pfeile
+und der Bereich, etwa „1–10 von 24". **Der Pfeil nach rechts führt zu
+älteren Einheiten**, der nach links zurück zu neueren. Auf der ersten Seite
+ist der linke Pfeil ausgegraut, auf der letzten der rechte.
 
 **Eine Einheit von heute, die noch nicht durch ist, ist „offen".** Sie steht
 in der Liste mit einem gelben Balken, dem Wort „offen" und einem „Weiter"
@@ -511,8 +584,20 @@ nicht.
 bestätigen" getippt wird und nicht auf „beenden".
 
 **Er ist auch bei unfertiger Einheit da.** Eine Einheit wird nicht immer
-fertig, und dann muss sie sich trotzdem beenden lassen, ohne dass man erst
-alles abhakt.
+fertig, und dann muss man trotzdem aus dem Studio herauskommen, ohne erst
+alles abzuhaken. Er heißt dann „pausieren" und nicht „beenden", weil die
+Einheit bis zum Ende des Tages offen bleibt und sich fortsetzen lässt.
+
+**Danach steht die Startseite oben.** Der Knopf liegt ganz unten, und ohne
+den Sprung stünde man danach unten auf der Startseite statt bei Trainingstag
+und Knopf.
+
+**Rechts geht es zu älteren Einheiten.** Die neuesten stehen oben und auf der
+ersten Seite. Wer weiter nach unten in die Vergangenheit will, erwartet den
+Weg nach rechts, wie beim Umblättern eines Buchs. Andersherum, wie im
+Kalender, wirkte es verkehrt. Wer auf die Startseite zurückkommt, steht
+wieder auf der ersten Seite, denn dort erscheint die gerade gemachte
+Einheit.
 
 **Dieselben Kacheln wie im Studio.** Beim Zurückblicken ist „welches Gerät war
 das" dieselbe Frage wie im Studio. Eine zweite Darstellung dafür wäre eine
@@ -534,6 +619,11 @@ Bankdrücken und keiner Latzug ergäben dieselbe Summe wie vier und vier, wären
 aber eine halbe Einheit.
 
 ### Häufige Nutzerfragen
+
+**Warum heißt der Knopf mal „Einheit pausieren" und mal „Einheit beenden"?**
+Solange noch Sätze offen sind, heißt er „pausieren", denn die Einheit bleibt
+offen und lässt sich heute fortsetzen. Sind alle Sätze durch, heißt er
+„beenden".
 
 **Ich habe „Einheit beenden" getippt und lande wieder auf der Startseite, die
 mir dieselbe Einheit anbietet.**
@@ -570,7 +660,13 @@ Leseansicht bietet dir aber „Weiter trainieren" an, wenn die Einheit noch
 läuft.
 
 **Warum sehe ich nur zehn Einheiten?**
-Die Startseite zeigt die letzten zehn. Ältere findest du über den Kalender.
+Die Startseite zeigt zehn auf einmal. Mit dem Pfeil nach rechts unter der
+Liste blätterst du zu den älteren, mit dem Pfeil nach links zurück. Einen
+Überblick über alle Tage gibt außerdem der Kalender.
+
+**Warum steht oben neben „Letzte Einheiten" keine Zahl mehr?**
+Die Zahl steht jetzt unter der Liste zwischen den Pfeilen, etwa
+„11–20 von 24". Dort sagt sie zugleich, wo du gerade bist.
 
 **„Zurück" bringt mich woandershin, als ich erwartet habe.**
 Coach merkt sich, woher du gekommen bist: Aus einer Einheit führt „Zurück"
@@ -581,6 +677,9 @@ dorthin zurück, wo du sie aufgeschlagen hast — Startseite oder Kalendermonat.
 ## 9. Der Kalender
 
 ### Verhalten
+
+Den Kalender öffnest du über das **Menü oben rechts**. Der Eintrag erscheint
+erst, wenn es mindestens eine Einheit gibt.
 
 Der Kalender zeigt ein Monatsraster über **alle** Tage, nicht nur die
 trainierten. Trainierte Tage sind gefüllt und tragen das Kürzel des
@@ -777,14 +876,15 @@ Die Einstellungen haben zwei Bereiche zur Auswahl, umschaltbar oben auf der
 Seite:
 
 - **Übungen** — die Bibliothek, nach Trainingstagen sortiert. Hier legst du
-  Übungen an, änderst und löschst sie. Pro Übung: Name, Gerätenummer,
+  Übungen an, änderst und entfernst sie. Pro Übung: Name, Gerätenummer,
   Reihenfolge, Trainingstag, Muskelgruppe, Zielsätze, Wiederholungsbereich,
-  Schrittweite, Gewichtsrichtung, Ausführungstext, englischer Suchbegriff und
+  Schrittweite, Gewichtsrichtung, Ausführungstext, ein YouTube-Link und
   Foto.
 - **Allgemein** — Körpergewicht und Passwort.
 
-„Übungen" ist der Bereich, in dem du landest. Löschen einer Übung passiert in
-zwei Schritten: erst „Übung löschen", dann „Wirklich löschen".
+Die Einstellungen öffnest du über das **Menü oben rechts**. „Übungen" ist der
+Bereich, in dem du landest. Unter jeder Übung steht „Entfernen"; was dann
+passiert, steht im nächsten Abschnitt.
 
 ### Begründung
 
@@ -793,8 +893,11 @@ hierher kommt; alles andere ändert man einmal im Jahr und soll dabei nicht im
 Weg stehen. Vorher trug die Seite alles untereinander, und das Passwort wäre
 der vierte Block hinter 25 Übungszeilen gewesen.
 
-**Löschen in zwei Schritten**, weil eine gelöschte Übung ihre Historie
-mitnimmt und das nicht durch einen Fehlgriff passieren soll.
+**Ein eingetragenes Video statt einer Suche.** Früher baute der Knopf „Video"
+aus einem englischen Suchbegriff eine YouTube-Suche, und daneben stand ein
+Knopf für die Google-Suche. Dass eine Suche genau das Video findet, das die
+Übung erklärt, ist Zufall. Jetzt trägst du das Video selbst ein, und genau
+das öffnet sich.
 
 **Die Reihenfolge in „Allgemein" folgt der Häufigkeit**: Körpergewicht trägt
 man regelmäßig ein, das Passwort fast nie.
@@ -816,14 +919,123 @@ Unterstützungsmaschine — Klimmzug- oder Dip-Maschine mit Gegengewicht — ist
 umgekehrt: weniger Gewicht ist schwerer. Coach dreht dann die Progression und
 die Auswertung entsprechend um.
 
-**Was passiert mit meinen Ergebnissen, wenn ich eine Übung lösche?**
-Die Sätze bleiben in den Einheiten stehen, in denen sie entstanden sind — mit
-Name und Foto, wie sie damals waren. Sie tauchen nur nicht mehr in künftigen
-Trainingstagen auf.
+**Wie hinterlege ich ein Video zu einer Übung?**
+Öffne die Übung in den Einstellungen und füge im Feld „Video (YouTube-Link)"
+den Link ein, etwa aus „Teilen → Link kopieren" in der YouTube-App.
+Angenommen werden Links, die mit https://www.youtube.com/,
+https://m.youtube.com/ oder https://youtu.be/ beginnen. Danach steht bei der
+Übung der Knopf „Video ansehen".
+
+**Warum steht bei meiner Übung kein Knopf „Video ansehen"?**
+Weil für diese Übung kein Link eingetragen ist. Ohne Link gibt es den Knopf
+nicht. Eine Suche nach passenden Videos macht Coach nicht mehr.
+
+**Warum nimmt Coach meinen Link nicht an?**
+Es werden nur YouTube-Links angenommen. Ein Link auf eine andere Seite wird
+mit der Meldung „Das ist kein YouTube-Link." abgewiesen.
+
+**Was passiert mit meinen Ergebnissen, wenn ich eine Übung entferne?**
+Das entscheidest du beim Entfernen: Ausblenden behält alle Sätze,
+vollständig löschen nimmt sie mit. Mehr dazu im nächsten Abschnitt.
 
 **Kann ich die Einstellungen im Studio benutzen?**
-Nur mit Netz. Ohne Verbindung verschwindet der Verweis darauf, weil die Seite
-ohne Server nicht funktioniert.
+Nur mit Netz. Ohne Verbindung verschwindet der Eintrag im Menü, weil die
+Seite ohne Server nicht funktioniert.
+
+---
+
+## 13a. Übung entfernen: ausblenden oder vollständig löschen
+
+### Verhalten
+
+Unter jeder Übung in den Einstellungen steht **„Entfernen"**. Ein Tipp öffnet
+ein Blatt mit drei Knöpfen:
+
+- **Ausblenden** (der vorgeschlagene Weg): Die Übung verschwindet aus dem
+  Plan, aus dem Studio und aus der Übungsliste. Alle ihre Sätze bleiben
+  erhalten und zählen weiter im Rückblick, in der Leseansicht alter
+  Einheiten, im Kalender und in der Fortschrittskurve, mit Namen und Foto.
+- **Vollständig löschen**: Danach kommt eine zweite Frage, „Wirklich alle
+  Daten löschen?", mit der Zahl der betroffenen Einheiten. Erst dann werden
+  die Übung und **jeder ihrer Sätze** gelöscht. Einheiten, in denen sonst
+  nichts stand, fallen mit weg.
+- **Abbrechen**: Es ändert sich nichts.
+
+Nach dem Ausblenden, Aktivieren oder Löschen erscheint oben kurz eine
+Rückmeldung, etwa „Latzug ist ausgeblendet.".
+
+Sobald es mindestens eine ausgeblendete Übung gibt, steht im **Menü oben
+rechts** der Eintrag **„Ausgeblendete Übungen"**. Die Übersicht zeigt sie in
+denselben Zeilen wie die Einstellungen, mit Foto, Gerätenummer und Daten,
+nach Trainingstag geordnet. Ein Tipp öffnet die Übung; dort stehen
+**„Wieder aktivieren"** und **„Vollständig löschen"**.
+
+**Wieder aktivieren** holt die Übung in ihren alten Trainingstag zurück, an
+ihre alte Stelle und mit ihrem ganzen Verlauf. Steht dort inzwischen eine
+andere Übung, rückt die eins nach hinten.
+
+### Begründung
+
+**Zwei Wege, weil es zwei Fälle gibt.** Meist geht es darum, dass ein Gerät
+durch ein anderes ersetzt wird. Die neue Übung hat mit der alten nichts zu
+tun, andere Gewichte, andere Wiederholungen, aber was du an der alten
+geleistet hast, bleibt Teil deiner Trainingsgeschichte. Dafür ist
+Ausblenden da. Wenn du etwas wirklich loswerden willst, soll es dann aber
+auch richtig weg sein: Löschen heißt bei Coach, dass auch die Sätze gehen.
+
+**Ausblenden ist der vorgeschlagene Weg**, weil sich Löschen nicht
+rückgängig machen lässt und Ausblenden schon.
+
+**Zweimal fragen beim Löschen**, und die zweite Frage nennt die Zahl der
+Einheiten, damit klar ist, was verloren geht.
+
+**Vor dem Löschen legt Coach eine Sicherungskopie** der betroffenen Dateien
+auf dem Server ab. In der App lässt sich nichts zurückholen, aber ein
+Fehlgriff ist damit nicht endgültig verloren.
+
+**Wieder aktivieren statt neu anlegen ist deine Wahl.** Kommt dasselbe Gerät
+zurück, holst du die alte Übung samt Verlauf zurück. Ist es ein anderes
+Gerät, auch wenn es gleich heißt, legst du eine neue Übung an, die bei null
+beginnt; in einem anderen Studio kann dieselbe Maschine eine andere
+Übersetzung haben, und die alten Gewichte stimmten dann nicht mehr.
+
+**Die alte Stelle, weil die Reihenfolge eines Tages Absicht ist.** Ein
+Zurückholen ans Ende würde sie verschieben, und du müsstest sie von Hand
+wiederherstellen.
+
+### Häufige Nutzerfragen
+
+**Ich habe eine Übung ausgeblendet. Sind meine Ergebnisse jetzt weg?**
+Nein. Sie stehen weiter in jeder alten Einheit und zählen in der
+Fortschrittskurve. Nur im Plan und im Studio taucht die Übung nicht mehr auf.
+
+**Wo finde ich eine ausgeblendete Übung wieder?**
+Im Menü oben rechts unter „Ausgeblendete Übungen". Der Eintrag erscheint nur,
+wenn es mindestens eine gibt.
+
+**Wie hole ich eine ausgeblendete Übung zurück?**
+Menü → „Ausgeblendete Übungen" → die Übung antippen → „Wieder aktivieren".
+Sie steht danach wieder an ihrer alten Stelle im alten Trainingstag.
+
+**Ich habe eine Übung aus einer alten Einheit heraus geöffnet und
+gespeichert. Ist sie jetzt wieder im Plan?**
+Nein. Speichern ändert nichts daran, ob eine Übung ausgeblendet ist. Zurück
+in den Plan kommt sie nur über „Wieder aktivieren".
+
+**Kann ich eine gelöschte Übung wiederherstellen?**
+In der App nicht. Auf dem Server liegt eine Sicherungskopie von vor dem
+Löschen, im Ordner `data/sicherung/`; zurückspielen lässt sie sich nur von
+Hand.
+
+**Warum ist meine Einheit vom Tag X verschwunden?**
+Wenn in dieser Einheit nur die Übung stand, die du vollständig gelöscht
+hast, ist mit der Übung auch die Einheit gegangen. Eine leere Einheit hätte
+keinen Inhalt mehr.
+
+**Ich habe eine Übung ausgeblendet. Gilt meine Einheit von heute jetzt als
+unvollständig?**
+Nein. Eine ausgeblendete Übung gehört nicht mehr zum Trainingstag und wird
+für „vollständig" nicht mehr verlangt.
 
 ---
 
@@ -961,8 +1173,10 @@ lassen sich mit jedem Texteditor öffnen.
 **Nach Monaten getrennt**, damit die Dateien klein bleiben und sich einzeln
 sichern lassen.
 
-**Keine automatische Sicherung.** Coach legt von sich aus keine Kopie an.
-Verlierst du den Server, verlierst du die Historie.
+**Keine automatische Sicherung.** Coach legt von sich aus keine laufende
+Kopie an. Verlierst du den Server, verlierst du die Historie. Einzige
+Ausnahme: Bevor du eine Übung vollständig löschst, legt Coach eine Kopie der
+betroffenen Dateien in `data/sicherung/` ab, auf demselben Server.
 
 ### Häufige Nutzerfragen
 
@@ -999,30 +1213,31 @@ Einen Webserver mit PHP 8.0 oder neuer und HTTPS. Eine Datenbank brauchst du
 nicht, die Daten liegen als Dateien auf deinem Webspace.
 
 <!-- save-help:checkpoint
-last-saved: 2026-10-18T09:00:00+02:00
+last-saved: 2026-10-23T20:50:00+02:00
 captured-topics:
   - Anmelden und Passwort
   - Was heute dran ist
   - Sätze eintragen im Studio
   - Die Pause zwischen den Sätzen
-  - Gepaarte Übungen (Supersets)
+  - Jede Übung am Stück, keine Supersets
   - Wann die Wiederholungen und wann das Gewicht steigen
   - Training ohne Empfang
-  - Einheit beenden und Rückblick
+  - Einheit pausieren, beenden und Rückblick
   - Der Kalender
   - Die Fortschrittskurve auf der Startseite
   - Der Verlauf einer einzelnen Übung
   - Körpergewicht eintragen
   - Einstellungen: Übungen und Allgemein
+  - Übung entfernen: ausblenden oder vollständig löschen
   - Fotos und Übungsbilder
   - Die App auf dem Homescreen
   - Wo deine Daten liegen
 boundary-hint: |
-  Lauf am 18.10.2026 über die Session vom 17.10.2026: Startseite für
-  Besucher hinter dem Schalter startseite, MIT-Lizenz, neue
-  Progressionsregel nach Frank (Wiederholung mehr nur, wenn alle Sätze das
-  Ziel schaffen; einmal Höchstzahl in allen Sätzen heißt sofort mehr
-  Gewicht), Beispieltabelle auf der Startseite, Hinweis auf einstellbare
-  Sätze, Wiederholungen und Stufe, Logo und Favicon (gelbe Plakette mit
-  gezeichnetem C). Zuletzt verarbeitet: Logo und Favicon live.
+  Lauf am 23.10.2026 über die Sessions vom 19. bis 23.10.: Verlaufstabelle
+  mit Uhr-Knopf auf der Kachel, Einheit pausieren/beenden mit Sprung nach
+  oben, Menü oben rechts (Kalender, Einstellungen, Abmelden), Blättern im
+  Rückblick (rechts = älter), Supersets ausgebaut, Entfernen mit Ausblenden,
+  Wieder aktivieren und Vollständig löschen, YouTube-Link statt Suchbegriff
+  und Google-Knopf. Zuletzt verarbeitet: Frank bleibt beim eigenen
+  YouTube-Link, ohne Link kein Knopf.
 -->
