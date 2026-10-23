@@ -1204,13 +1204,19 @@
             + '</section>';
     }
 
-    /** Der Ausgang bei noch offener Einheit, mit dem Stand als Auskunft. */
+    /**
+     * Der Ausgang bei noch offener Einheit, mit dem Stand als Auskunft.
+     *
+     * Er heißt "Einheit pausieren", nicht "beenden" (Frank, 23.10.2026): Die
+     * Einheit bleibt bis zum Ende des Tages offen und lässt sich von der
+     * Startseite aus fortsetzen. "Beenden" steht nur da, wo alles durch ist.
+     */
     function zeichneBeenden(fertigSaetze, zielSaetze) {
         return '<section class="beenden">'
             + '<p class="beenden__stand">' + fertigSaetze + ' von ' + zielSaetze
             + ' Sätzen</p>'
             + '<button class="knopf knopf--leise" data-gehe="start" data-abschluss="1">'
-            + 'Einheit beenden</button>'
+            + 'Einheit pausieren</button>'
             + '</section>';
     }
 
@@ -2425,7 +2431,15 @@
                 await kalenderLaden(monatVon(new Date()));
             }
 
-            return zeichnen();
+            zeichnen();
+
+            // Der Ausgang aus der Einheit liegt unter der letzten Kachel. Ohne
+            // das stünde man danach unten auf der Startseite statt bei
+            // Trainingstag und Knopf (Frank, 23.10.2026).
+            if (d.abschluss) {
+                window.scrollTo(0, 0);
+            }
+            return;
         }
 
         /*

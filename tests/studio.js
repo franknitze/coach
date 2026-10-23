@@ -61,6 +61,17 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
        'mit dem Stand als Auskunft: "' + await page.locator('.beenden__stand').innerText() + '"');
     ok(await page.locator('.beenden .knopf--leise').count() === 1,
        'und zurückhaltend gesetzt, das Gelb gehört "Satz bestätigen"');
+    ok((await page.locator('.beenden .knopf').innerText()) === 'Einheit pausieren',
+       'unfertig heißt der Ausgang "Einheit pausieren"');
+
+    await page.evaluate(() => { document.body.style.minHeight = '4000px'; });
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    ok(await page.evaluate(() => scrollY) > 1000, 'vor dem Tipp steht man unten');
+    await page.click('.beenden .knopf');
+    await page.waitForSelector('.heute__tag');
+    ok(await page.evaluate(() => scrollY) === 0, '"Einheit pausieren" führt auf die Startseite ganz oben');
+    await page.evaluate(() => { document.body.style.minHeight = ''; });
+    await t.studio('Oberkörper');
 
     const bank = page.locator('.kachel', { hasText: 'Bankdrücken' });
     ok((await bank.innerText()).includes('Zuletzt 80 kg × 10'), 'Kachel zeigt das letzte Ergebnis');
@@ -385,8 +396,19 @@ module.exports = (port) => testlauf('Studio', port, async (t) => {
     ok(await page.locator('.beenden').count() === 0,
        'der leise Ausgang weicht dabei der Erfolgsmeldung');
 
-    await page.locator('.geschafft [data-gehe="start"]').first().click();
+    ok((await page.locator('.geschafft--unten .knopf').innerText()) === 'Einheit beenden',
+       'fertig heißt der Ausgang "Einheit beenden"');
+
+    // Ausgang ganz unten: danach steht die Startseite oben, nicht unten.
+    // Die Startseite der Testdaten ist kürzer als der Bildschirm, dort wäre
+    // man ohnehin oben. Deshalb wird die Seite künstlich lang gemacht.
+    await page.evaluate(() => { document.body.style.minHeight = '4000px'; });
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.locator('.geschafft--unten [data-gehe="start"]').click();
     await page.waitForSelector('.heute__tag');
+    ok(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight + 1000),
+       'die Seite ist länger als der Bildschirm, die nächste Prüfung sagt also etwas');
+    ok(await page.evaluate(() => scrollY) === 0, '"Einheit beenden" führt auf die Startseite ganz oben');
     ok(await page.locator('.heute__tag').innerText() === 'Unterkörper',
        '"Einheit beenden" gibt den festgehaltenen Tag frei, der nächste ist dran');
     ok((await page.locator('.fussleiste .knopf').innerText()) === 'Los geht\'s',
