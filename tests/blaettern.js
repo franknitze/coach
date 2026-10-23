@@ -30,6 +30,14 @@ module.exports = (port) => testlauf('Blättern im Rückblick', port, async (t) =
     ok(s.zahl === '1–10 von 24' && s.zeilen === 10, 'erste Seite: ' + s.zahl + ', ' + s.zeilen + ' Zeilen');
     ok(s.erste.startsWith('Do, 24. Sep'), 'oben steht die neueste Einheit: ' + s.erste);
     ok(!s.aelter && s.neuer, 'zurück zu älteren geht, zu neueren nicht');
+    // Rechts geht es zu älteren, links zu neueren (Frank, 23.10.2026)
+    const lage = await page.evaluate(() => {
+        const x = (sel) => document.querySelector(sel).getBoundingClientRect().left;
+        return { aelter: x('[data-seite="aelter"]'), neuer: x('[data-seite="neuer"]'), zahl: x('.rueckblick__steuer .kal__zahl'),
+                 pfeilAelter: document.querySelector('[data-seite="aelter"]').textContent };
+    });
+    ok(lage.aelter > lage.zahl && lage.neuer < lage.zahl && lage.pfeilAelter === '→',
+       'der Pfeil nach rechts führt zu älteren Einheiten, der nach links zu neueren');
 
     await page.click('[data-seite="aelter"]');
     await page.waitForFunction(() => document.querySelector('.rueckblick__steuer .kal__zahl').textContent === '11–20 von 24');

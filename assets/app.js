@@ -936,19 +936,22 @@
 
         /*
          * Blättern, sobald es mehr Einheiten gibt als auf eine Seite passen
-         * (Frank, 23.10.2026). Dieselbe Zeile wie im Kalender: links zurück
-         * in der Zeit, also zu älteren Einheiten, rechts wieder zu neueren.
-         * Am jeweiligen Ende ist der Knopf gesperrt.
+         * (Frank, 23.10.2026). Dieselbe Zeile wie im Kalender, aber die
+         * Richtung folgt der Liste, nicht der Zeitachse: Die neuesten stehen
+         * oben und auf der ersten Seite, also führt RECHTS weiter zu älteren
+         * Einheiten und links zurück zu neueren. Andersherum, wie im
+         * Kalender, hat Frank es als verkehrt empfunden. Am jeweiligen Ende
+         * ist der Knopf gesperrt.
          */
         const versatz = r.offset || 0;
         if (r.total > r.sessions.length || versatz > 0) {
             const bis = versatz + r.sessions.length;
             html += '<div class="kal__steuer rueckblick__steuer">'
-                 + '<button class="kopfknopf" data-seite="aelter"'
-                 + (bis >= r.total ? ' disabled' : '') + ' aria-label="Ältere Einheiten">←</button>'
-                 + '<span class="kal__zahl">' + (versatz + 1) + '–' + bis + ' von ' + r.total + '</span>'
                  + '<button class="kopfknopf" data-seite="neuer"'
-                 + (versatz === 0 ? ' disabled' : '') + ' aria-label="Neuere Einheiten">→</button>'
+                 + (versatz === 0 ? ' disabled' : '') + ' aria-label="Neuere Einheiten">←</button>'
+                 + '<span class="kal__zahl">' + (versatz + 1) + '–' + bis + ' von ' + r.total + '</span>'
+                 + '<button class="kopfknopf" data-seite="aelter"'
+                 + (bis >= r.total ? ' disabled' : '') + ' aria-label="Ältere Einheiten">→</button>'
                  + '</div>';
         }
 
