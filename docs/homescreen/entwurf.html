@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entwurf Homescreen</title>
+<link rel="stylesheet" href="../../assets/startseite.css">
+<style>
+.homescreen { position: relative; aspect-ratio: 390 / 844; border-radius: 31px; overflow: hidden;
+  background: radial-gradient(120% 70% at 20% 0%, #3b4252 0%, transparent 60%), radial-gradient(90% 60% at 100% 100%, #4a3f1f 0%, transparent 65%), #15171c;
+  padding: 46px 20px 0; display: flex; flex-direction: column; }
+.homescreen__zeit { position: absolute; top: 14px; left: 30px; font: 600 14px var(--sans); color: var(--text); }
+.homescreen__raster { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px 14px; }
+.app { display: grid; justify-items: center; gap: 6px; }
+.app i { width: 100%; aspect-ratio: 1; border-radius: 23%; background: rgb(255 255 255 / .1); }
+.app span { width: 70%; height: 6px; border-radius: 3px; background: rgb(255 255 255 / .14); }
+.app--coach { position: relative; }
+.app--coach img { width: 100%; aspect-ratio: 1; border-radius: 23%; box-shadow: 0 0 0 3px var(--tag), 0 10px 30px rgb(242 183 5 / .35); }
+.app--coach b { font: 500 11px var(--sans); color: var(--text); }
+.app--coach::after { content: ""; position: absolute; inset: -10px -10px auto; aspect-ratio: 1; border-radius: 30%; border: 2px solid var(--tag); opacity: 0; animation: tipp 2.4s ease-out infinite; }
+@keyframes tipp { 0% { transform: scale(.8); opacity: .9; } 70%, 100% { transform: scale(1.25); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .app--coach::after { animation: none; } }
+.homescreen__dock { margin: auto -8px 12px; padding: 12px; border-radius: 26px; background: rgb(255 255 255 / .08); display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.homescreen__dock i { aspect-ratio: 1; border-radius: 23%; background: rgb(255 255 255 / .12); }
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="ph-barbell" viewBox="0 0 256 256"><path d="M248,120h-8V88a16,16,0,0,0-16-16H208V64a16,16,0,0,0-16-16H168a16,16,0,0,0-16,16v56H104V64A16,16,0,0,0,88,48H64A16,16,0,0,0,48,64v8H32A16,16,0,0,0,16,88v32H8a8,8,0,0,0,0,16h8v32a16,16,0,0,0,16,16H48v8a16,16,0,0,0,16,16H88a16,16,0,0,0,16-16V136h48v56a16,16,0,0,0,16,16h24a16,16,0,0,0,16-16v-8h16a16,16,0,0,0,16-16V136h8a8,8,0,0,0,0-16ZM32,168V88H48v80Zm56,24H64V64H88V192Zm104,0H168V64h24V175.82c0,.06,0,.12,0,.18s0,.12,0,.18V192Zm32-24H208V88h16Z"/></symbol>
+    <symbol id="ph-calendar-blank" viewBox="0 0 256 256"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"/></symbol>
+    <symbol id="ph-calendar-check" viewBox="0 0 256 256"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-38.34-85.66a8,8,0,0,1,0,11.32l-48,48a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L116,164.69l42.34-42.35A8,8,0,0,1,169.66,122.34Z"/></symbol>
+    <symbol id="ph-camera" viewBox="0 0 256 256"><path d="M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z"/></symbol>
+    <symbol id="ph-chart-line-up" viewBox="0 0 256 256"><path d="M232,208a8,8,0,0,1-8,8H32a8,8,0,0,1-8-8V48a8,8,0,0,1,16,0V156.69l50.34-50.35a8,8,0,0,1,11.32,0L128,132.69,180.69,80H160a8,8,0,0,1,0-16h40a8,8,0,0,1,8,8v40a8,8,0,0,1-16,0V91.31l-58.34,58.35a8,8,0,0,1-11.32,0L96,123.31l-56,56V200H224A8,8,0,0,1,232,208Z"/></symbol>
+    <symbol id="ph-check-circle" viewBox="0 0 256 256"><path d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z"/></symbol>
+    <symbol id="ph-github-logo" viewBox="0 0 256 256"><path d="M208.31,75.68A59.78,59.78,0,0,0,202.93,28,8,8,0,0,0,196,24a59.75,59.75,0,0,0-48,24H124A59.75,59.75,0,0,0,76,24a8,8,0,0,0-6.93,4,59.78,59.78,0,0,0-5.38,47.68A58.14,58.14,0,0,0,56,104v8a56.06,56.06,0,0,0,48.44,55.47A39.8,39.8,0,0,0,96,192v8H72a24,24,0,0,1-24-24A40,40,0,0,0,8,136a8,8,0,0,0,0,16,24,24,0,0,1,24,24,40,40,0,0,0,40,40H96v16a8,8,0,0,0,16,0V192a24,24,0,0,1,48,0v40a8,8,0,0,0,16,0V192a39.8,39.8,0,0,0-8.44-24.53A56.06,56.06,0,0,0,216,112v-8A58.14,58.14,0,0,0,208.31,75.68ZM200,112a40,40,0,0,1-40,40H112a40,40,0,0,1-40-40v-8a41.74,41.74,0,0,1,6.9-22.48A8,8,0,0,0,80,73.83a43.81,43.81,0,0,1,.79-33.58,43.88,43.88,0,0,1,32.32,20.06A8,8,0,0,0,119.82,64h32.35a8,8,0,0,0,6.74-3.69,43.87,43.87,0,0,1,32.32-20.06A43.81,43.81,0,0,1,192,73.83a8.09,8.09,0,0,0,1,7.65A41.72,41.72,0,0,1,200,104Z"/></symbol>
+    <symbol id="ph-hand-tap" viewBox="0 0 256 256"><path d="M56,76a60,60,0,0,1,120,0,8,8,0,0,1-16,0,44,44,0,0,0-88,0,8,8,0,1,1-16,0Zm140,44a27.9,27.9,0,0,0-13.36,3.39A28,28,0,0,0,144,106.7V76a28,28,0,0,0-56,0v80l-3.82-6.13a28,28,0,0,0-48.41,28.17l29.32,50A8,8,0,1,0,78.89,220L49.6,170a12,12,0,1,1,20.78-12l.14.23,18.68,30A8,8,0,0,0,104,184V76a12,12,0,0,1,24,0v68a8,8,0,1,0,16,0V132a12,12,0,0,1,24,0v20a8,8,0,0,0,16,0v-4a12,12,0,0,1,24,0v36c0,21.61-7.1,36.3-7.16,36.42a8,8,0,0,0,3.58,10.73A7.9,7.9,0,0,0,208,232a8,8,0,0,0,7.16-4.42c.37-.73,8.85-18,8.85-43.58V148A28,28,0,0,0,196,120Z"/></symbol>
+    <symbol id="ph-hard-drives" viewBox="0 0 256 256"><path d="M208,136H48a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V152A16,16,0,0,0,208,136Zm0,64H48V152H208v48Zm0-160H48A16,16,0,0,0,32,56v48a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V56A16,16,0,0,0,208,40Zm0,64H48V56H208v48ZM192,80a12,12,0,1,1-12-12A12,12,0,0,1,192,80Zm0,96a12,12,0,1,1-12-12A12,12,0,0,1,192,176Z"/></symbol>
+    <symbol id="ph-timer" viewBox="0 0 256 256"><path d="M128,40a96,96,0,1,0,96,96A96.11,96.11,0,0,0,128,40Zm0,176a80,80,0,1,1,80-80A80.09,80.09,0,0,1,128,216ZM173.66,90.34a8,8,0,0,1,0,11.32l-40,40a8,8,0,0,1-11.32-11.32l40-40A8,8,0,0,1,173.66,90.34ZM96,16a8,8,0,0,1,8-8h48a8,8,0,0,1,0,16H104A8,8,0,0,1,96,16Z"/></symbol>
+    <symbol id="ph-wifi-slash" viewBox="0 0 256 256"><path d="M213.92,210.62a8,8,0,1,1-11.84,10.76l-52-57.15a60,60,0,0,0-57.41,7.24,8,8,0,1,1-9.42-12.93A75.43,75.43,0,0,1,128,144c1.28,0,2.55,0,3.82.1L104.9,114.49A108,108,0,0,0,61,135.31,8,8,0,0,1,49.73,134,8,8,0,0,1,51,122.77a124.27,124.27,0,0,1,41.71-21.66L69.37,75.4a155.43,155.43,0,0,0-40.29,24A8,8,0,0,1,18.92,87,171.87,171.87,0,0,1,58,62.86L42.08,45.38A8,8,0,1,1,53.92,34.62ZM128,192a12,12,0,1,0,12,12A12,12,0,0,0,128,192ZM237.08,87A172.3,172.3,0,0,0,106,49.4a8,8,0,1,0,2,15.87A158.33,158.33,0,0,1,128,64a156.25,156.25,0,0,1,98.92,35.37A8,8,0,0,0,237.08,87ZM195,135.31a8,8,0,0,0,11.24-1.3,8,8,0,0,0-1.3-11.24,124.25,124.25,0,0,0-51.73-24.2A8,8,0,1,0,150,114.24,108.12,108.12,0,0,1,195,135.31Z"/></symbol>
+    <symbol id="ph-x-circle" viewBox="0 0 256 256"><path d="M165.66,101.66,139.31,128l26.35,26.34a8,8,0,0,1-11.32,11.32L128,139.31l-26.34,26.35a8,8,0,0,1-11.32-11.32L116.69,128,90.34,101.66a8,8,0,0,1,11.32-11.32L128,116.69l26.34-26.35a8,8,0,0,1,11.32,11.32ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z"/></symbol>
+</svg>
+<header class="kopf"><div class="innen"><a class="marke" href="#"><img src="../../assets/icons/logo.svg" alt="" width="30" height="30">COACH</a></div></header>
+<main>
+  <section class="abschnitt">
+    <div class="innen">
+      <div class="paar">
+        <div>
+          <h2 class="gross">Keine Webseite im Browser. Eine App auf deinem Homescreen.</h2>
+          <p class="text">Du legst Coach einmal als Symbol auf den Homescreen, auf dem iPhone genauso wie unter Android. Danach startet es mit einem Tipp, bildschirmfüllend und ohne Adressleiste, wie jede andere App.</p>
+          <ul class="punkte">
+            <li><svg class="sym"><use href="#ph-hand-tap"/></svg><div><b>Ein Tipp, und du bist im Training</b><span>Kein Browser öffnen, keine Adresse eintippen.</span></div></li>
+            <li><svg class="sym"><use href="#ph-check-circle"/></svg><div><b>Ohne App Store</b><span>Du installierst Coach direkt aus dem Browser heraus.</span></div></li>
+            <li><svg class="sym"><use href="#ph-barbell"/></svg><div><b>Einmal einrichten</b><span>iPhone: in Safari auf „Teilen“, dann „Zu Home-Bildschirm hinzufügen“. Android: in Chrome auf die drei Punkte, dann „Installieren und Verknüpfung erstellen“.</span></div></li>
+          </ul>
+        </div>
+        <figure class="handy"><div class="handy__rahmen">
+          <div class="homescreen" role="img" aria-label="Homescreen eines Handys mit dem Coach-Symbol zwischen anderen Apps">
+            <span class="homescreen__zeit">9:41</span>
+            <div class="homescreen__raster">
+              <div class="app"><i></i><span></span></div><div class="app"><i></i><span></span></div><div class="app"><i></i><span></span></div><div class="app"><i></i><span></span></div>
+              <div class="app"><i></i><span></span></div><div class="app app--coach"><img src="../../assets/icons/icon-180.png" alt=""><b>Coach</b></div><div class="app"><i></i><span></span></div><div class="app"><i></i><span></span></div>
+              <div class="app"><i></i><span></span></div><div class="app"><i></i><span></span></div><div class="app"><i></i><span></span></div><div class="app"><i></i><span></span></div>
+              <div class="app"><i></i><span></span></div><div class="app"><i></i><span></span></div>
+            </div>
+            <div class="homescreen__dock"><i></i><i></i><i></i><i></i></div>
+          </div>
+        </div></figure>
+      </div>
+    </div>
+  </section>
+</main></body></html>

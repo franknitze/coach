@@ -79,6 +79,34 @@
     </div>
   </section>
 
+  <section class="abschnitt" id="homescreen">
+    <div class="innen">
+      <div class="paar">
+        <div>
+          <h2 class="gross">Keine Webseite im Browser. Eine App auf deinem Homescreen.</h2>
+          <p class="text">Du legst Coach einmal als Symbol auf den Homescreen, auf dem iPhone genauso wie unter Android. Danach startet es mit einem Tipp, bildschirmfüllend und ohne Adressleiste, wie jede andere App.</p>
+          <ul class="punkte">
+            <li><svg class="sym"><use href="#ph-hand-tap"/></svg><div><b>Ein Tipp, und du bist im Training</b><span>Kein Browser öffnen, keine Adresse eintippen.</span></div></li>
+            <li><svg class="sym"><use href="#ph-check-circle"/></svg><div><b>Ohne App Store</b><span>Du installierst Coach direkt aus dem Browser heraus.</span></div></li>
+            <li><svg class="sym"><use href="#ph-barbell"/></svg><div><b>Einmal einrichten</b><span>iPhone: in Safari auf „Teilen“, dann „Zu Home-Bildschirm hinzufügen“. Android: in Chrome auf die drei Punkte, dann „Installieren und Verknüpfung erstellen“.</span></div></li>
+          </ul>
+        </div>
+        <figure class="handy"><div class="handy__rahmen">
+          <div class="homescreen" role="img" aria-label="Homescreen eines Handys mit dem Coach-Symbol zwischen anderen Apps">
+            <span class="homescreen__zeit">9:41</span>
+            <div class="homescreen__raster">
+              <div class="app"><i></i><span></span></div><div class="app"><i></i><span></span></div><div class="app"><i></i><span></span></div><div class="app"><i></i><span></span></div>
+              <div class="app"><i></i><span></span></div><div class="app app--coach"><img src="assets/icons/icon-180.png" alt=""><b>Coach</b></div><div class="app"><i></i><span></span></div><div class="app"><i></i><span></span></div>
+              <div class="app"><i></i><span></span></div><div class="app"><i></i><span></span></div><div class="app"><i></i><span></span></div><div class="app"><i></i><span></span></div>
+              <div class="app"><i></i><span></span></div><div class="app"><i></i><span></span></div>
+            </div>
+            <div class="homescreen__dock"><i></i><i></i><i></i><i></i></div>
+          </div>
+        </div></figure>
+      </div>
+    </div>
+  </section>
+
   <section class="abschnitt">
     <div class="innen">
       <div class="paar">
