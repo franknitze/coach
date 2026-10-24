@@ -160,7 +160,7 @@
       <ol class="schritte">
         <li><h3>Code laden</h3><p>Den Inhalt des Repos von GitHub herunterladen.</p></li>
         <li><h3>Hochladen</h3><p>Auf einen Webspace mit PHP 8 und HTTPS. Eine Datenbank brauchst du nicht.</p></li>
-        <li><h3>Passwort setzen</h3><p>Adresse öffnen, Passwort festlegen, über Safari auf den Homescreen legen.</p></li>
+        <li><h3>Passwort setzen</h3><p>Adresse öffnen, Passwort festlegen, auf den Homescreen legen: am iPhone über Safari, unter Android über Chrome.</p></li>
       </ol>
     </div>
   </section>
@@ -181,7 +181,8 @@
       <div class="fragen">
         <details><summary>Kostet Coach etwas?</summary><p>Nein. Der Code liegt offen auf GitHub. Du brauchst nur einen Webspace mit PHP und HTTPS.</p></details>
         <details><summary>Brauche ich eine Datenbank?</summary><p>Nein. Coach speichert alles in JSON-Dateien auf deinem Webspace. Hochladen genügt.</p></details>
-        <details><summary>Läuft Coach auf dem iPhone?</summary><p>Ja. Leg die Seite über Safari auf den Homescreen. Dann öffnet sie sich wie eine App, auch ohne Netz.</p></details>
+        <details><summary>Läuft Coach auf iPhone und Android?</summary><p>Ja, auf beiden. Leg die Seite auf den Homescreen. Dann öffnet sie sich wie eine App, auch ohne Netz.</p></details>
+        <details><summary>Wie lege ich Coach auf den Homescreen?</summary><p><b>iPhone:</b> Die Adresse in Safari öffnen, nicht in Chrome. Das Menü öffnen und auf „Teilen“ tippen, nach unten scrollen und „Zu Home-Bildschirm hinzufügen“ wählen. „Als Web-App öffnen“ einschalten und auf „Hinzufügen“ tippen.</p><p><b>Android:</b> Die Adresse in Chrome öffnen. Rechts neben der Adressleiste auf das Menü mit den drei Punkten tippen, dann auf „Installieren und Verknüpfung erstellen“ und auf „Installieren“.</p><p>Danach liegt Coach mit eigenem Symbol auf dem Homescreen und startet ohne Adressleiste.</p></details>
         <details><summary>Was passiert, wenn im Studio kein Empfang ist?</summary><p>Du trainierst weiter wie immer. Jeder bestätigte Satz liegt zuerst auf dem Handy und geht zum Server, sobald wieder Netz da ist.</p></details>
         <details><summary>Kann ich den Plan ändern?</summary><p>Ja. In den Einstellungen legst du Übungen an und änderst sie, mit Sätzen, Wiederholungsbereich, Schrittweite, Gerätenummer und einem Link zu einem YouTube-Video. Eine Übung, die du nicht mehr machst, blendest du aus: Ihre Einheiten bleiben in der Statistik. Oder du löschst sie vollständig, samt allen Sätzen.</p></details>
         <details><summary>Wer hilft mir beim Einrichten?</summary><p>Buch ein Erstgespräch. Dort klären wir, ob Coach zu dir passt und wie es auf deinen Server kommt.</p></details>
