@@ -39,6 +39,11 @@ async function foto(page, name, oben = true) {
 async function knoepfe(page) {
   return page.$$eval('button, a, img, [data-uebung]', els => els.filter(e => e.offsetParent).map(e => e.tagName + ' ' + [...e.attributes].filter(a => a.name.startsWith('data-') || a.name === 'class').map(a => a.name + '=' + a.value).join(' ') + ' | ' + (e.innerText || '').replace(/\s+/g, ' ').slice(0, 50)));
 }
+async function menue(page, ziel) {
+  await page.click('#menue-knopf');
+  await page.click('#menue [data-menue="' + ziel + '"]');
+  await page.waitForTimeout(600);
+}
 const SCHRITTE = {
   async anmelden(b) { const p = await neu(b, false); await foto(p, '01-anmelden'); },
   async start(b) { const p = await neu(b, true); await foto(p, '02-start'); },
@@ -64,11 +69,11 @@ const SCHRITTE = {
   },
   async kalender(b) {
     const p = await neu(b, true);
-    await p.click('[data-gehe="kalender"]'); await foto(p, '07-kalender');
+    await menue(p, 'kalender'); await foto(p, '07-kalender');
   },
   async plan(b) {
     const p = await neu(b, true);
-    await p.click('[data-gehe="plan"]'); await foto(p, '08-einstellungen');
+    await menue(p, 'plan'); await foto(p, '08-einstellungen');
     if (nur) console.log((await knoepfe(p)).join('\n'));
   },
   async verlauf(b) {
@@ -78,9 +83,14 @@ const SCHRITTE = {
     await p.evaluate(() => window.scrollTo(0, 700)); await foto(p, '10-verlauf-unten', false);
     if (nur) console.log((await knoepfe(p)).join('\n'));
   },
+  async verlaufstabelle(b) {
+    const p = await neu(b, true);
+    await p.click('[data-gehe="studio"]');
+    await p.click('.ist-offen [data-verlauf]'); await foto(p, '12-verlaufstabelle', false);
+  },
   async allgemein(b) {
     const p = await neu(b, true);
-    await p.click('[data-gehe="plan"]'); await p.click('[data-bereich="allgemein"]'); await foto(p, '11-allgemein');
+    await menue(p, 'plan'); await p.click('[data-bereich="allgemein"]'); await foto(p, '11-allgemein');
   },
 };
 (async () => {

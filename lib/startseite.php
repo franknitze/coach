@@ -69,6 +69,7 @@
       <figure class="handy"><div class="handy__rahmen"><img src="assets/img/startseite/studio.jpg" alt="Studio-Ansicht mit Reglern für Gewicht und Wiederholungen" loading="lazy"></div><figcaption><b>Studio</b>Die Regler stehen schon auf deinem Ziel.</figcaption></figure>
       <figure class="handy"><div class="handy__rahmen"><img src="assets/img/startseite/pause.jpg" alt="Pausen-Anzeige mit ablaufender Zeit" loading="lazy"></div><figcaption><b>Pause</b>Läuft nach jedem Satz von selbst ab.</figcaption></figure>
       <figure class="handy"><div class="handy__rahmen"><img src="assets/img/startseite/lupe.jpg" alt="Großansicht eines Geräts mit Gerätenummer und Ausführung" loading="lazy"></div><figcaption><b>Gerät und Ausführung</b>Foto, Nummer am Gerät und wie die Übung geht.</figcaption></figure>
+      <figure class="handy"><div class="handy__rahmen"><img src="assets/img/startseite/verlaufstabelle.jpg" alt="Tabelle mit den bisherigen Einheiten einer Übung: Datum, Gewicht, Wiederholungen, Ziel erreicht" loading="lazy"></div><figcaption><b>Bisher an diesem Gerät</b>Jede Einheit der Übung in einer Zeile, mit Haken fürs Ziel.</figcaption></figure>
       <figure class="handy"><div class="handy__rahmen"><img src="assets/img/startseite/einheit.jpg" alt="Abgeschlossene Einheit mit allen Sätzen" loading="lazy"></div><figcaption><b>Einheit</b>Jeder Satz jeder Übung, nachlesbar.</figcaption></figure>
       <figure class="handy"><div class="handy__rahmen"><img src="assets/img/startseite/kalender.jpg" alt="Monatskalender mit Trainingstagen" loading="lazy"></div><figcaption><b>Kalender</b>Wie regelmäßig du trainierst.</figcaption></figure>
       <figure class="handy"><div class="handy__rahmen"><img src="assets/img/startseite/verlauf.jpg" alt="Verlauf einer Übung mit Diagrammen für Gewicht und Volumen" loading="lazy"></div><figcaption><b>Verlauf</b>Schwerstes Gewicht und Volumen je Übung.</figcaption></figure>
@@ -145,11 +146,11 @@
       <h2 class="gross">Seit August im echten Einsatz.</h2>
       <p class="text">Coach entstand für ein eigenes Training und ist seitdem im Studio dabei. Die Zahlen stammen aus diesem Einsatz.</p>
       <div class="zahlen">
-        <div class="zahl"><strong>22</strong><p>Einheiten seit dem 19. August</p></div>
+        <div class="zahl"><strong>24</strong><p>Einheiten seit dem 19. August</p></div>
         <div class="zahl"><strong>120,9</strong><p>Höchster Fortschrittswert, gestartet bei 100</p></div>
         <div class="zahl"><strong>25</strong><p>Übungen, jede mit Bild</p></div>
       </div>
-      <p class="fuss-notiz">Stand 17.10.2026, aus der laufenden Installation.</p>
+      <p class="fuss-notiz">Stand 24.10.2026, aus der laufenden Installation.</p>
     </div>
   </section>
 
@@ -182,7 +183,7 @@
         <details><summary>Brauche ich eine Datenbank?</summary><p>Nein. Coach speichert alles in JSON-Dateien auf deinem Webspace. Hochladen genügt.</p></details>
         <details><summary>Läuft Coach auf dem iPhone?</summary><p>Ja. Leg die Seite über Safari auf den Homescreen. Dann öffnet sie sich wie eine App, auch ohne Netz.</p></details>
         <details><summary>Was passiert, wenn im Studio kein Empfang ist?</summary><p>Du trainierst weiter wie immer. Jeder bestätigte Satz liegt zuerst auf dem Handy und geht zum Server, sobald wieder Netz da ist.</p></details>
-        <details><summary>Kann ich den Plan ändern?</summary><p>Ja. Übungen anlegen, ändern und löschen geht in den Einstellungen, mit Sätzen, Wiederholungsbereich, Schrittweite und Gerätenummer.</p></details>
+        <details><summary>Kann ich den Plan ändern?</summary><p>Ja. In den Einstellungen legst du Übungen an und änderst sie, mit Sätzen, Wiederholungsbereich, Schrittweite, Gerätenummer und einem Link zu einem YouTube-Video. Eine Übung, die du nicht mehr machst, blendest du aus: Ihre Einheiten bleiben in der Statistik. Oder du löschst sie vollständig, samt allen Sätzen.</p></details>
         <details><summary>Wer hilft mir beim Einrichten?</summary><p>Buch ein Erstgespräch. Dort klären wir, ob Coach zu dir passt und wie es auf deinen Server kommt.</p></details>
       </div>
     </div>
