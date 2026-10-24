@@ -30,17 +30,17 @@ Nach A kommt B, nach B kommt C, dann wieder A. Nicht an Wochentage gebunden. Fä
 
 ## A: Oberkörper
 
-| # | Bewegung | Ziel | Sätze | Wdh | Pause |
-|---|---|---|---|---|---|
-| 1 | **Bankdrücken flach**, Langhantel | Brust | 4 | 5–8 | 3 min |
-| 2 | **Vertikales Ziehen**: Klimmzug oder Latzug, weiter Griff | Rücken (Breite) | 4 | 6–10 | 3 min |
-| 3 | **Schrägbankdrücken**, Kurzhantel | Brust (oberer Anteil) | 3 | 8–10 | 2,5 min |
-| 4 | **Horizontales Ziehen schwer**: Rudern vorgebeugt | Rücken (Dicke) | 4 | 6–10 | 2,5 min |
-| 5 | **Überkopfdrücken**, Kurzhantel oder Langhantel | Schulter | 3 | 8–10 | 2 min |
-| 6 | **Horizontales Ziehen eng**: Rudergriff eng, Kabel | Rücken (Mitte) | 3 | 10–12 | 2 min |
-| 7 | **Fliegende am Kabel** | Brust (gedehnt) | 3 | 12–15 | 90 s |
-| 8 | **Trizepsstrecken über Kopf**, Kabel | Trizeps | 3 | 10–15 | 60 s |
-| 9 | **Curl auf der Schrägbank** | Bizeps | 3 | 8–12 | 60 s |
+| # | Bewegung | Ziel | Sätze | Wdh |
+|---|---|---|---|---|
+| 1 | **Bankdrücken flach**, Langhantel | Brust | 4 | 5–8 |
+| 2 | **Vertikales Ziehen**: Klimmzug oder Latzug, weiter Griff | Rücken (Breite) | 4 | 6–10 |
+| 3 | **Schrägbankdrücken**, Kurzhantel | Brust (oberer Anteil) | 3 | 8–10 |
+| 4 | **Horizontales Ziehen schwer**: Rudern vorgebeugt | Rücken (Dicke) | 4 | 6–10 |
+| 5 | **Überkopfdrücken**, Kurzhantel oder Langhantel | Schulter | 3 | 8–10 |
+| 6 | **Horizontales Ziehen eng**: Rudergriff eng, Kabel | Rücken (Mitte) | 3 | 10–12 |
+| 7 | **Fliegende am Kabel** | Brust (gedehnt) | 3 | 12–15 |
+| 8 | **Trizepsstrecken über Kopf**, Kabel | Trizeps | 3 | 10–15 |
+| 9 | **Curl auf der Schrägbank** | Bizeps | 3 | 8–12 |
 
 **30 Sätze.** Brust 10, Rücken 11, Schulter 3, Trizeps 3, Bizeps 3.
 
@@ -48,16 +48,16 @@ Die Fliegenden stehen am Kabel und nicht an der Maschine: dort bleibt die Spannu
 
 ## B: Ganzkörper
 
-| # | Bewegung | Ziel | Sätze | Wdh | Pause |
-|---|---|---|---|---|---|
-| 1 | **Kniebeuge**, Langhantel | Quadrizeps, Gesäß | 4 | 5–8 | 3 min |
-| 2 | **Vertikales Ziehen eng**: Klimmzug oder Latzug, enger Griff | Rücken | 4 | 6–10 | 3 min |
-| 3 | **Horizontales Drücken**: Schrägbank oder Dips | Brust | 4 | 6–10 | 2,5 min |
-| 4 | **Hüftstrecken**: rumänisches Kreuzheben | Oberschenkelrückseite, Gesäß | 4 | 8–10 | 2,5 min |
-| 5 | **Seitheben**, Kabel oder Kurzhantel | Schulter seitlich | 4 | 12–20 | 90 s |
-| 6 | **Reverse Fly oder Face Pull** | Schulter hinten | 3 | 15–20 | 60 s |
-| 7 | **Beinbeugen** | Oberschenkelrückseite | 3 | 10–15 | 90 s |
-| 8 | **Wadenheben stehend** | Waden | 4 | 8–12 | 90 s |
+| # | Bewegung | Ziel | Sätze | Wdh |
+|---|---|---|---|---|
+| 1 | **Kniebeuge**, Langhantel | Quadrizeps, Gesäß | 4 | 5–8 |
+| 2 | **Vertikales Ziehen eng**: Klimmzug oder Latzug, enger Griff | Rücken | 4 | 6–10 |
+| 3 | **Horizontales Drücken**: Schrägbank oder Dips | Brust | 4 | 6–10 |
+| 4 | **Hüftstrecken**: rumänisches Kreuzheben | Oberschenkelrückseite, Gesäß | 4 | 8–10 |
+| 5 | **Seitheben**, Kabel oder Kurzhantel | Schulter seitlich | 4 | 12–20 |
+| 6 | **Reverse Fly oder Face Pull** | Schulter hinten | 3 | 15–20 |
+| 7 | **Beinbeugen** | Oberschenkelrückseite | 3 | 10–15 |
+| 8 | **Wadenheben stehend** | Waden | 4 | 8–12 |
 
 **30 Sätze.** Quadrizeps 4, hintere Kette 7, Brust 4, Rücken 4, Schulter 7, Waden 4.
 
@@ -67,16 +67,16 @@ Das Seitheben steht hier und nicht bei A, weil die seitliche Schulter am Oberkö
 
 ## C: Unterkörper
 
-| # | Bewegung | Ziel | Sätze | Wdh | Pause |
-|---|---|---|---|---|---|
-| 1 | **Beidbeiniges Drücken**: Beinpresse oder Hackenschmidt | Quadrizeps | 4 | 6–10 | 3 min |
-| 2 | **Beinbeugen sitzend** | Oberschenkelrückseite | 4 | 8–12 | 2,5 min |
-| 3 | **Einbeinig**: Ausfallschritt oder Split Squat | Quadrizeps, Gesäß, Stabilität | 3 | 8–12 je Bein | 2 min |
-| 4 | **Beinstrecken** | Quadrizeps (isoliert) | 4 | 12–20 | 90 s |
-| 5 | **Wadenheben sitzend** | Waden (Schollenmuskel) | 4 | 12–20 | 90 s |
-| 6 | **Curl** | Bizeps | 3 | 8–12 | 60 s |
-| 7 | **Trizepsdrücken** | Trizeps | 3 | 10–15 | 60 s |
-| 8 | **Bauch mit Zusatzgewicht**: Kabel-Crunch | Bauch | 3 | 10–15 | 60 s |
+| # | Bewegung | Ziel | Sätze | Wdh |
+|---|---|---|---|---|
+| 1 | **Beidbeiniges Drücken**: Beinpresse oder Hackenschmidt | Quadrizeps | 4 | 6–10 |
+| 2 | **Beinbeugen sitzend** | Oberschenkelrückseite | 4 | 8–12 |
+| 3 | **Einbeinig**: Ausfallschritt oder Split Squat | Quadrizeps, Gesäß, Stabilität | 3 | 8–12 je Bein |
+| 4 | **Beinstrecken** | Quadrizeps (isoliert) | 4 | 12–20 |
+| 5 | **Wadenheben sitzend** | Waden (Schollenmuskel) | 4 | 12–20 |
+| 6 | **Curl** | Bizeps | 3 | 8–12 |
+| 7 | **Trizepsdrücken** | Trizeps | 3 | 10–15 |
+| 8 | **Bauch mit Zusatzgewicht**: Kabel-Crunch | Bauch | 3 | 10–15 |
 
 **28 Sätze.** Quadrizeps 11, hintere Kette 4, Waden 4, Arme je 3, Bauch 3.
 
@@ -107,9 +107,9 @@ Arme und hintere Schulter bekommen weniger direkte Sätze als die großen Gruppe
 
 ## Pausen sind Teil des Plans
 
-3 Minuten nach den schweren Grundübungen, 2 bis 2,5 nach den mittelschweren, 60 bis 90 Sekunden bei Isolation. Wer die Pausen kürzt, spart keine Zeit, sondern verliert Gewicht, und dann stimmt das Volumen zwar auf dem Papier, aber der Reiz nicht.
+Nach jedem Satz zwei Minuten, bei jeder Übung gleich. Die App zählt die Pause nach jedem bestätigten Satz von selbst herunter. Wer die Pausen kürzt, spart keine Zeit, sondern verliert Gewicht, und dann stimmt das Volumen zwar auf dem Papier, aber der Reiz nicht.
 
-Bei 30 Sätzen landet eine Einheit damit bei etwa 85 bis 95 Minuten inklusive Aufwärmen. Wenn die Zeit knapp wird, fällt die letzte Übung weg, nicht die Pause.
+Bei 30 Sätzen kommen damit knapp eine Stunde Pause zusammen, dazu die Sätze selbst und das Aufwärmen. Wenn die Zeit knapp wird, fällt die letzte Übung weg, nicht die Pause.
 
 ## Steigerung
 
@@ -120,7 +120,3 @@ Startgewichte gibt es keine. Die erste Einheit ist die Eichung: das Gewicht so w
 ## Aufwärmen
 
 Fünf Minuten allgemein, danach pro schwerer Grundübung zwei bis drei Aufwärmsätze mit steigendem Gewicht und wenigen Wiederholungen. Diese Sätze zählen nicht zum Volumen und werden nicht mitgeschrieben.
-
-## Was noch fehlt
-
-Zu jeder Bewegung muss jetzt ein Gerät bestimmt werden. Das steht bewusst nicht hier drin: welche Bewegung an welchem Gerät ausgeführt wird, entscheidet, wer das Studio kennt.
