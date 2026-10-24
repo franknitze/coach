@@ -33,8 +33,8 @@
   <div class="innen">
     <a class="marke" href="#"><img src="assets/icons/logo.svg" alt="" width="30" height="30">COACH</a>
     <nav>
-      <a class="knopf" href="https://github.com/franknitze/coach"><svg class="sym" aria-hidden="true"><use href="#ph-github-logo"/></svg><span>GitHub</span></a>
-      <a class="knopf knopf--gelb" href="https://tidycal.com/cato-services/erstgespraech"><svg class="sym" aria-hidden="true"><use href="#ph-calendar-check"/></svg><span>Erstgespräch buchen</span></a>
+      <a class="knopf" href="https://github.com/franknitze/coach" target="_blank" rel="noopener"><svg class="sym" aria-hidden="true"><use href="#ph-github-logo"/></svg><span>GitHub</span></a>
+      <a class="knopf knopf--gelb" href="https://tidycal.com/cato-services/erstgespraech" target="_blank" rel="noopener"><svg class="sym" aria-hidden="true"><use href="#ph-calendar-check"/></svg><span>Erstgespräch buchen</span></a>
     </nav>
   </div>
 </header>
@@ -47,8 +47,8 @@
       <p class="unter">Coach führt dich durch jede Einheit im Studio, speichert jeden Satz sofort und sagt dir, wann das Gewicht hochgeht.</p>
       <p class="voraussetzung"><svg class="sym" aria-hidden="true"><use href="#ph-hard-drives"/></svg>Einzige Systemvoraussetzung: ein Webserver mit ≥ PHP 8.0 und HTTPS</p>
       <div class="aktionen aktionen--oben">
-        <a class="knopf knopf--gelb" href="https://tidycal.com/cato-services/erstgespraech"><svg class="sym" aria-hidden="true"><use href="#ph-calendar-check"/></svg>Erstgespräch buchen</a>
-        <a class="knopf" href="https://github.com/franknitze/coach"><svg class="sym" aria-hidden="true"><use href="#ph-github-logo"/></svg>Code auf GitHub</a>
+        <a class="knopf knopf--gelb" href="https://tidycal.com/cato-services/erstgespraech" target="_blank" rel="noopener"><svg class="sym" aria-hidden="true"><use href="#ph-calendar-check"/></svg>Erstgespräch buchen</a>
+        <a class="knopf" href="https://github.com/franknitze/coach" target="_blank" rel="noopener"><svg class="sym" aria-hidden="true"><use href="#ph-github-logo"/></svg>Code auf GitHub</a>
       </div>
       <form class="anmeldung" id="anmeldung" novalidate>
         <h2>Anmelden</h2>
@@ -223,8 +223,8 @@
       <h2 class="gross">Du willst Coach bei dir einrichten?</h2>
       <p class="text">Oder du hast eine eigene Idee für eine Anwendung, die genau so zu deinem Alltag passen soll. Lass uns darüber sprechen.</p>
       <div class="aktionen">
-        <a class="knopf knopf--gelb" href="https://tidycal.com/cato-services/erstgespraech"><svg class="sym" aria-hidden="true"><use href="#ph-calendar-check"/></svg>Erstgespräch buchen</a>
-        <a class="knopf" href="https://github.com/franknitze/coach"><svg class="sym" aria-hidden="true"><use href="#ph-github-logo"/></svg>Code auf GitHub</a>
+        <a class="knopf knopf--gelb" href="https://tidycal.com/cato-services/erstgespraech" target="_blank" rel="noopener"><svg class="sym" aria-hidden="true"><use href="#ph-calendar-check"/></svg>Erstgespräch buchen</a>
+        <a class="knopf" href="https://github.com/franknitze/coach" target="_blank" rel="noopener"><svg class="sym" aria-hidden="true"><use href="#ph-github-logo"/></svg>Code auf GitHub</a>
       </div>
     </div>
   </section>
@@ -232,7 +232,7 @@
 
 <footer class="fuss">
   <div class="innen">
-    <span>Coach, eine Anwendung von Cato Services</span>
-    <nav><a href="https://cato-services.de/impressum.html">Impressum</a><a href="https://cato-services.de/datenschutz.html">Datenschutz</a><a href="https://github.com/franknitze/coach">GitHub</a></nav>
+    <a class="fuss__marke" href="https://cato-services.de" target="_blank" rel="noopener"><span>Coach, eine Anwendung von</span><span class="fuss__firma"><img src="assets/img/cato-services.svg" alt="" width="28" height="28">Cato Services</span></a>
+    <nav><a href="https://cato-services.de/impressum.html" target="_blank" rel="noopener">Impressum</a><a href="https://cato-services.de/datenschutz.html" target="_blank" rel="noopener">Datenschutz</a><a href="https://github.com/franknitze/coach" target="_blank" rel="noopener">GitHub</a></nav>
   </div>
 </footer>
